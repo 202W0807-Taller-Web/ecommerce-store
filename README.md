@@ -1,69 +1,27 @@
-# React + TypeScript + Vite
+# E-commerce
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Como correr el proyecto
 
-Currently, two official plugins are available:
+Bastante simple, solo utiliza los siguientes comandos:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- npm install (para instalar todas las dependencias necesarias)
+- npm run dev (para correr el proyecto)
 
-## Expanding the ESLint configuration
+Si tienes algun problema con las dependencias, puede que sea porque estas en Windows, para ello, recomiendo utilizar `pnpm run dev`, lo cual debería arreglar cualquier problema :)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Como colaborar en el proyecto
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Dependiendo del modulo que te toque, trabajaras en la carpeta con el nombre de tu módulo, por ejemplo, si tu modulo es el catálogo, te dirijes a `src/catalog` y desarrollas tu feature ahí. No olvides realizar estos pasos antes de empezar a programar:
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+- Jala todos los cambios realizados en la rama `dev` con un `git pull origin dev`
+- Crea una rama asignándole un nombre con la siguiente forma `modulo-feature-developer_name`
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Para subir tus cambios crea una PR hacia `dev` y mandaselo al coordinador de tu módulo, el cual se encargará de realizar el merge correspondiente y arreglar conflictos si es necesario.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Manejo de ramas
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+La rama de producción sera `main`, la cual será gestionada por el equipo 3 y solo aceptará PRs desde dev.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+La rama de desarrollo será `dev`, donde será gestionada por todos los coordinadores de los diferentes módulos que tenemos, aceptará PRs de cualquier tipo.
+
+Por último, las diferentes ramas que se creen a partir de `dev` solo pueden ser gestionadas por una persona a menos que esta busque ayuda voluntariamente.
