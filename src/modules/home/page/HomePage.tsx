@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import ProductCard from "../../../components/ProductCard";
-import { useProducts } from "../../../hooks/useProducts";
+import ProductCard from "../components/ProductCard";
+import { useProducts } from "../hooks/useProducts";
 
 export default function HomePage() {
   const { products, loading, error } = useProducts();
