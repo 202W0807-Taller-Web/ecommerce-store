@@ -7,27 +7,38 @@ type MainLayoutProps = {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800">
-
+    <div className="min-h-screen flex flex-col bg-[#333027] text-[#EBC431]">
       {/* Header */}
-      <header className="bg-white shadow-md">
+      <header className="bg-[#413F39] shadow-md">
         <nav className="container mx-auto flex justify-between items-center p-4">
-          <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
+          <Link
+            to="/"
+            className="text-2xl font-bold text-[#EBC431] hover:text-[#C0A648] transition-colors"
+          >
             🛒 E-Commerce
           </Link>
-          <ul className="flex space-x-6 text-gray-600">
+          <ul className="flex space-x-6 text-[#C0A648]">
             <li>
-              <Link to="/" className="hover:text-blue-600 transition-colors">
+              <Link
+                to="/"
+                className="hover:text-[#EBC431] transition-colors"
+              >
                 Home
               </Link>
             </li>
             <li>
-              <Link to="/products" className="hover:text-blue-600 transition-colors">
+              <Link
+                to="/products"
+                className="hover:text-[#EBC431] transition-colors"
+              >
                 Productos
               </Link>
             </li>
             <li>
-              <Link to="/cart" className="hover:text-blue-600 transition-colors">
+              <Link
+                to="/cart"
+                className="hover:text-[#EBC431] transition-colors"
+              >
                 Carrito
               </Link>
             </li>
@@ -36,13 +47,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto p-6">
+      <main className="flex-1 container mx-auto p-6 bg-[#6B644C] rounded-lg shadow-md text-[#F5F5F5]">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 border-t mt-6">
-        <div className="container mx-auto text-center p-4 text-sm text-gray-500">
+      <footer className="bg-[#413F39] border-t mt-6">
+        <div className="container mx-auto text-center p-4 text-sm text-[#968751]">
           © {new Date().getFullYear()} E-Commerce Store. Todos los derechos reservados.
         </div>
       </footer>
