@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@layer components {
+  .fancy-input {
+    @apply w-full bg-[#333027]/60 border border-[#C0A648]/40 rounded-lg px-4 py-3
+           text-[#F5F5F5] placeholder:text-[#F5F5F5]/60
+           focus:outline-none focus:ring-2 focus:ring-[#EBC431] focus:border-transparent
+           transition-all duration-200 shadow-sm hover:bg-[#413F39]/70;
+  }
+}
