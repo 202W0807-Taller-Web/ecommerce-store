@@ -1,46 +1,122 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import CheckoutSteps from "../components/checkoutSteps";
+import OrderSummary from "../components/orderSummary";
 
 export default function Checkout_Step1() {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const shippingOptions = [
+    {
+      id: "standard",
+      name: "Envío Estándar (3–5 días)",
+      price: "$9.99",
+      description: "Entrega en 3 a 5 días hábiles",
+    },
+    {
+      id: "express",
+      name: "Envío Express (1–2 días)",
+      price: "$19.99",
+      description: "Entrega rápida en 1 o 2 días hábiles",
+    },
+    {
+      id: "pickup",
+      name: "Recojo en tienda",
+      price: "GRATIS",
+      description: "Disponible para recojo en 2 días",
+    },
+  ];
+
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Selecciona tu método de envío
-      </h1>
+    <div className="max-w-6xl mx-auto p-8">
+      <CheckoutSteps currentStep={1} />
 
-      <div className="space-y-6">
-        {/* Envío Estándar */}
-        <button className="w-full p-6 text-left border rounded-xl shadow hover:shadow-md hover:border-yellow-600 transition">
-          <h2 className="text-xl font-semibold">Envío Estándar (3–5 días)</h2>
-          <p className="text-gray-600 mt-2">$9.99</p>
-        </button>
+      {/* Contenedor principal dividido en dos columnas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-10">
+        {/* Columna izquierda — opciones de envío */}
+        <div className="md:col-span-2">
+          <h1 className="text-3xl font-bold mb-8 text-[#EBC431]">
+            Selecciona tu método de envío
+          </h1>
 
-        {/* Envío Express */}
-        <button className="w-full p-6 text-left border rounded-xl shadow hover:shadow-md hover:border-yellow-600 transition">
-          <h2 className="text-xl font-semibold">Envío Express (1–2 días)</h2>
-          <p className="text-gray-600 mt-2">$19.99</p>
-        </button>
+          <div className="space-y-6">
+            {shippingOptions.map((option) => {
+              const isSelected = selected === option.id;
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => setSelected(option.id)}
+                  className={`w-full p-6 text-left border rounded-2xl shadow-md transition-all duration-200
+                    ${
+                      isSelected
+                        ? "border-[#EBC431] bg-[#413F39]/70 shadow-lg"
+                        : "border-[#C0A648]/40 bg-[#333027] hover:border-[#EBC431]/80 hover:bg-[#413F39]/50"
+                    }`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h2
+                      className={`text-xl font-semibold ${
+                        isSelected ? "text-[#EBC431]" : "text-[#F5F5F5]"
+                      }`}
+                    >
+                      {option.name}
+                    </h2>
+                    {isSelected && (
+                      <span className="text-[#333027] font-semibold text-sm bg-[#EBC431] px-3 py-1 rounded-full">
+                        Seleccionado
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[#F5F5F5]/80">{option.description}</p>
+                  <p
+                    className={`mt-2 font-semibold ${
+                      isSelected ? "text-[#EBC431]" : "text-[#C0A648]"
+                    }`}
+                  >
+                    {option.price}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Recojo en tienda */}
-        <button className="w-full p-6 text-left border rounded-xl shadow hover:shadow-md hover:border-yellow-600 transition">
-          <h2 className="text-xl font-semibold">Recojo en tienda</h2>
-          <p className="text-gray-600 mt-2">GRATIS - Disponible en 2 días</p>
-        </button>
-      </div>
+          {/* Botones de navegación */}
+          <div className="flex justify-between mt-12">
+            <Link
+              to="/cart"
+              className="px-6 py-3 rounded-lg border-2 border-[#C0A648] text-[#EBC431] bg-[#333027] hover:bg-[#413F39]/80 hover:scale-105 hover:border-[#EBC431] transition font-medium"
+            >
+              ← Volver al carrito
+            </Link>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-10">
-        <Link
-          to="/cart"
-          className="px-6 py-3 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 transition"
-        >
-          ← Volver al carrito
-        </Link>
-        <Link
-          to="/checkout/step2"
-          className="px-6 py-3 rounded-lg bg-yellow-600 text-white font-semibold hover:bg-yellow-700 transition"
-        >
-          Siguiente paso →
-        </Link>
+            <Link
+              to={selected ? "/checkout/step2" : "#"}
+              onClick={(e) => !selected && e.preventDefault()}
+              className={`px-6 py-3 rounded-lg font-semibold shadow-sm transition-all transform 
+                ${
+                  selected
+                    ? "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md border-2 border-[#C0A648]"
+                    : "bg-[#EBC431] text-[#968751] cursor-not-allowed opacity-70 border-2 border-[#413F39]"
+                }`}
+            >
+              Siguiente paso →
+            </Link>
+          </div>
+        </div>
+
+        {/* Columna derecha — resumen del pedido */}
+        <div className="md:sticky md:top-8">
+          <OrderSummary
+            products={[
+              { name: "Producto A", quantity: 1, price: "$24.99" },
+              { name: "Producto B", quantity: 2, price: "$39.98" },
+            ]}
+            subtotal="$64.97"
+            shipping="$9.99"
+            taxes="$3.50"
+            total="$78.46"
+          />
+        </div>
       </div>
     </div>
   );
