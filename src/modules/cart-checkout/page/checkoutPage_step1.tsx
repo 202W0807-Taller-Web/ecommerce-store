@@ -91,6 +91,7 @@ export default function Checkout_Step1() {
 
             <Link
               to={selected ? "/checkout/step2" : "#"}
+              state={{method: selected}}
               onClick={(e) => !selected && e.preventDefault()}
               className={`px-6 py-3 rounded-lg font-semibold shadow-sm transition-all transform 
                 ${
