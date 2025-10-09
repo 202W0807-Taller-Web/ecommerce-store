@@ -7,7 +7,7 @@ type MainLayoutProps = {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#333027] text-[#EBC431]">
+    <div className="min-h-screen flex flex-col bg-white text-[#EBC431]">
       {/* Header */}
       <header className="bg-[#413F39] shadow-md">
         <nav className="container mx-auto flex justify-between items-center p-4">
@@ -47,7 +47,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto p-6 bg-[#6B644C] rounded-lg shadow-md text-[#F5F5F5]">
+      <main className="flex-1 container mx-auto p-6 bg-white rounded-lg  text-[#F5F5F5]">
         {children}
       </main>
 
