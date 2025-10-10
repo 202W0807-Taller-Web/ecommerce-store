@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCatalog } from "../hooks/useCatalog";
 import { type ProductFilters } from "../types";
-import { Layout } from "../components/Layout";
-import { FilterSidebar } from "../components/FilterSidebar";
-import { ProductCard } from "../components/ProductCard";
-import { SortOptions } from "../components/SortOptions";
-import { Pagination } from "../components/Pagination";
+import { FilterSidebar, ProductCard, SortOptions, Pagination } from "../components/catalog";
 
 export const CatalogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,8 +33,9 @@ export const CatalogPage = () => {
     currentSort: 'price',
   });
 
-  // Sincronizar URL con filtros
-  const updateUrlParams = () => {
+  // Cargar productos cuando cambian filtros/paginación
+  useEffect(() => {
+    // Sincronizar URL con filtros
     const params = new URLSearchParams();
     
     if (filters.search) params.set('search', filters.search);
@@ -52,15 +49,12 @@ export const CatalogPage = () => {
     params.set('limit', pagination.itemsPerPage.toString());
     
     setSearchParams(params);
-  };
-
-  // Cargar productos cuando cambian filtros/paginación
-  useEffect(() => {
-    updateUrlParams();
+    
+    // Cargar productos
     fetchProducts(filters, { page: pagination.currentPage, limit: pagination.itemsPerPage });
-  }, [filters, pagination.currentPage, pagination.itemsPerPage]);
+  }, [filters, pagination.currentPage, pagination.itemsPerPage, fetchProducts, setSearchParams]);
 
-  const handleFilterChange = (key: keyof ProductFilters, value: any) => {
+  const handleFilterChange = (key: keyof ProductFilters, value: unknown) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPagination(prev => ({ ...prev, currentPage: 1 })); // Reset página al cambiar filtros
   };
@@ -69,26 +63,26 @@ export const CatalogPage = () => {
 
   if (error) {
     return (
-      <Layout>
+
         <div className="text-center py-12">
           <div className="text-red-500 text-lg mb-4">{error}</div>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-6 py-2 bg-[#003669] text-white rounded-lg hover:bg-blue-800 transition-colors"
+            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 transition-colors"
           >
             Recargar página
           </button>
         </div>
-      </Layout>
+
     );
   }
 
   return (
-    <Layout>
+    
       <div className="flex min-h-screen">
         
         {/* Sidebar de filtros fijo */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 flex-shrink-0">
+        <div className="w-76 flex-shrink-0">
           <FilterSidebar 
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -97,10 +91,10 @@ export const CatalogPage = () => {
         </div>
 
         {/* Contenido principal */}
-        <div className="flex-1 bg-white">
+        <div className="ml-4 flex-1 bg-white border rounded-lg border-gray-200">
           
           {/* Sort Options */}
-          <div className="border-b border-gray-200 p-4">
+          <div className="pt-4">
             <SortOptions 
               currentSort={pagination.currentSort}
               onSortChange={(sort) => setPagination(prev => ({ ...prev, currentSort: sort }))}
@@ -131,7 +125,7 @@ export const CatalogPage = () => {
                     </div>
                     <button 
                       onClick={removeFilters}  
-                      className="px-6 py-2 bg-[#003669] text-white rounded-lg hover:bg-blue-800 transition-colors"
+                      className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 transition-colors"
                     >
                       Limpiar filtros
                     </button>
@@ -140,7 +134,7 @@ export const CatalogPage = () => {
               </div>
 
               {/* Paginación */}
-              <div className="border-t border-gray-200 p-4">
+              <div className="">
                 <Pagination
                   currentPage={pagination.currentPage}
                   totalPages={products.totalPages}
@@ -167,7 +161,6 @@ export const CatalogPage = () => {
           )}
         </div>
       </div>
-    </Layout>
   );
 };
 

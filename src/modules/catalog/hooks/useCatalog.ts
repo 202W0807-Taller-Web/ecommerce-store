@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { CatalogService } from "../services/catalog.service";
 import { type ProductFilters, type ProductSummary, type PaginationResult } from "../types";
 
@@ -27,7 +27,7 @@ export const useCatalog = (): UseCatalogResult => {
   const [error, setError] = useState<string | null>(null);
 
   // Instancia única del servicio
-  const catalogService = new CatalogService();
+  const catalogService = useMemo(() => new CatalogService(), []);
 
   const fetchProducts = useCallback(async (filters: ProductFilters, pagination: { page: number; limit: number }) => {
     setLoading(true);

@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
-import { type ProductSummary } from '../types';
+import { type ProductSummary } from '../../types';
 
 interface ProductCardProps {
-  product: ProductSummary & {
-    isPromo?: boolean;
-  };
+  product: ProductSummary;
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
@@ -18,37 +16,36 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           </svg>
         </button>
 
-        {/* Tag PROM si es promoción */}
-        {product.isPromo && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-pink-500 text-white text-xs font-medium px-2 py-1 rounded">
-              PROM
-            </span>
-          </div>
-        )}
-
-        <Link to={`/product/${product.id}`} className="block">
+        <Link to={`/catalog/product/${product.id}`} className="block">
           <div className="aspect-square overflow-hidden bg-gray-50 flex items-center justify-center">
             <img
-              src={product.image}
-              alt={product.name}
+              src={product.imagenesBase64[0] || ''}
+              alt={product.nombre}
               className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300"
             />
           </div>
           
           <div className="p-4">
-            <h3 className="text-sm font-normal text-gray-900 mb-2 line-clamp-2 leading-tight">
-              {product.name}
-            </h3>
+            <div className="flex items-center gap-2 mb-2">
+              {/* Badge PROM si es promoción */}
+              {product.isPromo && (
+                <span className="bg-red-200 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                  PROM
+                </span>
+              )}
+              <h3 className="text-lg font-medium text-primary line-clamp-2 leading-tight">
+                {product.nombre}
+              </h3>
+            </div>
             
             {/* Precio en formato S/ */}
             <div className="mb-2">
-              <span className="text-lg font-medium text-[#003669]">
-                S/ {product.price.toFixed(2)}
+              <span className="text-lg font-medium text-gray-900">
+                S/ {product.precio.toFixed(2)}
               </span>
-              {product.originalPrice && (
+              {product.precioOriginal && (
                 <span className="text-sm text-gray-500 line-through ml-2">
-                  S/ {product.originalPrice.toFixed(2)}
+                  S/ {product.precioOriginal.toFixed(2)}
                 </span>
               )}
             </div>

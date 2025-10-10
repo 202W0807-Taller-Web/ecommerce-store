@@ -1,1 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=DM+Sans:ital,opsz,wght@0,9..40,100..900;1,9..40,100..900&display=swap');
 @import "tailwindcss";
+
+
+@theme {
+  /* namespace de colores */
+  --color-primary: #C0A648;
+  --color-secondary: #968751;
+  --color-accent: #EBC431;
+  --color-neutral-400: #6B644C;
+  --color-neutral-600: #413F39;
+  --color-neutral-800: #333027;
+  --color-base: #ffffff;
+
+  /* tipografía */
+  --font-grotesk: "Space Grotesk", sans-serif;
+  --font-dm: "DM Sans", sans-serif;
+}
