@@ -1,7 +1,7 @@
 
 export default function PedidoCard({ pedido }: { pedido: any }) {
     return (
-        <div className="w-full max-w-[1200px]  mx-auto border border-gray-200 rounded-[5px] shadow-md bg-white overflow-hidden">
+        <div className="w-full max-w-[1200px]  mx-auto border border-gray-200 rounded-[5px] shadow-md shadow-[#00000033] bg-white overflow-hidden">
         
             {/* Estado del pedido */}
             <div className=" bg-[#F8F6F6]  px-4 py-2 rounded-t-md border-b border-[#CACACA] mb-3">
@@ -22,7 +22,7 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
 
                 <div className="flex justify-between items-center px-4 mt-4 mb-4">
                     {/* Imágenes de productos */}
-                    <div className="flex space-x-3 px-4 ">
+                    <div className="flex space-x-5 px-4 ">
                         {Array.isArray(pedido.imagenes) &&
                         pedido.imagenes.map((img: any, i: number) =>
                             img?.imagen ? (
@@ -30,13 +30,13 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
                                 key={i}
                                 src={img.imagen}
                                 alt="Producto"
-                                className="w-20 h-20 object-cover rounded-lg border"
+                                className="w-20 h-20 object-cover rounded-lg bg-gray-100 "
                             />
                             ) : null
                         )}
                     </div>
 
-                    {/* Botón de acción */}
+                    {/* Botón de detalle pedido */}
                     <button className=" w-[160px] text-sm font-medium px-4 py-2 rounded bg-[#C9B35E]  hover:bg-[#EADCA4] hover:text-[#C9B35E] text-white transition-colors duration-400">
                         Ver detalle
                     </button>
