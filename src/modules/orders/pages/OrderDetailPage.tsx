@@ -119,7 +119,7 @@ export default function OrderDetailPage() {
                     <div className="flex justify-end space-x-6">
                         <div>
                             <span className="font-medium text-[#766F5D]">{pedido.articulosDetallados.length} Artículos:</span>{' '}
-                            <span className="font-semibold text-gray-900">S/ {pedido.total.toFixed(2)}</span>
+                            <span className="font-semibold text-gray-900">S/ {pedido.costos.total.toFixed(2)}</span>
                         </div>
                         <div>
                             <span className="font-medium text-[#766F5D]">Fecha del Pedido:</span>{' '}

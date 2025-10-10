@@ -28,7 +28,7 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
                     </div>
                     {/* --- BOTÓN MODIFICADO --- */}
                     <Link 
-                        to={`/mis-pedidos/${pedido.cod_orden}`}
+                        to={`/mis-pedidos/${pedido._id}`}
                         className="w-[160px] text-center text-sm font-medium px-4 py-2 rounded bg-[#C9B35E] hover:bg-[#EADCA4] hover:text-[#C9B35E] text-white transition-colors duration-400"
                     >
                         Ver detalle
