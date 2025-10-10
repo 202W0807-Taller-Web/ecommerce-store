@@ -66,7 +66,7 @@ export default function CustomerOrdersPage() {
                 <button
                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                     disabled={page === 1}
-                    className="px-4 py-2 bg-[#C9B35E] rounded hover:bg-gray-300"
+                    className="px-4 py-2 text-white bg-[#C9B35E] rounded hover:bg-gray-300 transition-colors duration-400"
                 >
                     Anterior
                 </button>
@@ -74,7 +74,7 @@ export default function CustomerOrdersPage() {
                 <button
                     onClick={() => setPage((prev) => Math.min(prev + 1, meta.lastPage))}
                     disabled={page === meta.lastPage}
-                    className="px-4 py-2 bg-[#C9B35E] rounded hover:bg-gray-300"
+                    className="px-4 py-2 text-white bg-[#C9B35E] rounded hover:bg-gray-300 transition-colors duration-400"
                 >
                     Siguiente
                 </button>

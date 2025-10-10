@@ -6,6 +6,10 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
     const formattedDate = `Llegó el ${deliveryDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`;
     const estimatedDate = `Fecha estimada: ${deliveryDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`;
 
+    const totalArticulos = Array.isArray(pedido.imagenes)
+    ? pedido.imagenes.reduce((acc, item) => acc + (item.cantidad ?? 1), 0)
+    : 0;
+
     return (
         <div className="w-full max-w-[1200px]  mx-auto border border-gray-200 rounded-[5px] shadow-md shadow-[#00000033] bg-white overflow-hidden">
             <div className=" bg-[#F8F6F6]  px-4 py-2 rounded-t-md border-b border-[#CACACA] mb-3">
@@ -22,7 +26,14 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
                         {Array.isArray(pedido.imagenes) &&
                         pedido.imagenes.map((img: any, i: number) =>
                             img?.imagen ? (
-                            <img key={i} src={img.imagen} alt="Producto" className="w-20 h-20 object-cover rounded-lg bg-gray-100 " />
+                            <div key={i} className="relative">
+                                <img src={img.imagen} alt="Producto" className="w-20 h-20 object-cover rounded-lg bg-gray-100"/>
+                                {img.cantidad > 1 && (
+                                <span className="absolute bottom-1 right-1 bg-[#C9B35E] text-white text-xs font-bold rounded-full px-2 py-0.5 shadow">
+                                    x{img.cantidad}
+                                </span>
+                                )}
+                            </div>
                             ) : null
                         )}
                     </div>
@@ -38,7 +49,7 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
             <div className="px-4 py-3 text-sm text-gray-800 border-t border-[#CACACA] ">
                 <div className="flex justify-end space-x-6">
                     <div>
-                        <span className="font-medium text-[#766F5D]">{Array.isArray(pedido.imagenes) ? pedido.imagenes.length : 0} Artículos:</span>{' '}
+                        <span className="font-medium text-[#766F5D]">{totalArticulos} Artículos:</span>{' '}
                         <span className="font-semibold text-gray-900">S/ {pedido.total.toFixed(2)}</span>
                     </div>
                     <div>
@@ -54,3 +65,4 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
         </div>
     );
 }
+
