@@ -61,7 +61,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto p-6 bg-white rounded-lg  text-[#F5F5F5]">
+      <main className="flex-1 container mx-auto p-6 bg-white rounded-lg"> {/* <--- Se quitó text-[#F5F5F5] */}
         {children}
       </main>
 
