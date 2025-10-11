@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
-import { type ProductSummary } from '../../types';
+import { type ProductSummaryWithUI } from '../../types';
 
 interface ProductCardProps {
-  product: ProductSummary;
+  product: ProductSummaryWithUI;
+  // Datos hardcodeados que se pasan como parámetros
+  mockRating?: number;
 }
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
   return (
     <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
@@ -17,11 +19,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         </button>
 
         <Link to={`/catalog/product/${product.id}`} className="block">
-          <div className="aspect-square overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div className="aspect-square overflow-hidden bg-gray-50">
             <img
-              src={product.imagenesBase64[0] || ''}
+              src={product.imagen || ''}
               alt={product.nombre}
-              className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
           
@@ -61,9 +63,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                   ))}
                 </div>
                 <span className="text-sm font-medium text-gray-900 ml-1">
-                  {product.rating.toFixed(1)}
+                  {(mockRating || product.rating || 0).toFixed(1)}
                 </span>
               </div>
+              
             </div>
           </div>
         </Link>

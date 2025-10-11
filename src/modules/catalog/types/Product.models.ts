@@ -1,11 +1,10 @@
-// Interfaces para la estructura real de la API
+// Interfaces basadas en la estructura real de la API
 
-// Imagen del producto
-export interface ProductoImagen {
+// GET /atributos - Atributo completo con sus valores posibles
+export interface Atributo {
   id: number;
-  productoId: number;
-  principal: boolean;
-  imagen: string;
+  nombre: string;
+  atributoValores: AtributoValor[];
 }
 
 // Valor de un atributo
@@ -15,74 +14,84 @@ export interface AtributoValor {
   valor: string;
 }
 
-// Atributo completo con sus valores posibles
-export interface Atributo {
-  id: number;
-  nombre: string;
-  atributoValores: AtributoValor[];
-}
-
-// Atributo del producto (asignado a un producto específico)
-export interface ProductoAtributo {
+// GET /product/:id - Imagen del producto
+export interface ProductoImagen {
   id: number;
   productoId: number;
-  atributoId: number;
-  atributoValorId: number;
-  nombre: string;
-  valor: string;
+  principal: boolean;
+  imagen: string;
 }
 
-// Atributos que determinan variantes (Talla, Color, etc.)
-export type AtributoVariante = 'Talla' | 'Color' | 'Unidad medida';
+// Imagen de una variante específica
+export interface VarianteImagen {
+  id: number;
+  varianteId: number;
+  imagen: string;
+}
 
-// Variante del producto (determinada por atributos de variante)
-export interface ProductoVariante {
+// Atributo de una variante específica
+export interface VarianteAtributo {
+  id: number;
+  varianteId: number;
+  atributoValorId: number;
+  atributoValor: string;
+}
+
+// Variante del producto (GET /product/:id)
+export interface Variante {
   id: number;
   productoId: number;
   precio: number;
-  stock: number;
-  // Atributos que definen esta variante específica
-  talla?: string;
-  color?: string;
-  unidadMedida?: string;
-  // Para compatibilidad con estructura anterior
-  atributos: Array<{
-    nombre: string;
-    valor: string;
-  }>;
+  sku: string;
+  stock?: number; // Stock disponible para esta variante
+  varianteImagenes: VarianteImagen[];
+  varianteAtributos: VarianteAtributo[];
 }
 
-// Respuesta detallada del producto (GET /product/:id)
+// Atributo asignado a un producto específico
+export interface ProductoAtributo {
+  id: number;
+  productoId: number;
+  atributoValorId: number;
+  valor: string;
+}
+
+// GET /product/:id - Respuesta detallada del producto
 export interface Product {
   id: number;
   nombre: string;
   descripcion: string;
   idPromocion: number | null;
   productoImagenes: ProductoImagen[];
-  variantes: ProductoVariante[];
+  variantes: Variante[];
   productoAtributos: ProductoAtributo[];
-  // Atributos para filtros (Categoría, Género, Deporte, Tipo, Colección)
-  atributosFiltro: Record<string, string>;
-  // Campos mockeados para las vistas
-  precio: number;
-  precioOriginal?: number;
-  categoria: string;
-  rating: number;
-  reviewCount: number;
-  isPromo: boolean;
-  promotionId?: number;
 }
 
-// Respuesta resumida del producto (GET /products)
+// GET /product/listado - Respuesta resumida del producto
 export interface ProductSummary {
-  id?: number;
+  id: number;
   nombre: string;
-  descripcion: string;
-  imagenesBase64: string[];
-  // Atributos para filtros (Categoría, Género, Deporte, Tipo, Colección)
-  atributosFiltro: Record<string, string>;
-  // Campos mockeados para las vistas
   precio: number;
+  imagen: string;
+  tienePromocion: boolean;
+}
+
+// Interfaces extendidas para funcionalidad de la UI
+export interface ProductWithUI extends Product {
+  // Campos calculados para la UI
+  precioMinimo: number;
+  precioMaximo: number;
+  coloresDisponibles: string[];
+  tallasDisponibles: string[];
+  imagenPrincipal: string;
+  todasLasImagenes: string[];
+  varianteSeleccionada?: Variante;
+  colorSeleccionado?: string;
+  tallaSeleccionada?: string;
+}
+
+export interface ProductSummaryWithUI extends ProductSummary {
+  // Campos calculados para la UI
   precioOriginal?: number;
   categoria: string;
   rating: number;

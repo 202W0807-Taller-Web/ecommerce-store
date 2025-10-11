@@ -1,20 +1,20 @@
 import { useState, useCallback, useMemo } from "react";
 import { CatalogService } from "../services/catalog.service";
-import { type ProductFilters, type ProductSummary, type PaginationResult } from "../types";
+import { type ProductFilters, type ProductSummaryWithUI, type PaginationResult } from "../types";
 
 export interface UseCatalogResult {
   // Productos
-  products: PaginationResult<ProductSummary>;
+  products: PaginationResult<ProductSummaryWithUI>;
   loading: boolean;
   error: string | null;
   
   // Acciones
   fetchProducts: (filters: ProductFilters, pagination: { page: number; limit: number }) => Promise<void>;
-  searchProducts: (query: string, filters?: Partial<ProductFilters>) => Promise<ProductSummary[]>;
+  searchProducts: (query: string, filters?: Partial<ProductFilters>) => Promise<ProductSummaryWithUI[]>;
 }
 
 export const useCatalog = (): UseCatalogResult => {
-  const [products, setProducts] = useState<PaginationResult<ProductSummary>>({
+  const [products, setProducts] = useState<PaginationResult<ProductSummaryWithUI>>({
     data: [],
     total: 0,
     page: 1,
@@ -43,7 +43,7 @@ export const useCatalog = (): UseCatalogResult => {
     }
   }, [catalogService]);
 
-  const searchProducts = useCallback(async (query: string, filters?: Partial<ProductFilters>): Promise<ProductSummary[]> => {
+  const searchProducts = useCallback(async (query: string, filters?: Partial<ProductFilters>): Promise<ProductSummaryWithUI[]> => {
     setLoading(true);
     setError(null);
     

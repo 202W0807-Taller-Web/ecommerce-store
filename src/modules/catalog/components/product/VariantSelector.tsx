@@ -1,122 +1,120 @@
 import { useState, useMemo, useEffect } from 'react';
-import { type ProductoVariante } from '../../types';
+import { type Variante } from '../../types';
 import { obtenerColorPorNombre } from '../../data/colors';
 
 interface VariantSelectorProps {
-  variants: ProductoVariante[];
-  onVariantChange: (variant: ProductoVariante | null) => void;
-  selectedVariant: ProductoVariante | null;
+  variants: Variante[];
+  onVariantChange: (variant: Variante | null) => void;
+  onColorChange?: (color: string | null) => void;
+  selectedVariant: Variante | null;
 }
 
-export const VariantSelector = ({ variants, onVariantChange, selectedVariant }: VariantSelectorProps) => {
+export const VariantSelector = ({ variants, onVariantChange, onColorChange, selectedVariant }: VariantSelectorProps) => {
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
 
-  // Agrupar atributos de variante (Talla, Color, etc.)
-  const attributeGroups = useMemo(() => {
-    const groups: Record<string, string[]> = {};
-    
-    // Obtener tallas únicas
-    const tallas = variants.map(v => v.talla).filter((talla): talla is string => Boolean(talla));
-    if (tallas.length > 0) {
-      groups['Talla'] = [...new Set(tallas)];
-    }
-    
-    // Obtener colores únicos
-    const colores = variants.map(v => v.color).filter((color): color is string => Boolean(color));
-    if (colores.length > 0) {
-      groups['Color'] = [...new Set(colores)];
-    }
-    
-    // Obtener unidades de medida únicas
-    const unidades = variants.map(v => v.unidadMedida).filter((unidad): unidad is string => Boolean(unidad));
-    if (unidades.length > 0) {
-      groups['Unidad medida'] = [...new Set(unidades)];
-    }
-    
-    return groups;
+  // Obtener colores disponibles
+  const availableColors = useMemo(() => {
+    const colores = new Set<string>();
+    variants.forEach(variant => {
+      variant.varianteAtributos.forEach(atributo => {
+        if (['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Morado'].includes(atributo.atributoValor)) {
+          colores.add(atributo.atributoValor);
+        }
+      });
+    });
+    return Array.from(colores);
+  }, [variants]);
+
+  // Obtener tallas disponibles para un color específico
+  const getAvailableSizesForColor = useMemo(() => {
+    return (color: string) => {
+      const tallas = new Set<string>();
+      variants.forEach(variant => {
+        const hasColor = variant.varianteAtributos.some(attr => attr.atributoValor === color);
+        if (hasColor) {
+          variant.varianteAtributos.forEach(atributo => {
+            if (['S', 'M', 'L', 'XL', 'XXL'].includes(atributo.atributoValor)) {
+              tallas.add(atributo.atributoValor);
+            }
+          });
+        }
+      });
+      return Array.from(tallas);
+    };
   }, [variants]);
 
   // Encontrar la variante que coincide con los atributos seleccionados
   const matchingVariant = useMemo(() => {
-    if (Object.keys(selectedAttributes).length === 0) {
-      return variants[0] || null;
+    if (Object.keys(selectedAttributes).length < 2) {
+      return null; // No se selecciona ninguna variante por defecto
     }
 
     return variants.find(variant => {
-      // Verificar que coincida con los atributos seleccionados
-      return Object.entries(selectedAttributes).every(([attrName, attrValue]) => {
-        switch (attrName) {
-          case 'Talla':
-            return variant.talla === attrValue;
-          case 'Color':
-            return variant.color === attrValue;
-          case 'Unidad medida':
-            return variant.unidadMedida === attrValue;
-          default:
-            return true;
-        }
-      });
+      // Verificar que coincida con color y talla seleccionados
+      const hasSelectedColor = variant.varianteAtributos.some(atributo => 
+        atributo.atributoValor === selectedAttributes['Color']
+      );
+      const hasSelectedSize = variant.varianteAtributos.some(atributo => 
+        atributo.atributoValor === selectedAttributes['Talla']
+      );
+      return hasSelectedColor && hasSelectedSize;
     }) || null;
   }, [variants, selectedAttributes]);
 
-  // Establecer la primera combinación como selección por defecto
-  useEffect(() => {
-    if (Object.keys(selectedAttributes).length === 0 && variants.length > 0) {
-      const defaultAttributes: Record<string, string> = {};
-      
-      // Obtener la primera talla disponible
-      const firstTalla = variants.find(v => v.talla)?.talla;
-      if (firstTalla) {
-        defaultAttributes['Talla'] = firstTalla;
-      }
-      
-      // Obtener el primer color disponible
-      const firstColor = variants.find(v => v.color)?.color;
-      if (firstColor) {
-        defaultAttributes['Color'] = firstColor;
-      }
-      
-      // Obtener la primera unidad de medida disponible
-      const firstUnidad = variants.find(v => v.unidadMedida)?.unidadMedida;
-      if (firstUnidad) {
-        defaultAttributes['Unidad medida'] = firstUnidad;
-      }
-      
-      setSelectedAttributes(defaultAttributes);
-    }
-  }, [variants, selectedAttributes]);
+  // No establecer selección por defecto - el usuario debe elegir
 
   // Actualizar la variante seleccionada cuando cambien los atributos
-  useMemo(() => {
+  useEffect(() => {
+    if (matchingVariant) {
+      console.log('🎨 VariantSelector - Variante encontrada:', {
+        id: matchingVariant.id,
+        sku: matchingVariant.sku,
+        precio: matchingVariant.precio,
+        stock: matchingVariant.stock,
+        atributos: matchingVariant.varianteAtributos.map(attr => attr.atributoValor)
+      });
+    }
     onVariantChange(matchingVariant);
-  }, [matchingVariant, onVariantChange]);
 
-  const handleAttributeChange = (attributeName: string, value: string) => {
+    // Limpiar color si no hay variante seleccionada
+    if (!matchingVariant && onColorChange) {
+      onColorChange(null);
+    }
+  }, [matchingVariant, onVariantChange, onColorChange]);
+
+  const handleColorChange = (color: string) => {
+    console.log('🎨 VariantSelector - Color seleccionado:', {
+      color,
+      currentAttributes: selectedAttributes
+    });
+    
+    setSelectedAttributes({
+      Color: color,
+      Talla: '' // Limpiar talla cuando cambia el color
+    });
+
+    // Notificar al componente padre sobre el cambio de color
+    if (onColorChange) {
+      onColorChange(color);
+    }
+  };
+
+  const handleSizeChange = (size: string) => {
+    console.log('📏 VariantSelector - Talla seleccionada:', {
+      size,
+      currentAttributes: selectedAttributes
+    });
+    
     setSelectedAttributes(prev => ({
-      ...prev,
-      [attributeName]: value
+      Color: prev.Color,
+      Talla: size
     }));
   };
 
-  // Verificar si una combinación de atributos está disponible
-  const isAttributeAvailable = (attributeName: string, value: string) => {
-    const testAttributes = { ...selectedAttributes, [attributeName]: value };
-    
-    return variants.some(variant => {
-      return Object.entries(testAttributes).every(([attrName, attrValue]) => {
-        switch (attrName) {
-          case 'Talla':
-            return variant.talla === attrValue;
-          case 'Color':
-            return variant.color === attrValue;
-          case 'Unidad medida':
-            return variant.unidadMedida === attrValue;
-          default:
-            return true;
-        }
-      });
-    });
-  };
+  // Obtener tallas disponibles para el color seleccionado
+  const availableSizes = selectedAttributes['Color'] 
+    ? getAvailableSizesForColor(selectedAttributes['Color'])
+    : [];
 
   if (variants.length === 0) {
     return null;
@@ -124,85 +122,85 @@ export const VariantSelector = ({ variants, onVariantChange, selectedVariant }: 
 
   return (
     <div className="space-y-6">
-      {Object.entries(attributeGroups).map(([attributeName, values]) => (
-        <div key={attributeName}>
+      {/* Selector de Color - Primero */}
+      <div>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">
+          Color: {selectedAttributes['Color'] ? (
+            <span className="font-normal text-gray-600">{selectedAttributes['Color']}</span>
+          ) : (
+            <span className="font-normal text-gray-400">Selecciona un color</span>
+          )}
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {availableColors.map(color => {
+            const isSelected = selectedAttributes['Color'] === color;
+            const colorData = obtenerColorPorNombre(color);
+            const hexColor = colorData?.hex || '#000000';
+            
+            return (
+              <button
+                key={color}
+                onClick={() => handleColorChange(color)}
+                className={`
+                  w-10 h-10 rounded-full border-2 transition-all duration-200
+                  ${isSelected 
+                    ? 'border-primary scale-110 shadow-lg ring-2 ring-primary/20' 
+                    : 'border-gray-300 hover:border-gray-400 hover:scale-105'
+                  }
+                  cursor-pointer
+                `}
+                style={{ backgroundColor: hexColor }}
+                title={color}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selector de Talla - Segundo, solo visible si hay color seleccionado */}
+      {selectedAttributes['Color'] && (
+        <div>
           <h4 className="text-sm font-medium text-gray-900 mb-3">
-            {(attributeName === 'Color' || attributeName === 'Talla' || attributeName === 'Unidad medida') && selectedAttributes[attributeName] ? (
-              <>
-                {attributeName}: <span className="font-normal text-gray-600">{selectedAttributes[attributeName]}</span>
-              </>
+            Talla: {selectedAttributes['Talla'] ? (
+              <span className="font-normal text-gray-600">{selectedAttributes['Talla']}</span>
             ) : (
-              attributeName
+              <span className="font-normal text-gray-400">Selecciona una talla</span>
             )}
           </h4>
           <div className="flex flex-wrap gap-2">
-            {values.map(value => {
-              const isSelected = selectedAttributes[attributeName] === value;
-              const isAvailable = isAttributeAvailable(attributeName, value);
-              const isDisabled = !isAvailable;
+            {availableSizes.map(size => {
+              const isSelected = selectedAttributes['Talla'] === size;
               
-              // Si es un color, obtener el código hex y renderizar solo el círculo
-              if (attributeName === 'Color') {
-                const colorData = obtenerColorPorNombre(value);
-                const hexColor = colorData?.hex || '#000000';
-                
-                return (
-                  <button
-                    key={value}
-                    onClick={() => handleAttributeChange(attributeName, value)}
-                    disabled={isDisabled}
-                    className={`
-                      w-8 h-8 rounded-full border-2 transition-all duration-200
-                      ${isSelected 
-                        ? 'border-primary scale-110 shadow-lg' 
-                        : 'border-gray-300 hover:border-gray-400 hover:scale-105'
-                      }
-                      ${isDisabled 
-                        ? 'opacity-50 cursor-not-allowed' 
-                        : 'cursor-pointer'
-                      }
-                    `}
-                    style={{ backgroundColor: hexColor }}
-                    title={value} // Tooltip con el nombre del color
-                  />
-                );
-              }
-              
-              // Para otros atributos (talla, etc.), mantener el diseño original
               return (
                 <button
-                  key={value}
-                  onClick={() => handleAttributeChange(attributeName, value)}
-                  disabled={isDisabled}
+                  key={size}
+                  onClick={() => handleSizeChange(size)}
                   className={`
-                    px-4 py-2 text-sm font-medium rounded-md border-2 transition-colors
+                    px-4 py-2 border-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${isSelected 
-                      ? 'bg-primary/80 text-white border-primary' 
-                      : 'bg-white text-gray-900 border-gray-300 hover:border-gray-400'
+                      ? 'border-primary bg-primary text-white' 
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                     }
-                    ${isDisabled 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'cursor-pointer'
-                    }
+                    cursor-pointer
                   `}
                 >
-                  {value}
+                  {size}
                 </button>
               );
             })}
           </div>
         </div>
-      ))}
+      )}
 
       {/* Información de la variante seleccionada */}
       {selectedVariant && (
         <div className="bg-gray-50 p-4 rounded-lg">
-          {selectedVariant.stock > 0 ? (
+          {(selectedVariant.stock || 0) > 0 ? (
             <div className="flex items-center text-sm text-green-600">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              En stock ({selectedVariant.stock} unidades)
+              En stock ({selectedVariant.stock || 0} unidades)
             </div>
           ) : (
             <div className="flex items-center text-sm text-red-600">

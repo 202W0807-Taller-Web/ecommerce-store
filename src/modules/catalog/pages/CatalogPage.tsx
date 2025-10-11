@@ -106,15 +106,31 @@ export const CatalogPage = () => {
             <>
               <div className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.data.map((product, index) => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={{
-                        ...product,
-                        isPromo: index % 3 === 1 // Simular algunos productos como promoción
-                      }}
-                    />
-                  ))}
+                  {products.data.map((product, index) => {
+                    // Generar datos hardcodeados para cada producto
+                    const mockRating = 4.2 + (product.id % 3) * 0.2; // Rating entre 4.2 y 4.6
+                    const mockReviewCount = 120 + (product.id * 15); // Productos vendidos entre 120 y 870
+                    
+                    // Console.log para mostrar datos hardcodeados
+                    console.log(`📊 CatalogPage - Datos hardcodeados para producto ${product.id}:`, {
+                      productId: product.id,
+                      mockRating,
+                      mockReviewCount,
+                      source: 'CatalogPage - generateMockData'
+                    });
+                    
+                    return (
+                      <ProductCard 
+                        key={product.id} 
+                        product={{
+                          ...product,
+                          isPromo: index % 3 === 1 // Simular algunos productos como promoción
+                        }}
+                        mockRating={mockRating}
+                        mockReviewCount={mockReviewCount}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Estado vacío */}

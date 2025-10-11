@@ -1,9 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { CategoriesModal } from './CategoriesModal';
+import { MOCK_ATRIBUTOS } from '../../catalog/mocks/atributos.mock';
 
 export const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +56,13 @@ export const Header = () => {
             <div className="flex items-center space-x-4 w-full max-w-2xl">
               
               {/* Categories Button */}
-              <button className="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
-                
+              <button 
+                onClick={() => setIsCategoriesModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
                 <span className="text-sm font-medium text-gray-700">Categorías</span>
               </button>
 
@@ -122,6 +130,13 @@ export const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Categories Modal */}
+      <CategoriesModal
+        isOpen={isCategoriesModalOpen}
+        onClose={() => setIsCategoriesModalOpen(false)}
+        attributes={MOCK_ATRIBUTOS}
+      />
     </header>
   );
 };

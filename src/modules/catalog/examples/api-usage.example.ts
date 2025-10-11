@@ -5,7 +5,7 @@
  * que coinciden con la estructura real de la API.
  */
 
-import { CatalogService, transformApiProductToProduct, transformApiProductSummaryToProductSummary } from '../services/catalog.service';
+import { CatalogService } from '../services/catalog.service';
 
 // Ejemplo de respuesta real de la API para GET /product/:id
 const apiProductDetailExample = {
@@ -60,13 +60,9 @@ export async function ejemploUsoServicio() {
 
 // Ejemplo de transformación manual de datos
 export function ejemploTransformacionManual() {
-  // Transformar respuesta detallada
-  const productoTransformado = transformApiProductToProduct(apiProductDetailExample);
-  console.log('Producto transformado:', productoTransformado);
-  
-  // Transformar respuesta resumida
-  const productoResumenTransformado = transformApiProductSummaryToProductSummary(apiProductSummaryExample, 0);
-  console.log('Producto resumen transformado:', productoResumenTransformado);
+  // Los datos ahora se transforman automáticamente en el servicio
+  console.log('Ejemplo de producto detallado:', apiProductDetailExample);
+  console.log('Ejemplo de producto resumen:', apiProductSummaryExample);
 }
 
 /**
