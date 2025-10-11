@@ -13,7 +13,7 @@ interface OrderItemType {
     cantidad: number;
     precioUnitario: number;
     subTotal: number;
-    detalleProducto: DetalleProducto;
+    detalle_producto: DetalleProducto;
 }
 
 // Componente para un item individual del pedido - AHORA CON ESTILO
@@ -22,15 +22,15 @@ function OrderItem({ item }: { item: any }) {
         // Se añade borde inferior y padding
         <div className="flex items-start gap-x-6 py-6 last:pb-0 first:pt-0 border-b border-gray-200 last:border-b-0">
             <img 
-                src={item.detalleProducto?.imagen || '/placeholder.png'} 
-                alt={item.detalleProducto?.nombre || 'Producto'} 
+                src={item.detalle_producto?.imagen || '/placeholder.png'} 
+                alt={item.detalle_producto?.nombre || 'Producto'} 
                 className="w-24 h-24 object-cover rounded-lg bg-gray-100" 
             />
             <div className="flex-1">
-                <p className="font-semibold text-lg text-gray-800">{item.detalleProducto?.nombre || 'Nombre no disponible'}</p>
+                <p className="font-semibold text-lg text-gray-800">{item.detalle_producto?.nombre || 'Nombre no disponible'}</p>
                 {/* CORRECCIÓN: Se muestra el precio unitario correcto */}
                 <p className="text-sm text-gray-600 mb-1">S/{(item.precioUnitario || 0).toFixed(2)}</p>
-                <p className="text-sm text-gray-500 font-medium">{item.detalleProducto?.marca || 'Marca no disponible'}</p>
+                <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.marca || 'Marca no disponible'}</p>
                  {/* AÑADIDO: Texto de devolución como en el mockup */}
                 <p className="text-xs text-gray-500 mt-2">Devolución elegible hasta el 27 de Agosto de 2025</p>
             </div>
@@ -123,7 +123,7 @@ export default function OrderDetailPage() {
                                {/* CORRECCIÓN 2: Especificar tipos aquí también */}
                                {pedido.items?.map((item: OrderItemType, index: number) => (
                                    <div key={index} className="flex justify-between">
-                                        <span>{item.detalleProducto?.nombre}</span>
+                                        <span>{item.detalle_producto?.nombre}</span>
                                         <span>S/{(item.subTotal || 0).toFixed(2)}</span>
                                    </div>
                                ))}
