@@ -26,7 +26,7 @@ export const ProductHeader = ({ productName }: ProductHeaderProps) => {
               </svg>
             </button>
             <h1 className="text-2xl font-bold text-gray-900">
-              Detalles del producto
+              {productName}
             </h1>
           </div>
 

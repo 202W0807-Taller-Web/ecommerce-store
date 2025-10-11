@@ -1,4 +1,4 @@
-// Componente de paginación con iconos
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 interface PaginationProps {
   currentPage: number;
@@ -15,7 +15,7 @@ export const Pagination = ({
   onPageChange,
   itemsPerPage,
   onItemsPerPageChange,
-  total: _total // Prefijo _ para indicar que no se usa
+  total: _total // eslint-disable-line @typescript-eslint/no-unused-vars
 }: PaginationProps) => {
   // Variables calculadas para información de productos
   // const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -67,7 +67,7 @@ export const Pagination = ({
   });
 
   return (
-    <div className="bg-white px-4 py-4 ">
+    <div className="px-6 py-4">
       <div className="flex items-center justify-between">
         
         {/* Items per page selector */}
@@ -96,9 +96,7 @@ export const Pagination = ({
             className="p-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Página anterior"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
+            <FiChevronLeft className="w-4 h-4" />
           </button>
 
           {pages.map((page) => (
@@ -121,9 +119,7 @@ export const Pagination = ({
             className="p-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Página siguiente"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <FiChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

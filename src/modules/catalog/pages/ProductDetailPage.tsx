@@ -15,7 +15,7 @@ export const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { product, loading, error, fetchProductDetail } = useProductDetail();
   const [selectedVariant, setSelectedVariant] = useState<Variante | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
 
   const generateMockData = (productId: number) => {
     const mockRating = 4.2 + (productId % 3) * 0.2; 
@@ -26,9 +26,8 @@ export const ProductDetailPage = () => {
 
   const { mockRating, mockReviewCount } = product ? generateMockData(product.id) : { mockRating: 4.5, mockReviewCount: 150 };
 
-  const handleColorChange = (color: string | null) => {
-    setSelectedColor(color);
-    console.log('🎨 ProductDetailPage - Color seleccionado:', color);
+  const handleColorChange = (colorId: number | null) => {
+    setSelectedColor(colorId);
   };
 
   useEffect(() => {
@@ -40,34 +39,8 @@ export const ProductDetailPage = () => {
 
   const handleAddToCart = (quantity: number, variant?: Variante) => {
     // TODO: Implementar lógica de carrito
-    console.log('Producto agregado:', {
-      id: product?.id,
-      nombre: product?.nombre,
-      precioBase: product?.precioMinimo,
-      precioMaximo: product?.precioMaximo
-    });
-    
-    console.log('Cantidad:', quantity);
-    
-    if (variant) {
-      console.log('Variante seleccionada:', {
-        id: variant.id,
-        sku: variant.sku,
-        precio: variant.precio,
-        stock: variant.stock,
-        atributos: variant.varianteAtributos.map(attr => ({
-          nombre: attr.atributoValor,
-          valor: attr.atributoValor
-        }))
-      });
-      console.log('💰 Precio total:', `S/ ${(variant.precio * quantity).toFixed(2)}`);
-    } else {
-      console.log('⚠️  Sin variante seleccionada - usando precio base');
-      console.log('💰 Precio total:', `S/ ${((product?.precioMinimo || 0) * quantity).toFixed(2)}`);
-    }
-    
-    console.log('✅ Producto agregado al carrito correctamente');
-    console.log('---');
+    // Producto agregado al carrito
+    console.log('Agregando al carrito:', { quantity, variant: variant?.id });
   };
 
   // Estados de carga y error
@@ -81,6 +54,11 @@ export const ProductDetailPage = () => {
 
   if (!product) {
     return <ProductDetailError productNotFound />;
+  }
+
+  // No renderizar si el producto no tiene variantes
+  if (!product.variantes || product.variantes.length === 0) {
+    return <ProductDetailError error="Este producto no tiene variantes disponibles" />;
   }
 
   return (

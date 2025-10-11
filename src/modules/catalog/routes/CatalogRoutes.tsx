@@ -15,7 +15,6 @@ export default function CatalogRoutes() {
       {/* Redirección de /catalog/product a /catalog */}
       <Route path="/product" element={<ProductRedirect />} />
       
-      
     </Routes>
   );
 }

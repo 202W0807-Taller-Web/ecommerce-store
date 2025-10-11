@@ -1,6 +1,4 @@
-// Interfaces basadas en la estructura real de la API
-
-// GET /atributos - Atributo completo con sus valores posibles
+// GET /atributos - 
 export interface Atributo {
   id: number;
   nombre: string;
@@ -14,7 +12,6 @@ export interface AtributoValor {
   valor: string;
 }
 
-// GET /product/:id - Imagen del producto
 export interface ProductoImagen {
   id: number;
   productoId: number;
@@ -22,19 +19,17 @@ export interface ProductoImagen {
   imagen: string;
 }
 
-// Imagen de una variante específica
 export interface VarianteImagen {
   id: number;
   varianteId: number;
   imagen: string;
 }
 
-// Atributo de una variante específica
 export interface VarianteAtributo {
   id: number;
   varianteId: number;
   atributoValorId: number;
-  atributoValor: string;
+  atributoValor: string | null; 
 }
 
 // Variante del producto (GET /product/:id)
@@ -43,7 +38,7 @@ export interface Variante {
   productoId: number;
   precio: number;
   sku: string;
-  stock?: number; // Stock disponible para esta variante
+  stock?: number; 
   varianteImagenes: VarianteImagen[];
   varianteAtributos: VarianteAtributo[];
 }
@@ -53,7 +48,7 @@ export interface ProductoAtributo {
   id: number;
   productoId: number;
   atributoValorId: number;
-  valor: string;
+  atributoValor: string | null;
 }
 
 // GET /product/:id - Respuesta detallada del producto
@@ -67,7 +62,7 @@ export interface Product {
   productoAtributos: ProductoAtributo[];
 }
 
-// GET /product/listado - Respuesta resumida del producto
+// GET /product/listado -
 export interface ProductSummary {
   id: number;
   nombre: string;
@@ -77,7 +72,7 @@ export interface ProductSummary {
 }
 
 // Interfaces extendidas para funcionalidad de la UI
-export interface ProductWithUI extends Product {
+export interface FrontendProduct extends Product {
   // Campos calculados para la UI
   precioMinimo: number;
   precioMaximo: number;
@@ -85,39 +80,16 @@ export interface ProductWithUI extends Product {
   tallasDisponibles: string[];
   imagenPrincipal: string;
   todasLasImagenes: string[];
-  varianteSeleccionada?: Variante;
-  colorSeleccionado?: string;
-  tallaSeleccionada?: string;
 }
 
-export interface ProductSummaryWithUI extends ProductSummary {
+export interface FrontendProductSummary extends ProductSummary {
   // Campos calculados para la UI
   precioOriginal?: number;
-  categoria: string;
   rating: number;
   reviewCount: number;
   isPromo: boolean;
 }
 
-// Interfaces de compatibilidad para componentes existentes
-export interface ProductAttribute {
-  id: string;
-  attributeName: string;
-  value: string;
-}
-
-export interface ProductVariant {
-  id: string;
-  price: number;
-  inStock: boolean;
-  stockCount: number;
-  attributes: VariantAttribute[];
-}
-
-export interface VariantAttribute {
-  attributeName: string;
-  value: string;
-}
 
 export interface ProductFilters {
   search?: string;

@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { type ProductSummaryWithUI } from '../../types';
+import { type FrontendProductSummary } from '../../types';
 
 interface ProductCardProps {
-  product: ProductSummaryWithUI;
+  product: FrontendProductSummary;
   // Datos hardcodeados que se pasan como parámetros
   mockRating?: number;
 }

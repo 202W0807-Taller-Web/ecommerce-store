@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { type ProductWithUI, type Variante } from '../../types';
+import { type FrontendProduct, type Variante } from '../../types';
+import { useAtributos } from '../../contexts';
 import './ProductGallery.css';
 
 interface ProductGalleryProps {
-  product: ProductWithUI;
+  product: FrontendProduct;
   selectedVariant?: Variante | null;
-  selectedColor?: string | null;
+  selectedColor?: number | null;
 }
 
 export const ProductGallery = ({ product, selectedVariant, selectedColor }: ProductGalleryProps) => {
+  const { atributos } = useAtributos();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -17,32 +19,35 @@ export const ProductGallery = ({ product, selectedVariant, selectedColor }: Prod
     const images = [...product.productoImagenes.map(img => img.imagen)];
     const colorImages = new Map<string, string>();
     
-    console.log('🖼️ ProductGallery - Imágenes base del producto:', images.length);
     
-    // Agrupar variantes por color y tomar solo una imagen por color
-    product.variantes.forEach(variant => {
-      const colorAttr = variant.varianteAtributos.find(attr => 
-        ['Negro', 'Blanco', 'Azul', 'Rojo'].includes(attr.atributoValor)
-      );
-      
-      if (colorAttr && variant.varianteImagenes.length > 0) {
-        const color = colorAttr.atributoValor;
-        if (!colorImages.has(color)) {
-          colorImages.set(color, variant.varianteImagenes[0].imagen);
-          console.log(`🎨 ProductGallery - Agregando imagen para color ${color}:`, variant.varianteImagenes[0].imagen);
-        }
-      }
-    });
+    // Obtener atributo de color del contexto
+    const colorAttribute = atributos.find(attr => attr.nombre.toLowerCase() === 'color');
+    
+    if (colorAttribute) {
+      // Agrupar variantes por color usando IDs
+      product.variantes.forEach(variant => {
+        // Buscar atributos de color en la variante
+        variant.varianteAtributos.forEach(varianteAttr => {
+          const colorValue = colorAttribute.atributoValores.find(valor => 
+            valor.id === varianteAttr.atributoValorId
+          );
+          
+          if (colorValue && variant.varianteImagenes.length > 0) {
+            const colorName = colorValue.valor;
+                    if (!colorImages.has(colorName)) {
+                      colorImages.set(colorName, variant.varianteImagenes[0].imagen);
+                    }
+          }
+        });
+      });
+    }
     
     // Agregar imágenes de colores únicos
     colorImages.forEach(imageUrl => {
       if (!images.includes(imageUrl)) {
         images.push(imageUrl);
-        console.log('🖼️ ProductGallery - Agregando imagen de variante:', imageUrl);
       }
     });
-    
-    console.log('🖼️ ProductGallery - Total de imágenes disponibles:', images.length);
     return images;
   };
 
@@ -75,47 +80,27 @@ export const ProductGallery = ({ product, selectedVariant, selectedColor }: Prod
 
   // Cuando se selecciona un color o una variante, mostrar su imagen correspondiente
   useEffect(() => {
-    console.log('🖼️ ProductGallery - useEffect triggered:', {
-      hasSelectedVariant: !!selectedVariant,
-      selectedColor,
-      variantId: selectedVariant?.id,
-      currentSelectedIndex: selectedImageIndex,
-      totalImages: allImages.length
-    });
 
     let targetImageUrl: string | null = null;
 
     // Prioridad 1: Si hay variante seleccionada, usar su imagen
     if (selectedVariant && selectedVariant.varianteImagenes.length > 0) {
       targetImageUrl = selectedVariant.varianteImagenes[0].imagen;
-      console.log('🎨 ProductGallery - Usando imagen de variante:', targetImageUrl);
     }
     // Prioridad 2: Si no hay variante pero sí color, usar imagen del color
     else if (selectedColor) {
-      // Función para obtener la imagen de un color específico
-      const getImageForColor = (color: string) => {
-        const variantWithColor = product.variantes.find(variant => 
-          variant.varianteAtributos.some(attr => attr.atributoValor === color)
-        );
-        
-        if (variantWithColor && variantWithColor.varianteImagenes.length > 0) {
-          return variantWithColor.varianteImagenes[0].imagen;
-        }
-        return null;
-      };
+      // Buscar variante que tenga el color seleccionado (por ID)
+      const variantWithColor = product.variantes.find(variant => 
+        variant.varianteAtributos.some(attr => attr.atributoValorId === selectedColor)
+      );
       
-      targetImageUrl = getImageForColor(selectedColor);
-      console.log('🎨 ProductGallery - Usando imagen de color:', selectedColor, targetImageUrl);
+      if (variantWithColor && variantWithColor.varianteImagenes.length > 0) {
+        targetImageUrl = variantWithColor.varianteImagenes[0].imagen;
+      }
     }
 
     if (targetImageUrl) {
       const targetImageIndex = allImages.findIndex(img => img === targetImageUrl);
-      
-      console.log('🖼️ ProductGallery - Buscando imagen:', {
-        targetImageUrl,
-        targetImageIndex,
-        currentIndex: selectedImageIndex
-      });
       
       if (targetImageIndex !== -1 && targetImageIndex !== selectedImageIndex) {
         setSelectedImageIndex(targetImageIndex);
@@ -124,32 +109,12 @@ export const ProductGallery = ({ product, selectedVariant, selectedColor }: Prod
         setTimeout(() => {
           scrollToImage(targetImageIndex);
         }, 100);
-        
-        console.log('🖼️ ProductGallery - Cambiando imagen:', {
-          source: selectedVariant ? 'variante' : 'color',
-          targetImageUrl,
-          imageIndex: targetImageIndex,
-          totalImages: allImages.length
-        });
-      } else {
-        console.log('🖼️ ProductGallery - No se cambió la imagen:', {
-          targetImageIndex,
-          currentIndex: selectedImageIndex,
-          reason: targetImageIndex === -1 ? 'imagen no encontrada' : 'ya está seleccionada'
-        });
       }
-    } else {
-      console.log('🖼️ ProductGallery - No hay imagen objetivo (sin variante ni color)');
     }
-  }, [selectedVariant, selectedColor, allImages, selectedImageIndex, product.variantes]);
+  }, [selectedVariant, selectedColor, allImages, selectedImageIndex, product.variantes, atributos]);
 
   // Función para manejar selección manual de imágenes
   const handleImageClick = (index: number) => {
-    console.log('🖼️ ProductGallery - Selección manual de imagen:', {
-      imageIndex: index,
-      totalImages: allImages.length,
-      source: 'manual click'
-    });
     setSelectedImageIndex(index);
   };
 

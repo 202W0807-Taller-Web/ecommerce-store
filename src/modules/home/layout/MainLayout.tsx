@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { Header } from '../../home/components/Header';
+import { Footer } from '../../home/components/Footer';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -23,9 +24,7 @@ export const MainLayout = ({
       </main>
       
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        
-      </footer>
+      <Footer />
     </div>
   );
 };

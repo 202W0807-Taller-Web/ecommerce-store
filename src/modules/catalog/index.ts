@@ -7,6 +7,7 @@ export * from './components';
 export * from './pages/CatalogPage';
 export * from './pages/ProductDetailPage';
 export * from './routes/CatalogRoutes';
+export * from './contexts';
 
 // Exportaciones específicas por si necesitas acceso directo
 export { CatalogService } from './services/catalog.service';

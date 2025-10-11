@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
 import { CatalogService } from '../services/catalog.service';
-import { type ProductWithUI } from '../types';
+import { type FrontendProduct } from '../types';
 
 export interface UseProductDetailResult {
-  product: ProductWithUI | null;
+  product: FrontendProduct | null;
   loading: boolean;
   error: string | null;
   
@@ -12,7 +12,7 @@ export interface UseProductDetailResult {
 }
 
 export const useProductDetail = (): UseProductDetailResult => {
-  const [product, setProduct] = useState<ProductWithUI | null>(null);
+  const [product, setProduct] = useState<FrontendProduct | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

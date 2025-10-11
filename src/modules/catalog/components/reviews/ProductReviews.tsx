@@ -17,7 +17,7 @@ interface ProductReviewsProps {
   productId: number;
 }
 
-export const ProductReviews = ({ productId }: ProductReviewsProps) => {
+export const ProductReviews = ({ productId: _productId }: ProductReviewsProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   // Datos mock para las calificaciones
   const ratingData = {
@@ -60,9 +60,8 @@ export const ProductReviews = ({ productId }: ProductReviewsProps) => {
     setIsModalOpen(false);
   };
 
-  const handleSubmitReview = (rating: number, title: string, comment: string) => {
+  const handleSubmitReview = (_rating: number, _title: string, _comment: string) => {
     // TODO: Implementar lógica para enviar el comentario
-    console.log('Enviando comentario:', { rating, title, comment, productId });
   };
 
   return (

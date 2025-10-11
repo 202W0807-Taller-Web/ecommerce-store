@@ -1,22 +1,46 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type Atributo } from '../../catalog/types';
+import { useAtributos } from '../../catalog/contexts';
 
 interface CategoriesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  attributes: Atributo[];
 }
 
-export const CategoriesModal = ({ isOpen, onClose, attributes }: CategoriesModalProps) => {
+export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
   const navigate = useNavigate();
   const [hoveredAttribute, setHoveredAttribute] = useState<Atributo | null>(null);
-  const [hoverTimeout, setHoverTimeout] = useState<number | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { atributos, loading, error } = useAtributos();
 
-  // Filtrar atributos excluyendo talla, color y unidad de medida
-  const filteredAttributes = attributes.filter(attr => 
-    !['Talla', 'Color', 'Unidad medida'].includes(attr.nombre)
-  );
+  // Filtrar atributos para categorías
+  const filteredAttributes = atributos.filter(attr => {
+    // Excluir atributos que no son categorías
+    const excludedAttributes = [
+      'Talla', 'Color', 'Unidad medida', 'Medida', 'Size', 'Colour', 
+      'Tamaño', 'Dimension', 'Peso', 'Weight', 'Material', 'Marca'
+    ];
+    
+    // Convertir a minúsculas para comparación case-insensitive
+    const attrNameLower = attr.nombre.toLowerCase();
+    const isExcluded = excludedAttributes.some(excluded => 
+      excluded.toLowerCase() === attrNameLower
+    );
+    
+    // Excluir si está en la lista de excluidos
+    if (isExcluded) return false;
+    
+    // Excluir si no tiene valores o tiene valores vacíos
+    if (!attr.atributoValores || attr.atributoValores.length === 0) return false;
+    
+    // Excluir si todos los valores están vacíos o son null
+    const hasValidValues = attr.atributoValores.some(valor => 
+      valor.valor && valor.valor.trim() !== ''
+    );
+    
+    return hasValidValues;
+  });
 
   const handleAttributeClick = (attribute: Atributo) => {
     // Navegar al catálogo con el atributo seleccionado
@@ -113,8 +137,39 @@ export const CategoriesModal = ({ isOpen, onClose, attributes }: CategoriesModal
                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
                   Categorías
                 </h3>
-                <nav className="space-y-1">
-                  {filteredAttributes.map((attribute) => (
+                
+                {/* Loading State */}
+                {loading && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-sm text-gray-600">Cargando categorías...</span>
+                  </div>
+                )}
+                
+                {/* Error State */}
+                {error && (
+                  <div className="text-center py-8">
+                    <div className="text-red-500 text-sm mb-2">{error}</div>
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Recargar
+                    </button>
+                  </div>
+                )}
+                
+                {/* Empty State */}
+                {!loading && !error && filteredAttributes.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 text-sm">No hay categorías disponibles</div>
+                  </div>
+                )}
+                
+                {/* Attributes List */}
+                {!loading && !error && filteredAttributes.length > 0 && (
+                  <nav className="space-y-1">
+                    {filteredAttributes.map((attribute) => (
                     <button
                       key={attribute.id}
                       onClick={() => handleAttributeClick(attribute)}
@@ -137,8 +192,9 @@ export const CategoriesModal = ({ isOpen, onClose, attributes }: CategoriesModal
                         </svg>
                       </div>
                     </button>
-                  ))}
-                </nav>
+                    ))}
+                  </nav>
+                )}
               </div>
             </div>
 
@@ -170,7 +226,9 @@ export const CategoriesModal = ({ isOpen, onClose, attributes }: CategoriesModal
 
                 {/* Values Grid */}
                 <div className="grid grid-cols-3 gap-6">
-                  {hoveredAttribute.atributoValores.map((value, index) => (
+                  {hoveredAttribute.atributoValores
+                    .filter(value => value.valor && value.valor.trim() !== '')
+                    .map((value, index) => (
                     <div 
                       key={value.id} 
                       className="space-y-2 animate-in fade-in duration-300"
@@ -204,9 +262,6 @@ export const CategoriesModal = ({ isOpen, onClose, attributes }: CategoriesModal
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Selecciona una categoría
                   </h3>
-                  <p className="text-gray-500">
-                    Pasa el cursor sobre una categoría para ver sus opciones
-                  </p>
                 </div>
               </div>
             )}

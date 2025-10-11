@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { type ProductWithUI, type Variante } from "../../types";
+import { type FrontendProduct, type Variante } from "../../types";
 import { VariantSelector } from "./VariantSelector";
 
 interface ProductInfoProps {
-  product: ProductWithUI;
+  product: FrontendProduct;
   onAddToCart: (quantity: number, variant?: Variante) => void;
   onVariantChange?: (variant: Variante | null) => void;
-  onColorChange?: (color: string | null) => void;
+  onColorChange?: (colorId: number | null) => void;
   // Datos hardcodeados que se pasan como parámetros
   mockRating?: number;
   mockReviewCount?: number;
@@ -31,34 +31,17 @@ export const ProductInfo = ({
   };
 
   // Función para manejar cambios de color
-  const handleColorChange = (color: string | null) => {
-    console.log('🎨 ProductInfo - Color seleccionado:', color);
-    
-    // Pasar el color al componente padre
+  const handleColorChange = (colorId: number | null) => {
+    // Pasar el color ID al componente padre
     if (onColorChange) {
-      onColorChange(color);
+      onColorChange(colorId);
     }
   };
 
   const handleAddToCart = () => {
     if (!selectedVariant) {
-      console.log(
-        "⚠️ ProductInfo - No se puede agregar al carrito sin variante seleccionada"
-      );
       return;
     }
-
-    console.log("🔄 ProductInfo - Enviando al carrito:");
-    console.log("📊 Estado actual:", {
-      quantity,
-      selectedVariant: {
-        id: selectedVariant.id,
-        sku: selectedVariant.sku,
-        precio: selectedVariant.precio,
-        stock: selectedVariant.stock,
-      },
-      displayPrice,
-    });
 
     onAddToCart(quantity, selectedVariant);
   };
@@ -108,7 +91,6 @@ export const ProductInfo = ({
           variants={product.variantes}
           onVariantChange={handleVariantChange}
           onColorChange={handleColorChange}
-          selectedVariant={selectedVariant}
         />
       )}
 

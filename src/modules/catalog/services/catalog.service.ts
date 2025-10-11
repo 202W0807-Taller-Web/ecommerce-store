@@ -1,24 +1,22 @@
+import axios, { type AxiosResponse } from 'axios';
 import { 
   type Product, 
   type ProductSummary,
-  type ProductWithUI,
-  type ProductSummaryWithUI,
+  type FrontendProduct,
+  type FrontendProductSummary,
   type Atributo,
   type ProductFilters, 
   type PaginationParams, 
   type PaginationResult,
-  type Category,
 } from '../types';
-import { enhanceProductWithUI } from '../utils/variants.utils';
-import { MOCK_ATRIBUTOS } from '../mocks/atributos.mock';
-import { generarProductosMock, generarProductoDetalleMock } from '../mocks/productos.mock';
+import { enhanceProduct } from '../utils/variants.utils';
 
 /**
  * Funciones de transformación de datos
  */
 
 // Formatear producto para listado con datos de UI
-function formatearProducto(producto: ProductSummary): ProductSummaryWithUI {
+function formatearProducto(producto: ProductSummary): FrontendProductSummary {
   const tienePromocion = producto.tienePromocion;
   
   return {
@@ -28,44 +26,66 @@ function formatearProducto(producto: ProductSummary): ProductSummaryWithUI {
     imagen: producto.imagen,
     tienePromocion,
     precioOriginal: tienePromocion ? producto.precio * 1.3 : undefined,
-    categoria: 'Categoría Mock', // TODO: Obtener de productoAtributos
     rating: 0, // Se pasará como parámetro en el componente
-    reviewCount: 0, // Se pasará como parámetro en el componente
+    reviewCount: 0, 
     isPromo: tienePromocion
   };
 }
 
-/**
- * Servicio simplificado para el catálogo
- * Consolida toda la lógica de negocio sin capas innecesarias
- */
 export class CatalogService {
-  private mockCategories: Category[] = [];
+  private baseUrl: string;
 
   constructor() {
-    this.initializeMockData();
+
+    this.baseUrl = import.meta.env.DEV 
+      ? '' // Usar proxy de Vite en desarrollo
+      : import.meta.env.VITE_CATALOG_API_URL || '';
   }
 
   /**
-   * Simular llamada a API real para obtener lista de productos (GET /product/listado)
+   * Obtener lista de productos desde la API (GET /api/productos/listado)
    */
-  private async fetchProductsFromApi(): Promise<ProductSummary[]> {
-    // TODO: Reemplazar con llamada real a la API
-    // const response = await fetch('/api/product/listado');
-    // return await response.json();
-    
-    return generarProductosMock();
+  private async fetchProducts(): Promise<ProductSummary[]> {
+    // En desarrollo, usar proxy (baseUrl vacío)
+    if (!import.meta.env.DEV && !this.baseUrl) {
+      throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
+    }
+
+    try {
+      const url = import.meta.env.DEV 
+        ? '/api/productos/listado'  // Proxy en desarrollo
+        : `${this.baseUrl}/api/productos/listado`;  // URL directa en producción
+      
+      const response: AxiosResponse<ProductSummary[]> = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching products from API:', error);
+      throw new Error('No se pudieron cargar los productos desde el servidor. Verifica tu conexión.');
+    }
   }
 
   /**
-   * Simular llamada a API real para obtener detalle de producto (GET /product/:id)
+   * Obtener detalle de producto desde la API (GET /api/productos/:id)
    */
-  private async fetchProductDetailFromApi(id: number): Promise<Product | null> {
-    // TODO: Reemplazar con llamada real a la API
-    // const response = await fetch(`/api/product/${id}`);
-    // return await response.json();
-    
-    return generarProductoDetalleMock(id);
+  private async fetchProductDetail(id: number): Promise<Product | null> {
+    if (!import.meta.env.DEV && !this.baseUrl) {
+      throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
+    }
+
+    try {
+      const url = import.meta.env.DEV 
+        ? `/api/productos/${id}`  // Proxy en desarrollo
+        : `${this.baseUrl}/api/productos/${id}`;  // URL directa en producción
+      
+      const response: AxiosResponse<Product> = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return null; // Producto no encontrado
+      }
+      console.error(`Error fetching product detail for ID ${id} from API:`, error);
+      throw new Error(`No se pudo cargar el producto con ID ${id} desde el servidor. Verifica tu conexión.`);
+    }
   }
 
   /**
@@ -74,12 +94,12 @@ export class CatalogService {
   async getProducts(
     filters: ProductFilters = {}, 
     pagination: PaginationParams = { page: 1, limit: 12 }
-  ): Promise<PaginationResult<ProductSummaryWithUI>> {
+  ): Promise<PaginationResult<FrontendProductSummary>> {
     // Obtener datos de la API real
-    const apiProducts = await this.fetchProductsFromApi();
+    const apiProducts = await this.fetchProducts();
     
     // Formatear productos para UI
-    const productSummaries: ProductSummaryWithUI[] = apiProducts.map((apiProduct) => 
+    const productSummaries: FrontendProductSummary[] = apiProducts.map((apiProduct) => 
       formatearProducto(apiProduct)
     );
 
@@ -87,14 +107,10 @@ export class CatalogService {
     let filteredProducts = [...productSummaries];
 
     if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
       filteredProducts = filteredProducts.filter(p => 
-        p.nombre.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        p.categoria.toLowerCase().includes(filters.search!.toLowerCase())
+        p.nombre.toLowerCase().includes(searchTerm)
       );
-    }
-
-    if (filters.category) {
-      filteredProducts = filteredProducts.filter(p => p.categoria === filters.category);
     }
 
     if (filters.priceMin) {
@@ -165,60 +181,20 @@ export class CatalogService {
   /**
    * Obtener detalles de un producto específico
    */
-  async getProductDetail(id: number): Promise<ProductWithUI | null> {
-    const apiProduct = await this.fetchProductDetailFromApi(id);
+  async getProductDetail(id: number): Promise<FrontendProduct | null> {
+    const apiProduct = await this.fetchProductDetail(id);
     if (!apiProduct) return null;
     
-    return enhanceProductWithUI(apiProduct);
+    return enhanceProduct(apiProduct);
   }
 
-  /**
-   * Buscar productos por término de búsqueda
-   */
-  async searchProducts(query: string, filters?: Partial<ProductFilters>): Promise<ProductSummaryWithUI[]> {
-    const searchFilters: ProductFilters = { search: query, ...filters };
-    const result = await this.getProducts(searchFilters, { page: 1, limit: 50 });
-    return result.data;
-  }
-
-  /**
-   * Obtener productos recomendados
-   */
-  async getRecommendedProducts(excludeId?: number, limit: number = 8): Promise<ProductSummaryWithUI[]> {
-    const apiProducts = await this.fetchProductsFromApi();
-    const transformedProducts = apiProducts
-      .map((apiProduct) => formatearProducto(apiProduct))
-      .filter(p => p.id !== excludeId);
-    
-    const shuffled = [...transformedProducts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, limit);
-  }
-
-  /**
-   * Obtener productos relacionados
-   */
-  async getRelatedProducts(productId: number, limit: number = 4): Promise<ProductSummaryWithUI[]> {
-    const apiProducts = await this.fetchProductsFromApi();
-    const transformedProducts = apiProducts
-      .map((apiProduct) => formatearProducto(apiProduct))
-      .filter(p => p.id !== productId);
-    
-    return transformedProducts.slice(0, limit);
-  }
-
-  /**
-   * Obtener todas las categorías
-   */
-  async getCategories(): Promise<Category[]> {
-    return this.mockCategories.filter(c => c.isActive);
-  }
 
 
   /**
    * Obtener productos con descuento
    */
-  async getDiscountedProducts(limit: number = 8): Promise<ProductSummaryWithUI[]> {
-    const apiProducts = await this.fetchProductsFromApi();
+  async getDiscountedProducts(limit: number = 8): Promise<FrontendProductSummary[]> {
+    const apiProducts = await this.fetchProducts();
     const transformedProducts = apiProducts
       .map((apiProduct) => formatearProducto(apiProduct))
       .filter(p => p.isPromo); // Solo productos en promoción
@@ -227,31 +203,51 @@ export class CatalogService {
   }
 
   /**
-   * Obtener todos los atributos disponibles (GET /atributos)
+   * Buscar productos por query
    */
-  async getAtributos(): Promise<Atributo[]> {
-    // TODO: Reemplazar con llamada real a la API
-    // const response = await fetch('/api/atributos');
-    // return await response.json();
+  async searchProducts(query: string, filters?: Partial<ProductFilters>): Promise<FrontendProductSummary[]> {
+    const allProducts = await this.fetchProducts();
+    const transformedProducts = allProducts.map((apiProduct) => formatearProducto(apiProduct));
     
-    return MOCK_ATRIBUTOS;
+    // Aplicar búsqueda
+    const searchTerm = query.toLowerCase();
+    let filteredProducts = transformedProducts.filter(p => 
+      p.nombre.toLowerCase().includes(searchTerm)
+    );
+
+    // Aplicar filtros adicionales si se proporcionan
+    if (filters) {
+      if (filters.priceMin) {
+        filteredProducts = filteredProducts.filter(p => p.precio >= filters.priceMin!);
+      }
+      if (filters.priceMax) {
+        filteredProducts = filteredProducts.filter(p => p.precio <= filters.priceMax!);
+      }
+    }
+
+    return filteredProducts;
   }
 
   /**
-   * Inicializar datos mock
+   * Obtener todos los atributos disponibles (GET /api/atributos)
    */
-  private initializeMockData(): void {
-    this.initializeCategories();
+  async getAtributos(): Promise<Atributo[]> {
+    if (!import.meta.env.DEV && !this.baseUrl) {
+      throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
+    }
+
+    try {
+      const url = import.meta.env.DEV 
+        ? '/api/atributos'  // Proxy en desarrollo
+        : `${this.baseUrl}/api/atributos`;  // URL directa en producción
+      
+      const response: AxiosResponse<Atributo[]> = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching atributos from API:', error);
+      throw new Error('No se pudieron cargar los atributos desde el servidor. Verifica tu conexión.');
+    }
   }
 
-  private initializeCategories(): void {
-    this.mockCategories = [
-      { id: 'electronics', name: 'Electronics', slug: 'electronics', productCount: 25, isActive: true },
-      { id: 'clothing', name: 'Clothing', slug: 'clothing', productCount: 20, isActive: true },
-      { id: 'home', name: 'Home', slug: 'home', productCount: 15, isActive: true },
-      { id: 'sports', name: 'Sports', slug: 'sports', productCount: 10, isActive: true },
-      { id: 'books', name: 'Books', slug: 'books', productCount: 8, isActive: true }
-    ];
-  }
 
 }

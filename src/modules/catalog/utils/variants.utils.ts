@@ -1,4 +1,4 @@
-import { type Product, type Variante, type ProductWithUI } from '../types';
+import { type Product, type Variante, type FrontendProduct } from '../types';
 
 /**
  * Utilidades para manejar variantes de productos
@@ -6,6 +6,7 @@ import { type Product, type Variante, type ProductWithUI } from '../types';
 
 /**
  * Obtiene todos los colores disponibles en las variantes de un producto
+ * @deprecated Usar getColoresDisponiblesById en su lugar
  */
 export function getColoresDisponibles(variantes: Variante[]): string[] {
   const colores = new Set<string>();
@@ -23,7 +24,33 @@ export function getColoresDisponibles(variantes: Variante[]): string[] {
 }
 
 /**
+ * Obtiene todos los colores disponibles usando IDs de atributos
+ * Necesita el contexto de atributos para mapear IDs a valores
+ */
+export function getColoresDisponiblesById(
+  variantes: Variante[], 
+  colorAttribute: { id: number; nombre: string; atributoValores: { id: number; valor: string }[] } | undefined
+): number[] {
+  if (!colorAttribute) return [];
+  
+  const coloresDisponibles = new Set<number>();
+  variantes.forEach(variant => {
+    variant.varianteAtributos.forEach(varianteAttr => {
+      // Buscar el atributo de color por su atributoValorId
+      const colorValue = colorAttribute.atributoValores.find(valor => 
+        valor.id === varianteAttr.atributoValorId
+      );
+      if (colorValue) {
+        coloresDisponibles.add(colorValue.id);
+      }
+    });
+  });
+  return Array.from(coloresDisponibles);
+}
+
+/**
  * Obtiene todas las tallas disponibles para un color específico
+ * @deprecated Usar getTallasPorColorById en su lugar
  */
 export function getTallasPorColor(variantes: Variante[], colorSeleccionado: string): string[] {
   const tallas = new Set<string>();
@@ -36,7 +63,7 @@ export function getTallasPorColor(variantes: Variante[], colorSeleccionado: stri
     if (hasColor) {
       variante.varianteAtributos.forEach(atributo => {
         // Buscar atributos de talla (asumiendo que son valores como "S", "M", "L", "XL")
-        if (isTallaAttribute(atributo.atributoValor)) {
+        if (atributo.atributoValor && isTallaAttribute(atributo.atributoValor)) {
           tallas.add(atributo.atributoValor);
         }
       });
@@ -47,7 +74,47 @@ export function getTallasPorColor(variantes: Variante[], colorSeleccionado: stri
 }
 
 /**
+ * Obtiene todas las tallas disponibles para un color específico usando IDs
+ */
+export function getTallasPorColorById(
+  variantes: Variante[], 
+  colorId: number,
+  sizeAttribute: { id: number; nombre: string; atributoValores: { id: number; valor: string }[] } | undefined,
+  colorAttribute: { id: number; nombre: string; atributoValores: { id: number; valor: string }[] } | undefined
+): number[] {
+  if (!sizeAttribute || !colorAttribute) return [];
+  
+  const tallasDisponibles = new Set<number>();
+  
+  // Obtener el valor del color seleccionado
+  const selectedColorValue = colorAttribute.atributoValores.find(valor => valor.id === colorId);
+  if (!selectedColorValue) return [];
+  
+  variantes.forEach(variant => {
+    // Verificar si la variante tiene el color seleccionado
+    const hasColor = variant.varianteAtributos.some(attr => 
+      attr.atributoValorId === selectedColorValue.id
+    );
+    
+    if (hasColor) {
+      variant.varianteAtributos.forEach(varianteAttr => {
+        // Buscar el atributo de talla por su atributoValorId
+        const sizeValue = sizeAttribute.atributoValores.find(valor => 
+          valor.id === varianteAttr.atributoValorId
+        );
+        if (sizeValue) {
+          tallasDisponibles.add(sizeValue.id);
+        }
+      });
+    }
+  });
+  
+  return Array.from(tallasDisponibles);
+}
+
+/**
  * Encuentra la variante específica basada en color y talla seleccionados
+ * @deprecated Usar encontrarVarianteById en su lugar
  */
 export function encontrarVariante(
   variantes: Variante[], 
@@ -57,6 +124,25 @@ export function encontrarVariante(
   return variantes.find(variante => {
     const atributos = variante.varianteAtributos.map(a => a.atributoValor);
     return atributos.includes(colorSeleccionado) && atributos.includes(tallaSeleccionada);
+  }) || null;
+}
+
+/**
+ * Encuentra la variante específica basada en IDs de color y talla
+ */
+export function encontrarVarianteById(
+  variantes: Variante[], 
+  colorId: number, 
+  tallaId: number
+): Variante | null {
+  return variantes.find(variante => {
+    const hasSelectedColor = variante.varianteAtributos.some(atributo => 
+      atributo.atributoValorId === colorId
+    );
+    const hasSelectedSize = variante.varianteAtributos.some(atributo => 
+      atributo.atributoValorId === tallaId
+    );
+    return hasSelectedColor && hasSelectedSize;
   }) || null;
 }
 
@@ -89,6 +175,22 @@ export function getImagenesVariante(
   }
   
   const variante = encontrarVariante(variantes, colorSeleccionado, tallaSeleccionada);
+  return variante?.varianteImagenes.map(img => img.imagen) || [];
+}
+
+/**
+ * Obtiene las imágenes de una variante específica usando IDs
+ */
+export function getImagenesVarianteById(
+  variantes: Variante[], 
+  colorId?: number, 
+  tallaId?: number
+): string[] {
+  if (!colorId || !tallaId) {
+    return [];
+  }
+  
+  const variante = encontrarVarianteById(variantes, colorId, tallaId);
   return variante?.varianteImagenes.map(img => img.imagen) || [];
 }
 
@@ -133,9 +235,9 @@ export function getRangoPrecios(variantes: Variante[]): { min: number; max: numb
 }
 
 /**
- * Convierte un Product a ProductWithUI con campos calculados
+ * Convierte un Product a FrontendProduct con campos calculados
  */
-export function enhanceProductWithUI(producto: Product): ProductWithUI {
+export function enhanceProduct(producto: Product): FrontendProduct {
   const rangoPrecios = getRangoPrecios(producto.variantes);
   const colores = getColoresDisponibles(producto.variantes);
   const todasLasImagenes = getTodasLasImagenes(producto);
@@ -147,7 +249,7 @@ export function enhanceProductWithUI(producto: Product): ProductWithUI {
   const todasLasTallas = new Set<string>();
   producto.variantes.forEach(variante => {
     variante.varianteAtributos.forEach(atributo => {
-      if (isTallaAttribute(atributo.atributoValor)) {
+      if (atributo.atributoValor && isTallaAttribute(atributo.atributoValor)) {
         todasLasTallas.add(atributo.atributoValor);
       }
     });
@@ -160,13 +262,7 @@ export function enhanceProductWithUI(producto: Product): ProductWithUI {
     coloresDisponibles: colores,
     tallasDisponibles: Array.from(todasLasTallas),
     imagenPrincipal,
-    todasLasImagenes,
-    // Datos por defecto (se sobrescribirán con parámetros en el componente)
-    rating: 0,
-    reviewCount: 0,
-    categoria: 'Categoría Mock',
-    isPromo: !!producto.idPromocion,
-    precioOriginal: producto.idPromocion ? rangoPrecios.min * 1.3 : undefined
+    todasLasImagenes
   };
 }
 
