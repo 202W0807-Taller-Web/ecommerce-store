@@ -1,6 +1,6 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=DM+Sans:ital,opsz,wght@0,9..40,100..900;1,9..40,100..900&display=swap');
 @import "tailwindcss";
-
 
 @theme {
   /* namespace de colores */
@@ -16,4 +16,13 @@
   /* tipografía */
   --font-grotesk: "Space Grotesk", sans-serif;
   --font-dm: "DM Sans", sans-serif;
+}
+
+@layer components {
+  .fancy-input {
+    @apply w-full bg-[#333027]/60 border border-[#C0A648]/40 rounded-lg px-4 py-3
+           text-[#F5F5F5] placeholder:text-[#F5F5F5]/60
+           focus:outline-none focus:ring-2 focus:ring-[#EBC431] focus:border-transparent
+           transition-all duration-200 shadow-sm hover:bg-[#413F39]/70;
+  }
 }
