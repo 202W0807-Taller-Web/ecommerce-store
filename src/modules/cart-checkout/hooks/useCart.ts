@@ -10,8 +10,8 @@ export interface CartItem {
 
 
 export function useCart(userId = 1) {
-  const apiUrl = "http://localhost:8080/api/carritos";
-  
+  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/carritos`;
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function useCart(userId = 1) {
       const res = await fetch(`${apiUrl}/usuario/${userId}`);
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
-      setCart(data.items ?? []); // tu backend devuelve { idCarrito, idUsuario, items, total }
+      setCart(data.items ?? []);
     } catch (err) {
       setError((err as Error).message);
     } finally {

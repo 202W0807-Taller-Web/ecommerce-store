@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { CategoriesModal } from './CategoriesModal';
 import { FaBars, FaSearch, FaGraduationCap } from 'react-icons/fa';
-import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart,  } from 'react-icons/fi';
+import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart, } from 'react-icons/fi';
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ export const Header = () => {
     <header className="bg-white sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-24">
-          
           {/* Logo Section */}
           <div className="flex items-center space-x-3">
             <div className="relative">
@@ -37,7 +36,6 @@ export const Header = () => {
                 <FiShoppingBag className="absolute -bottom-1 -right-1 w-2 h-3 text-white" />
               </div>
             </div>
-            
             {/* Brand Text */}
             <Link to="/" className="text-xl font-bold text-primary">
               EzCommerce
@@ -47,9 +45,9 @@ export const Header = () => {
           {/* Navigation and Search Section */}
           <div className="flex-1 flex items-center justify-center mx-8">
             <div className="flex items-center space-x-4 w-full max-w-2xl">
-              
+
               {/* Categories Button */}
-              <button 
+              <button
                 onClick={() => setIsCategoriesModalOpen(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -80,7 +78,6 @@ export const Header = () => {
 
           {/* User Actions Section */}
           <div className="flex items-center space-x-4">
-            
             {/* Shopping Bag */}
             <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
               <FiShoppingBag className="w-6 h-6" />
@@ -96,13 +93,13 @@ export const Header = () => {
             </button>
 
             {/* Shopping Cart */}
-            <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <Link
+              to="/cart"
+              className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+            >
               <FiShoppingCart className="w-6 h-6" />
               {/* Cart badge */}
-              {/* <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                5
-              </span> */}
-            </button>
+            </Link>
 
             {/* User Profile */}
             <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
@@ -112,11 +109,11 @@ export const Header = () => {
         </div>
       </div>
 
-               {/* Categories Modal */}
-               <CategoriesModal
-                 isOpen={isCategoriesModalOpen}
-                 onClose={() => setIsCategoriesModalOpen(false)}
-               />
+      {/* Categories Modal */}
+      <CategoriesModal
+        isOpen={isCategoriesModalOpen}
+        onClose={() => setIsCategoriesModalOpen(false)}
+      />
     </header>
   );
 };
