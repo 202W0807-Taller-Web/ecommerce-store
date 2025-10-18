@@ -1,9 +1,9 @@
-import { Link, useLocation, useNavigate} from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import CheckoutSteps from "../components/checkoutSteps";
 import OrderSummary from "../components/orderSummary";
 import UserInfo from "../components/infoUserForm";
 import { useShippingUser } from "../hooks/useShippingUser";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface CartItem {
   idProducto: number;
@@ -17,7 +17,8 @@ export default function Checkout_Step2() {
   const navigate = useNavigate();
 
   const cart = location.state?.passedCart as CartItem[] | undefined;
-  const method = location.state?.shippingMethod as string | undefined;
+  const method = location.state?.method as string | undefined;
+  console.log(method);
   const idUsuario = 20; // valor hardcodeado
 
   const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/envio`;
@@ -31,6 +32,16 @@ export default function Checkout_Step2() {
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        nombreCompleto: user.nombreCompleto || "",
+        email: user.email || "",
+        telefono: user.telefono || "",
+      });
+    }
+  }, [user]);
 
   if (!cart) {
     return (
@@ -68,11 +79,8 @@ export default function Checkout_Step2() {
         });
       }
 
-      if (method === "pickup") {
-        navigate("/checkout/step3", { state: { passedCart: cart, shippingMethod: method } });
-      } else {
-        navigate("/checkout/step3", { state: { passedCart: cart, shippingMethod: method } });
-      }
+      navigate("/checkout/step3", { state: { passedCart: cart, shippingMethod: method, userInfo: userInfo } });
+
     } catch (err) {
       console.error("Error al continuar:", err);
       setError("Ocurrió un error al guardar la información. Intenta nuevamente.");
@@ -109,7 +117,7 @@ export default function Checkout_Step2() {
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-6 border-t border-[#C0A648]/40">
             <button
-              onClick={() => navigate("/checkout/step1" , { state: {cart}})}
+              onClick={() => navigate("/checkout/step1", { state: { cart } })}
               className="px-6 py-3 rounded-lg border-2 border-[#C0A648] text-[#EBC431] bg-[#333027] hover:bg-[#413F39]/80 hover:scale-105 hover:border-[#EBC431] transition font-medium"
             >
               ← Volver a método de entrega
@@ -118,11 +126,10 @@ export default function Checkout_Step2() {
             <button
               onClick={handleContinue}
               disabled={!isFormComplete || isSubmitting}
-              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${
-                !isFormComplete || isSubmitting
+              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${!isFormComplete || isSubmitting
                   ? "bg-gray-500 text-gray-300 cursor-not-allowed"
                   : "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md"
-              }`}
+                }`}
             >
               {isSubmitting ? "Procesando..." : "Continuar →"}
             </button>
