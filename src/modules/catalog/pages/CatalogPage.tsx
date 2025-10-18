@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCatalog } from "../hooks/useCatalog";
 import { type ProductFilters } from "../types";
@@ -23,6 +23,9 @@ export const CatalogPage = () => {
   const [filters, setFilters] = useState<ProductFilters>(() => {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+    const color = searchParams.get("color") || "";
+    const size = searchParams.get("size") || "";
+    const unit = searchParams.get("unit") || "";
     const priceMin = searchParams.get("priceMin") || "";
     const priceMax = searchParams.get("priceMax") || "";
     const rating = searchParams.get("rating") || "";
@@ -30,7 +33,10 @@ export const CatalogPage = () => {
 
     return {
       search: search || undefined,
-      category: category || undefined,
+      category: category ? category.split(',') : undefined,
+      color: color ? color.split(',') : undefined,
+      size: size ? size.split(',') : undefined,
+      unit: unit ? unit.split(',') : undefined,
       priceMin: priceMin ? Number(priceMin) : undefined,
       priceMax: priceMax ? Number(priceMax) : undefined,
       rating: rating ? Number(rating) : undefined,
@@ -40,33 +46,110 @@ export const CatalogPage = () => {
 
   const [pagination, setPagination] = useState({
     currentPage: Number(searchParams.get("page")) || 1,
-    itemsPerPage: Number(searchParams.get("limit")) || 12,
+    itemsPerPage: Number(searchParams.get("limit")) || 3,
     currentSort: "price",
   });
 
   // Estado para el modal de filtros en móvil
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // Cargar productos cuando cambian filtros/paginación
-  useEffect(() => {
-    // Cargar productos con los filtros actuales
-    fetchProducts(filters, {
-      page: pagination.currentPage,
-      limit: pagination.itemsPerPage,
-    });
-  }, [
-    filters,
-    pagination.currentPage,
-    pagination.itemsPerPage,
-    fetchProducts,
-  ]);
+  // Estado separado para filtros de precio (con debounce)
+  const [priceFilters, setPriceFilters] = useState({
+    priceMin: filters.priceMin,
+    priceMax: filters.priceMax,
+  });
 
-  // Sincronizar URL cuando cambien los filtros desde la UI
+  // Ref para el timeout del debounce
+  const priceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Estado para controlar cuándo aplicar filtros
+  const [shouldApplyFilters, setShouldApplyFilters] = useState(false);
+
+  // Estado para mensajes de error de validación
+  const [priceErrors, setPriceErrors] = useState<{
+    priceMin?: string;
+    priceMax?: string;
+  }>({});
+
+  // Función para manejar cambios de precio (sin debounce automático)
+  const handlePriceChange = useCallback((key: 'priceMin' | 'priceMax', value: number | undefined) => {
+    // Limpiar errores previos
+    setPriceErrors(prev => ({ ...prev, [key]: undefined }));
+
+    // Validar que no sea negativo
+    if (value !== undefined && value < 0) {
+      setPriceErrors(prev => ({ 
+        ...prev, 
+        [key]: 'El precio no puede ser negativo' 
+      }));
+      return; // No actualizar si es negativo
+    }
+
+    // Validar que precio máximo no sea menor que precio mínimo
+    if (key === 'priceMax' && value !== undefined && priceFilters.priceMin !== undefined && value < priceFilters.priceMin) {
+      setPriceErrors(prev => ({ 
+        ...prev, 
+        priceMax: 'El precio máximo no puede ser menor que el precio mínimo' 
+      }));
+      return; // No actualizar si precio máximo es menor que precio mínimo
+    }
+
+    if (key === 'priceMin' && value !== undefined && priceFilters.priceMax !== undefined && value > priceFilters.priceMax) {
+      setPriceErrors(prev => ({ 
+        ...prev, 
+        priceMin: 'El precio mínimo no puede ser mayor que el precio máximo' 
+      }));
+      return; // No actualizar si precio mínimo es mayor que precio máximo
+    }
+
+    // Solo actualizar el estado local, no aplicar filtros automáticamente
+    setPriceFilters(prev => ({ ...prev, [key]: value }));
+  }, [priceFilters.priceMin, priceFilters.priceMax]);
+
+  // Cargar productos solo cuando se presione el botón de aplicar filtros
+  useEffect(() => {
+    if (shouldApplyFilters) {
+      const filtersWithPrice = {
+        ...filters,
+        priceMin: priceFilters.priceMin,
+        priceMax: priceFilters.priceMax,
+      };
+      fetchProducts(filtersWithPrice, {
+        page: pagination.currentPage,
+        limit: pagination.itemsPerPage,
+      });
+      setShouldApplyFilters(false);
+    }
+  }, [shouldApplyFilters, filters, priceFilters, pagination.currentPage, pagination.itemsPerPage, fetchProducts]);
+
+  // Sincronizar estado de precio cuando cambien los filtros desde la URL
+  useEffect(() => {
+    setPriceFilters({
+      priceMin: filters.priceMin,
+      priceMax: filters.priceMax,
+    });
+  }, [filters.priceMin, filters.priceMax]);
+
+  // Limpiar timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (priceTimeoutRef.current) {
+        clearTimeout(priceTimeoutRef.current);
+        priceTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  // Sincronizar URL cuando cambien los filtros desde la UI (solo filtros aplicados)
   useEffect(() => {
     const params = new URLSearchParams();
 
     if (filters.search) params.set("search", filters.search);
-    if (filters.category) params.set("category", filters.category);
+    if (filters.category && filters.category.length > 0) params.set("category", filters.category.join(','));
+    if (filters.color && filters.color.length > 0) params.set("color", filters.color.join(','));
+    if (filters.size && filters.size.length > 0) params.set("size", filters.size.join(','));
+    if (filters.unit && filters.unit.length > 0) params.set("unit", filters.unit.join(','));
+    // Usar filters.priceMin/priceMax (solo valores aplicados, no locales)
     if (filters.priceMin) params.set("priceMin", filters.priceMin.toString());
     if (filters.priceMax) params.set("priceMax", filters.priceMax.toString());
     if (filters.rating) params.set("rating", filters.rating.toString());
@@ -77,14 +160,59 @@ export const CatalogPage = () => {
 
     // Actualizar URL sin recargar la página
     setSearchParams(params, { replace: true });
-  }, [filters, pagination, setSearchParams]);
+  }, [
+    filters.search,
+    filters.category,
+    filters.color,
+    filters.size,
+    filters.unit,
+    filters.rating,
+    filters.inStock,
+    filters.tags,
+    filters.priceMin,  // ✅ Usar filters en lugar de priceFilters
+    filters.priceMax,  // ✅ Usar filters en lugar de priceFilters
+    pagination,
+    setSearchParams
+  ]);
 
   const handleFilterChange = (key: keyof ProductFilters, value: unknown) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset página al cambiar filtros
+    // Si es un filtro de precio, usar la función sin debounce
+    if (key === 'priceMin' || key === 'priceMax') {
+      handlePriceChange(key, value as number | undefined);
+    } else {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset página al cambiar filtros
+    }
   };
 
-  const removeFilters = () => setFilters({});
+  // Función para aplicar filtros manualmente
+  const applyFilters = () => {
+    // Validar que no haya errores antes de aplicar
+    if (priceErrors.priceMin || priceErrors.priceMax) {
+      return; // No aplicar si hay errores
+    }
+
+    // Actualizar los filtros con los valores de precio
+    setFilters(prev => ({
+      ...prev,
+      priceMin: priceFilters.priceMin,
+      priceMax: priceFilters.priceMax,
+    }));
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setShouldApplyFilters(true);
+  };
+
+  // Crear objeto de filtros que incluya los valores locales de precio para los inputs
+  const filtersForInputs = {
+    ...filters,
+    priceMin: priceFilters.priceMin,
+    priceMax: priceFilters.priceMax,
+  };
+
+  const removeFilters = () => {
+    setFilters({});
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
 
   if (error) {
     return (
@@ -109,9 +237,11 @@ export const CatalogPage = () => {
             <FilterSidebarSkeleton />
           ) : (
             <FilterSidebar
-              filters={filters}
+              filters={filtersForInputs}
               onFilterChange={handleFilterChange}
               onClearFilters={removeFilters}
+              onApplyFilters={applyFilters}
+              priceErrors={priceErrors}
             />
           )}
         </div>
@@ -226,14 +356,12 @@ export const CatalogPage = () => {
       <FilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
-        filters={filters}
+        filters={filtersForInputs}
         onFilterChange={handleFilterChange}
         onClearFilters={removeFilters}
-        onApplyFilters={() => {
-          // Los filtros se aplican automáticamente cuando cambian
-          // No necesitamos hacer nada adicional aquí
-        }}
+        onApplyFilters={applyFilters}
         loading={loading}
+        priceErrors={priceErrors}
       />
     </div>
   );

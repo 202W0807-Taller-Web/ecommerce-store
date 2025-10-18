@@ -12,6 +12,10 @@ interface FilterModalProps {
   onClearFilters: () => void;
   onApplyFilters: () => void;
   loading?: boolean;
+  priceErrors?: {
+    priceMin?: string;
+    priceMax?: string;
+  };
 }
 
 export const FilterModal = ({
@@ -21,7 +25,8 @@ export const FilterModal = ({
   onFilterChange,
   onClearFilters,
   onApplyFilters,
-  loading = false
+  loading = false,
+  priceErrors
 }: FilterModalProps) => {
   const handleApplyFilters = () => {
     onApplyFilters();
@@ -63,12 +68,13 @@ export const FilterModal = ({
                   {loading ? (
                     <FilterMobileSkeleton />
                   ) : (
-                    <FilterMobile
-                      filters={filters}
-                      onFilterChange={onFilterChange}
-                      onClearFilters={onClearFilters}
-                      onApplyFilters={handleApplyFilters}
-                    />
+        <FilterMobile
+          filters={filters}
+          onFilterChange={onFilterChange}
+          onClearFilters={onClearFilters}
+          onApplyFilters={handleApplyFilters}
+          priceErrors={priceErrors}
+        />
                   )}
                 </div>
               </DialogPanel>

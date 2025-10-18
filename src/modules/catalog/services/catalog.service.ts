@@ -45,7 +45,16 @@ export class CatalogService {
   /**
    * Obtener lista de productos desde la API (GET /api/productos/listado)
    */
-  private async fetchProducts(): Promise<ProductSummary[]> {
+  private async fetchProducts(
+    pagination?: PaginationParams, 
+    filters?: ProductFilters
+  ): Promise<{
+    data: ProductSummary[];
+    total: number;
+    currentPage: number;
+    itemsPerPage: number;
+    totalPages: number;
+  }> {
     // En desarrollo, usar proxy (baseUrl vacío)
     if (!import.meta.env.DEV && !this.baseUrl) {
       throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
@@ -56,7 +65,43 @@ export class CatalogService {
         ? '/api/productos/listado'  // Proxy en desarrollo
         : `${this.baseUrl}/api/productos/listado`;  // URL directa en producción
       
-      const response: AxiosResponse<ProductSummary[]> = await axios.get(url);
+      // Agregar parámetros de paginación y filtros a la URL
+      const params = new URLSearchParams();
+      
+      // Parámetros de paginación
+      if (pagination) {
+        params.append('PageNumber', pagination.page.toString());
+        params.append('PageSize', pagination.limit.toString());
+      }
+      
+      // Parámetros de filtros
+      if (filters) {
+        // Combinar todos los atributos que no sean talla, color o unidad de medida bajo "Categoria"
+        const categorias = [];
+        if (filters.category && filters.category.length > 0) {
+          categorias.push(...filters.category);
+        }
+        // Agregar otros atributos que no sean talla, color o unidad de medida
+        if (filters.tags && filters.tags.length > 0) {
+          categorias.push(...filters.tags);
+        }
+        
+        params.append('Categoria', categorias.join(',') || '');
+        params.append('Color', filters.color?.join(',') || '');
+        params.append('Talla', filters.size?.join(',') || '');
+        params.append('PrecioMin', filters.priceMin?.toString() || '');
+        params.append('PrecioMax', filters.priceMax?.toString() || '');
+      }
+      
+      const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
+      const response: AxiosResponse<{
+        data: ProductSummary[];
+        total: number;
+        currentPage: number;
+        itemsPerPage: number;
+        totalPages: number;
+      }> = await axios.get(fullUrl);
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching products from API:', error);
@@ -93,19 +138,21 @@ export class CatalogService {
    */
   async getProducts(
     filters: ProductFilters = {}, 
-    pagination: PaginationParams = { page: 1, limit: 12 }
+    pagination: PaginationParams = { page: 1, limit: 3 }
   ): Promise<PaginationResult<FrontendProductSummary>> {
-    // Obtener datos de la API real
-    const apiProducts = await this.fetchProducts();
+    // Obtener datos de la API real con paginación y filtros
+    const apiResponse = await this.fetchProducts(pagination, filters);
     
     // Formatear productos para UI
-    const productSummaries: FrontendProductSummary[] = apiProducts.map((apiProduct) => 
+    const productSummaries: FrontendProductSummary[] = apiResponse.data.map((apiProduct) => 
       formatearProducto(apiProduct)
     );
 
-    // Aplicar filtros (simulados en el frontend por ahora)
+    // Los filtros principales (categoría, precio) ya se aplican en la API
+    // Solo aplicamos filtros adicionales del frontend
     let filteredProducts = [...productSummaries];
 
+    // Búsqueda por texto (si no está soportada en la API)
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       filteredProducts = filteredProducts.filter(p => 
@@ -113,19 +160,12 @@ export class CatalogService {
       );
     }
 
-    if (filters.priceMin) {
-      filteredProducts = filteredProducts.filter(p => p.precio >= filters.priceMin!);
-    }
-
-    if (filters.priceMax) {
-      filteredProducts = filteredProducts.filter(p => p.precio <= filters.priceMax!);
-    }
-
+    // Filtro por rating (si no está soportado en la API)
     if (filters.rating) {
       filteredProducts = filteredProducts.filter(p => p.rating >= filters.rating!);
     }
 
-    // Aplicar ordenamiento
+    // Aplicar ordenamiento (si no está soportado en la API)
     if (filters.sortBy) {
       filteredProducts.sort((a, b) => {
         let valueA: string | number;
@@ -161,20 +201,15 @@ export class CatalogService {
       });
     }
 
-    // Aplicar paginación
-    const total = filteredProducts.length;
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-
+    // Usar los datos de paginación de la API
     return {
-      data: paginatedProducts,
-      total,
-      page: pagination.page,
-      limit: pagination.limit,
-      totalPages: Math.ceil(total / pagination.limit),
-      hasNext: pagination.page < Math.ceil(total / pagination.limit),
-      hasPrev: pagination.page > 1
+      data: filteredProducts,
+      total: apiResponse.total,
+      page: apiResponse.currentPage,
+      limit: apiResponse.itemsPerPage,
+      totalPages: apiResponse.totalPages,
+      hasNext: apiResponse.currentPage < apiResponse.totalPages,
+      hasPrev: apiResponse.currentPage > 1
     };
   }
 
@@ -194,8 +229,8 @@ export class CatalogService {
    * Obtener productos con descuento
    */
   async getDiscountedProducts(limit: number = 8): Promise<FrontendProductSummary[]> {
-    const apiProducts = await this.fetchProducts();
-    const transformedProducts = apiProducts
+    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }); // Obtener más productos para filtrar
+    const transformedProducts = apiResponse.data
       .map((apiProduct) => formatearProducto(apiProduct))
       .filter(p => p.isPromo); // Solo productos en promoción
     
@@ -206,16 +241,17 @@ export class CatalogService {
    * Buscar productos por query
    */
   async searchProducts(query: string, filters?: Partial<ProductFilters>): Promise<FrontendProductSummary[]> {
-    const allProducts = await this.fetchProducts();
-    const transformedProducts = allProducts.map((apiProduct) => formatearProducto(apiProduct));
+    // Crear filtros de búsqueda combinando query con filtros existentes
+    const searchFilters: ProductFilters = {
+      search: query,
+      ...filters
+    };
     
-    // Aplicar búsqueda
-    const searchTerm = query.toLowerCase();
-    let filteredProducts = transformedProducts.filter(p => 
-      p.nombre.toLowerCase().includes(searchTerm)
-    );
-
+    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }, searchFilters);
+    const transformedProducts = apiResponse.data.map((apiProduct) => formatearProducto(apiProduct));
+    
     // Aplicar filtros adicionales si se proporcionan
+    let filteredProducts = transformedProducts;
     if (filters) {
       if (filters.priceMin) {
         filteredProducts = filteredProducts.filter(p => p.precio >= filters.priceMin!);

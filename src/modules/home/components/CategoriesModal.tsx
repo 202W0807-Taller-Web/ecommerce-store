@@ -43,19 +43,24 @@ export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
   });
 
   const handleAttributeClick = (attribute: Atributo) => {
-    // Navegar al catálogo con el atributo seleccionado
-    const searchParams = new URLSearchParams();
-    searchParams.set('category', attribute.nombre);
-    
-    navigate(`/catalog?${searchParams.toString()}`);
-    onClose();
+    // Si el atributo tiene un solo valor, navegar directamente con ese valor
+    if (attribute.atributoValores && attribute.atributoValores.length === 1) {
+      const singleValue = attribute.atributoValores[0].valor;
+      if (singleValue) {
+        const searchParams = new URLSearchParams();
+        searchParams.set('category', singleValue);
+        navigate(`/catalog?${searchParams.toString()}`);
+        onClose();
+        return;
+      }
+    }
+    // Si tiene múltiples valores, no hacer nada (solo mostrar el hover)
   };
 
-  const handleValueClick = (attribute: Atributo, value: string) => {
+  const handleValueClick = (_attribute: Atributo, value: string) => {
     // Navegar al catálogo con el valor específico seleccionado
     const searchParams = new URLSearchParams();
-    searchParams.set('category', attribute.nombre);
-    searchParams.set('value', value);
+    searchParams.set('category', value);
     
     navigate(`/catalog?${searchParams.toString()}`);
     onClose();

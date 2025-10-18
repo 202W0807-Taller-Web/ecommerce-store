@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type ProductFilters, type Atributo } from '../../types';
 import { obtenerColorPorNombre } from '../../data/colors';
 import { useAtributos } from '../../contexts';
@@ -8,6 +8,10 @@ interface FilterMobileProps {
   onFilterChange: (key: keyof ProductFilters, value: unknown) => void;
   onClearFilters: () => void;
   onApplyFilters: () => void;
+  priceErrors?: {
+    priceMin?: string;
+    priceMax?: string;
+  };
 }
 
 // Estados de filtros seleccionados
@@ -19,10 +23,62 @@ export const FilterMobile = ({
   filters, 
   onFilterChange, 
   onClearFilters, 
-  onApplyFilters 
+  onApplyFilters,
+  priceErrors
 }: FilterMobileProps) => {
   const { atributos, loading } = useAtributos();
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({});
+
+  // Sincronizar filtros de la URL con el estado interno
+  useEffect(() => {
+    const newSelectedFilters: SelectedFilters = {};
+    
+    // Mapear filtros de la URL al estado interno
+    if (filters.color && filters.color.length > 0) {
+      newSelectedFilters['Color'] = filters.color;
+    }
+    if (filters.size && filters.size.length > 0) {
+      newSelectedFilters['Talla'] = filters.size;
+    }
+    if (filters.unit && filters.unit.length > 0) {
+      newSelectedFilters['Unidad'] = filters.unit;
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      newSelectedFilters['Etiquetas'] = filters.tags;
+    }
+    
+    // Distribuir categorías entre los atributos correspondientes
+    if (filters.category && filters.category.length > 0) {
+      // Si hay atributos disponibles, distribuir los valores
+      if (atributos && atributos.length > 0) {
+        filters.category.forEach(categoria => {
+          // Buscar en qué atributo pertenece esta categoría
+          const atributoEncontrado = atributos.find(atributo => 
+            atributo.atributoValores.some(valor => valor.valor === categoria)
+          );
+          
+          if (atributoEncontrado) {
+            const nombreAtributo = atributoEncontrado.nombre;
+            if (!newSelectedFilters[nombreAtributo]) {
+              newSelectedFilters[nombreAtributo] = [];
+            }
+            newSelectedFilters[nombreAtributo].push(categoria);
+          } else {
+            // Si no se encuentra en ningún atributo, ponerlo en 'Categoría'
+            if (!newSelectedFilters['Categoría']) {
+              newSelectedFilters['Categoría'] = [];
+            }
+            newSelectedFilters['Categoría'].push(categoria);
+          }
+        });
+      } else {
+        // Si no hay atributos disponibles, poner todo en 'Categoría'
+        newSelectedFilters['Categoría'] = filters.category;
+      }
+    }
+    
+    setSelectedFilters(newSelectedFilters);
+  }, [filters, atributos]);
 
   const handleFilterToggle = (atributoNombre: string, valor: string) => {
     setSelectedFilters(prev => {
@@ -49,18 +105,42 @@ export const FilterMobile = ({
   };
 
   const handleApplyFilters = () => {
-    // Aplicar todos los filtros seleccionados
+    // Combinar todos los atributos que no sean talla, color o unidad de medida
+    const categorias: string[] = [];
+    const colores: string[] = [];
+    const tallas: string[] = [];
+    const unidades: string[] = [];
+    
     Object.entries(selectedFilters).forEach(([atributoNombre, valores]) => {
       if (valores && valores.length > 0) {
-        if (atributoNombre === 'Categoría') {
-          onFilterChange('category', valores[0]);
-        } else if (atributoNombre === 'Color') {
-          onFilterChange('tags', valores);
+        if (atributoNombre === 'Color') {
+          colores.push(...valores);
+        } else if (atributoNombre === 'Talla') {
+          tallas.push(...valores);
+        } else if (atributoNombre === 'Unidad') {
+          unidades.push(...valores);
+        } else {
+          // Todos los demás atributos (género, deporte, tipo, etc.) van a categorías
+          categorias.push(...valores);
         }
-        // Agregar más mapeos según necesites
       }
     });
     
+    // Aplicar los filtros agrupados
+    if (categorias.length > 0) {
+      onFilterChange('category', categorias);
+    }
+    if (colores.length > 0) {
+      onFilterChange('color', colores);
+    }
+    if (tallas.length > 0) {
+      onFilterChange('size', tallas);
+    }
+    if (unidades.length > 0) {
+      onFilterChange('unit', unidades);
+    }
+    
+    // Llamar a la función de aplicar filtros del componente padre
     onApplyFilters();
   };
 
