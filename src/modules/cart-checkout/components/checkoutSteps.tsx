@@ -5,8 +5,9 @@ type CheckoutStepsProps = {
 export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
   const steps = [
     { id: 1, label: "Método" },
-    { id: 2, label: "Envío" },
-    { id: 3, label: "Confirmación" },
+    { id: 2, label: "Info" },
+    { id: 3, label: "Envío" },
+    { id: 4, label: "Confirmación"},
   ];
 
   return (

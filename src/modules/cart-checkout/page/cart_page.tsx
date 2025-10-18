@@ -86,13 +86,13 @@ export default function CartPage() {
           <OrderSummary
             products={products}
             subtotal={`$${subtotal.toFixed(2)}`}
-            shipping="$5.00"
+            shipping="$0.00"
             taxes={`$${iva.toFixed(2)}`}
             total={`$${total.toFixed(2)}`}
           />
 
           <button
-            onClick={() => navigate("/checkout/step1")}
+            onClick={() => navigate("/checkout/step1" , { state: {cart}})}
             className="mt-6 w-60 bg-[#EBC431] text-[#333027] rounded-lg py-2 font-semibold text-lg hover:bg-[#F5E27A] transition-all duration-200 shadow-md"
           >
             Continuar Compra
