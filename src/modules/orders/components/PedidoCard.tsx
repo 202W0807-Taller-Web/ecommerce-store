@@ -89,7 +89,7 @@ import { Link } from 'react-router-dom';
 export default function PedidoCard({ pedido }: { pedido: any }) {
 
     const totalArticulos = Array.isArray(pedido.imagenes)
-    ? pedido.imagenes.reduce((acc, item) => acc + (item.cantidad ?? 1), 0)
+    ? pedido.imagenes.reduce((acc:number, item: { imagen: string; cantidad?: number }) => acc + (item.cantidad ?? 1), 0)
     : 0;
 
     return (
