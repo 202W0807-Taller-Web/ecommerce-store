@@ -252,7 +252,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       <MenuItem
                         icon={<CiProfile size={20} />}
                         text="Mi perfil"
-                        to="/profile"
+                        to="/user-panel"
                         onClick={() => setIsUserMenuOpen(false)}
                       />
                       <MenuItem
