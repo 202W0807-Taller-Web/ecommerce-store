@@ -106,6 +106,14 @@ export const CatalogPage = () => {
     setPriceFilters(prev => ({ ...prev, [key]: value }));
   }, [priceFilters.priceMin, priceFilters.priceMax]);
 
+  // Cargar productos automáticamente al montar el componente
+  useEffect(() => {
+    fetchProducts(filters, {
+      page: pagination.currentPage,
+      limit: pagination.itemsPerPage,
+    });
+  }, []); // Solo ejecutar una vez al montar
+
   // Cargar productos solo cuando se presione el botón de aplicar filtros
   useEffect(() => {
     if (shouldApplyFilters) {
