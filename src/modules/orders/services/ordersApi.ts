@@ -1,7 +1,8 @@
 // src/orders/services/ordersApi.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3002/api/orders';
+// const API_BASE_URL = 'http://localhost:3002/api/orders';
+const API_BASE_URL = 'https://orders-query-833583666995.us-central1.run.app/api/orders';
 
 export async function getMisPedidos(usuarioId: string, page = 1, limit = 5) {
     try {

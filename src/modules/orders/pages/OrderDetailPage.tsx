@@ -110,9 +110,10 @@ export default function OrderDetailPage() {
                         {/* AÑADIDO: Tarjeta de método de pago */}
                         <InfoCard title="Método Pago" icon="/icons/tarjeta.png">
                             <p>{pedido.metodoPago || 'No especificado'}</p>
-                            {/* Simulamos la fecha y referencia como en el mockup */}
                             <p>
-                                {new Date(pedido.fechaCreacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} | #1072894317
+                                {pedido.pago?.fecha_pago
+                                    ? `${new Date(pedido.pago.fecha_pago).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} | #${pedido.pago.estado}`
+                                    : 'Pago no realizado'}
                             </p>
                         </InfoCard>
                         
@@ -135,8 +136,14 @@ export default function OrderDetailPage() {
                                )}
                                 <div className="flex justify-between">
                                     <span>Envío</span>
-                                    <span>{pedido.costos?.envio === 0 ? 'Gratis' : `S/${pedido.costos?.envio.toFixed(2)}`}</span>
+                                    <span className="font-bold text-[#C9B35E]">{pedido.costos?.envio === 0 ? 'Gratis' : `S/${pedido.costos?.envio.toFixed(2)}`}</span>
                                 </div>
+                                {pedido.costos?.impuestos !== undefined && (
+                                    <div className="flex justify-between text-gray-700">
+                                        <span>Impuestos</span>
+                                        <span>S/{pedido.costos.impuestos.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <hr className="my-2"/>
                                 <div className="flex justify-between font-bold text-base text-gray-800">
                                     <span>Total</span>
