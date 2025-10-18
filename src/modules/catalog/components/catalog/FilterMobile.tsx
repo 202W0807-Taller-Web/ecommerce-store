@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type ProductFilters, type Atributo } from '../../types';
-import { obtenerColorPorNombre } from '../../data/colors';
+import { getColorHex } from '../../utils/colorMapper';
 import { useAtributos } from '../../contexts';
 
 interface FilterMobileProps {
@@ -12,6 +12,7 @@ interface FilterMobileProps {
     priceMin?: string;
     priceMax?: string;
   };
+  onPriceChange?: (key: 'priceMin' | 'priceMax', value: number | undefined) => void;
 }
 
 // Estados de filtros seleccionados
@@ -24,7 +25,8 @@ export const FilterMobile = ({
   onFilterChange, 
   onClearFilters, 
   onApplyFilters,
-  priceErrors
+  priceErrors,
+  onPriceChange,
 }: FilterMobileProps) => {
   const { atributos, loading } = useAtributos();
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({});
@@ -126,19 +128,17 @@ export const FilterMobile = ({
       }
     });
     
-    // Aplicar los filtros agrupados
-    if (categorias.length > 0) {
-      onFilterChange('category', categorias);
-    }
-    if (colores.length > 0) {
-      onFilterChange('color', colores);
-    }
-    if (tallas.length > 0) {
-      onFilterChange('size', tallas);
-    }
-    if (unidades.length > 0) {
-      onFilterChange('unit', unidades);
-    }
+    // Aplicar todos los filtros de una vez para evitar múltiples re-renders
+    const newFilters: Partial<ProductFilters> = {};
+    if (categorias.length > 0) newFilters.category = categorias;
+    if (colores.length > 0) newFilters.color = colores;
+    if (tallas.length > 0) newFilters.size = tallas;
+    if (unidades.length > 0) newFilters.unit = unidades;
+    
+    // Aplicar todos los filtros de una vez
+    Object.entries(newFilters).forEach(([key, value]) => {
+      onFilterChange(key as keyof ProductFilters, value);
+    });
     
     // Llamar a la función de aplicar filtros del componente padre
     onApplyFilters();
@@ -155,8 +155,7 @@ export const FilterMobile = ({
 
   const renderFilterValue = (atributo: Atributo, valor: { id: number; valor: string }) => {
     if (atributo.nombre === 'Color') {
-      const colorData = obtenerColorPorNombre(valor.valor);
-      const hexColor = colorData?.hex || '#000000';
+      const hexColor = getColorHex(valor.valor);
       const isSelected = isFilterSelected(atributo.nombre, valor.valor);
       
       return (
@@ -264,10 +263,17 @@ export const FilterMobile = ({
                     type="number"
                     placeholder="0"
                     value={filters.priceMin || ''}
-                    onChange={(e) => onFilterChange('priceMin', e.target.value ? Number(e.target.value) : undefined)}
-                    className="flex-1 px-2 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    onChange={(e) => onPriceChange?.('priceMin', e.target.value ? Number(e.target.value) : undefined)}
+                    className={`flex-1 px-2 py-2 text-sm border rounded-r-md transition-colors ${
+                      priceErrors?.priceMin 
+                        ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary'
+                    }`}
                   />
                 </div>
+                {priceErrors?.priceMin && (
+                  <p className="text-red-500 text-xs mt-1">{priceErrors.priceMin}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Hasta</label>
@@ -279,10 +285,17 @@ export const FilterMobile = ({
                     type="number"
                     placeholder="100"
                     value={filters.priceMax || ''}
-                    onChange={(e) => onFilterChange('priceMax', e.target.value ? Number(e.target.value) : undefined)}
-                    className="flex-1 px-2 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    onChange={(e) => onPriceChange?.('priceMax', e.target.value ? Number(e.target.value) : undefined)}
+                    className={`flex-1 px-2 py-2 text-sm border rounded-r-md transition-colors ${
+                      priceErrors?.priceMax 
+                        ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary'
+                    }`}
                   />
                 </div>
+                {priceErrors?.priceMax && (
+                  <p className="text-red-500 text-xs mt-1">{priceErrors.priceMax}</p>
+                )}
               </div>
             </div>
           </div>

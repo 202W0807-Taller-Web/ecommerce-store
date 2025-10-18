@@ -43,21 +43,15 @@ export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
   });
 
   const handleAttributeClick = (attribute: Atributo) => {
-    // Si el atributo tiene un solo valor, navegar directamente con ese valor
-    if (attribute.atributoValores && attribute.atributoValores.length === 1) {
-      const singleValue = attribute.atributoValores[0].valor;
-      if (singleValue) {
-        const searchParams = new URLSearchParams();
-        searchParams.set('category', singleValue);
-        navigate(`/catalog?${searchParams.toString()}`);
-        onClose();
-        return;
-      }
-    }
-    // Si tiene múltiples valores, no hacer nada (solo mostrar el hover)
+    // Navegar al catálogo con el atributo seleccionado
+    const searchParams = new URLSearchParams();
+    searchParams.set('category', attribute.nombre);
+    
+    navigate(`/catalog?${searchParams.toString()}`);
+    onClose();
   };
 
-  const handleValueClick = (_attribute: Atributo, value: string) => {
+  const handleValueClick = (value: string) => {
     // Navegar al catálogo con el valor específico seleccionado
     const searchParams = new URLSearchParams();
     searchParams.set('category', value);
@@ -240,7 +234,7 @@ export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <button
-                        onClick={() => handleValueClick(hoveredAttribute, value.valor)}
+                        onClick={() => handleValueClick(value.valor)}
                         className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200 group transform hover:scale-[1.02] hover:shadow-md"
                       >
                         <h5 className="font-medium text-gray-900 group-hover:text-primary transition-colors duration-200">

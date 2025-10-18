@@ -46,7 +46,7 @@ export const CatalogPage = () => {
 
   const [pagination, setPagination] = useState({
     currentPage: Number(searchParams.get("page")) || 1,
-    itemsPerPage: Number(searchParams.get("limit")) || 3,
+    itemsPerPage: Number(searchParams.get("limit")) || 9,
     currentSort: "price",
   });
 
@@ -73,48 +73,58 @@ export const CatalogPage = () => {
 
   // Función para manejar cambios de precio (sin debounce automático)
   const handlePriceChange = useCallback((key: 'priceMin' | 'priceMax', value: number | undefined) => {
-    // Limpiar errores previos
     setPriceErrors(prev => ({ ...prev, [key]: undefined }));
 
-    // Validar que no sea negativo
-    if (value !== undefined && value < 0) {
-      setPriceErrors(prev => ({ 
-        ...prev, 
-        [key]: 'El precio no puede ser negativo' 
-      }));
-      return; // No actualizar si es negativo
+    if (value === undefined || value === null) {
+      setPriceFilters(prev => ({ ...prev, [key]: value }));
+      return;
     }
 
-    // Validar que precio máximo no sea menor que precio mínimo
-    if (key === 'priceMax' && value !== undefined && priceFilters.priceMin !== undefined && value < priceFilters.priceMin) {
-      setPriceErrors(prev => ({ 
-        ...prev, 
-        priceMax: 'El precio máximo no puede ser menor que el precio mínimo' 
+    if (value < 0) {
+      setPriceErrors(prev => ({
+        ...prev,
+        [key]: 'El precio no puede ser negativo'
       }));
-      return; // No actualizar si precio máximo es menor que precio mínimo
+      setPriceFilters(prev => ({ ...prev, [key]: value }));
+      return;
     }
 
-    if (key === 'priceMin' && value !== undefined && priceFilters.priceMax !== undefined && value > priceFilters.priceMax) {
-      setPriceErrors(prev => ({ 
-        ...prev, 
-        priceMin: 'El precio mínimo no puede ser mayor que el precio máximo' 
-      }));
-      return; // No actualizar si precio mínimo es mayor que precio máximo
-    }
-
-    // Solo actualizar el estado local, no aplicar filtros automáticamente
     setPriceFilters(prev => ({ ...prev, [key]: value }));
-  }, [priceFilters.priceMin, priceFilters.priceMax]);
 
-  // Cargar productos automáticamente al montar el componente
+    const newPriceFilters = { ...priceFilters, [key]: value };
+
+    if (key === 'priceMax' && newPriceFilters.priceMin !== undefined && value < newPriceFilters.priceMin) {
+      setPriceErrors(prev => ({
+        ...prev,
+        priceMax: 'El precio máximo no puede ser menor que el precio mínimo'
+      }));
+    }
+
+    if (key === 'priceMin' && newPriceFilters.priceMax !== undefined && value > newPriceFilters.priceMax) {
+      setPriceErrors(prev => ({
+        ...prev,
+        priceMin: 'El precio mínimo no puede ser mayor que el precio máximo'
+      }));
+    }
+
+    if (key === 'priceMin' && newPriceFilters.priceMax !== undefined && value <= newPriceFilters.priceMax) {
+      setPriceErrors(prev => ({ ...prev, priceMax: undefined }));
+    }
+
+    if (key === 'priceMax' && newPriceFilters.priceMin !== undefined && value >= newPriceFilters.priceMin) {
+      setPriceErrors(prev => ({ ...prev, priceMin: undefined }));
+    }
+  }, [priceFilters]);
+
+  // Cargar productos cuando cambien los filtros o paginación (sin precios locales)
   useEffect(() => {
     fetchProducts(filters, {
       page: pagination.currentPage,
       limit: pagination.itemsPerPage,
     });
-  }, []); // Solo ejecutar una vez al montar
+  }, [filters, pagination.currentPage, pagination.itemsPerPage, fetchProducts]);
 
-  // Cargar productos solo cuando se presione el botón de aplicar filtros
+  // Cargar productos solo cuando se presione el botón de aplicar filtros (con precios locales)
   useEffect(() => {
     if (shouldApplyFilters) {
       const filtersWithPrice = {
@@ -129,6 +139,33 @@ export const CatalogPage = () => {
       setShouldApplyFilters(false);
     }
   }, [shouldApplyFilters, filters, priceFilters, pagination.currentPage, pagination.itemsPerPage, fetchProducts]);
+
+  // Sincronizar filtros desde la URL cuando cambien los searchParams
+  useEffect(() => {
+    const newFilters: ProductFilters = {};
+    
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
+    const color = searchParams.get("color") || "";
+    const size = searchParams.get("size") || "";
+    const unit = searchParams.get("unit") || "";
+    const priceMin = searchParams.get("priceMin") || "";
+    const priceMax = searchParams.get("priceMax") || "";
+    const rating = searchParams.get("rating") || "";
+    const inStock = searchParams.get("inStock") === "true";
+
+    if (search) newFilters.search = search;
+    if (category) newFilters.category = category.split(',').filter(Boolean);
+    if (color) newFilters.color = color.split(',').filter(Boolean);
+    if (size) newFilters.size = size.split(',').filter(Boolean);
+    if (unit) newFilters.unit = unit.split(',').filter(Boolean);
+    if (priceMin) newFilters.priceMin = Number(priceMin);
+    if (priceMax) newFilters.priceMax = Number(priceMax);
+    if (rating) newFilters.rating = Number(rating);
+    if (inStock) newFilters.inStock = inStock;
+
+    setFilters(newFilters);
+  }, [searchParams]);
 
   // Sincronizar estado de precio cuando cambien los filtros desde la URL
   useEffect(() => {
@@ -166,8 +203,13 @@ export const CatalogPage = () => {
     params.set("page", pagination.currentPage.toString());
     params.set("limit", pagination.itemsPerPage.toString());
 
-    // Actualizar URL sin recargar la página
-    setSearchParams(params, { replace: true });
+    const newUrl = params.toString();
+    const currentUrl = searchParams.toString();
+    
+    // Solo actualizar si la URL realmente cambió
+    if (newUrl !== currentUrl) {
+      setSearchParams(params, { replace: true });
+    }
   }, [
     filters.search,
     filters.category,
@@ -177,10 +219,12 @@ export const CatalogPage = () => {
     filters.rating,
     filters.inStock,
     filters.tags,
-    filters.priceMin,  // ✅ Usar filters en lugar de priceFilters
-    filters.priceMax,  // ✅ Usar filters en lugar de priceFilters
-    pagination,
-    setSearchParams
+    filters.priceMin,
+    filters.priceMax,
+    pagination.currentPage,
+    pagination.itemsPerPage,
+    setSearchParams,
+    searchParams
   ]);
 
   const handleFilterChange = (key: keyof ProductFilters, value: unknown) => {
@@ -219,6 +263,8 @@ export const CatalogPage = () => {
 
   const removeFilters = () => {
     setFilters({});
+    setPriceFilters({ priceMin: undefined, priceMax: undefined });
+    setPriceErrors({});
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
@@ -250,6 +296,7 @@ export const CatalogPage = () => {
               onClearFilters={removeFilters}
               onApplyFilters={applyFilters}
               priceErrors={priceErrors}
+              onPriceChange={handlePriceChange}
             />
           )}
         </div>
@@ -370,6 +417,7 @@ export const CatalogPage = () => {
         onApplyFilters={applyFilters}
         loading={loading}
         priceErrors={priceErrors}
+        onPriceChange={handlePriceChange}
       />
     </div>
   );

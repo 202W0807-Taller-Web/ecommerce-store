@@ -16,6 +16,7 @@ interface FilterModalProps {
     priceMin?: string;
     priceMax?: string;
   };
+  onPriceChange?: (key: 'priceMin' | 'priceMax', value: number | undefined) => void;
 }
 
 export const FilterModal = ({
@@ -26,7 +27,8 @@ export const FilterModal = ({
   onClearFilters,
   onApplyFilters,
   loading = false,
-  priceErrors
+  priceErrors,
+  onPriceChange
 }: FilterModalProps) => {
   const handleApplyFilters = () => {
     onApplyFilters();
@@ -74,6 +76,7 @@ export const FilterModal = ({
           onClearFilters={onClearFilters}
           onApplyFilters={handleApplyFilters}
           priceErrors={priceErrors}
+          onPriceChange={onPriceChange}
         />
                   )}
                 </div>

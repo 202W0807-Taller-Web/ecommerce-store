@@ -36,12 +36,9 @@ export const Pagination = ({
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
               className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary"
             >
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-              <option value={5}>5</option>
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-              <option value={48}>48</option>
+                <option value={9}>9</option>
+                <option value={15}>15</option>
+                <option value={24}>24</option>
             </select>
             <span className="text-sm text-gray-500">por página</span>
           </div>
@@ -83,12 +80,9 @@ export const Pagination = ({
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
             className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary"
           >
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={12}>12</option>
-            <option value={24}>24</option>
-            <option value={48}>48</option>
+                <option value={9}>9</option>
+                <option value={15}>15</option>
+                <option value={24}>24</option>
           </select>
           <span className="text-sm text-gray-500">por página</span>
         </div>

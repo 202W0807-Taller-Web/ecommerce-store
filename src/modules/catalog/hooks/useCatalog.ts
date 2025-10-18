@@ -18,7 +18,7 @@ export const useCatalog = (): UseCatalogResult => {
     data: [],
     total: 0,
     page: 1,
-    limit: 3,
+    limit: 9,
     totalPages: 0,
     hasNext: false,
     hasPrev: false

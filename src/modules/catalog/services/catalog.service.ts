@@ -138,7 +138,7 @@ export class CatalogService {
    */
   async getProducts(
     filters: ProductFilters = {}, 
-    pagination: PaginationParams = { page: 1, limit: 3 }
+    pagination: PaginationParams = { page: 1, limit: 9 }
   ): Promise<PaginationResult<FrontendProductSummary>> {
     // Obtener datos de la API real con paginación y filtros
     const apiResponse = await this.fetchProducts(pagination, filters);
