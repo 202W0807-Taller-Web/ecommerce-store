@@ -6,7 +6,7 @@ interface ShippingFormProps {
 }
 
 export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
-  const API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/envio`;
+  const API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
   const idUsuarioEnvio = 20; // HARDCODED (luego puedes reemplazarlo)
 
   const {

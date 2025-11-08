@@ -21,7 +21,7 @@ export default function Checkout_Step2() {
   console.log(method);
   const idUsuario = 20; // valor hardcodeado
 
-  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/envio`;
+  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
   const { user, createUser } = useShippingUser(apiUrl, idUsuario);
 
   const [userInfo, setUserInfo] = useState({
