@@ -49,7 +49,7 @@ export function useCart() {
     // Optimistic update
     const previousCart = cart;
     const existingItemIndex = cart.items.findIndex(
-      (item) => item.idProducto === producto.idProducto && 
+      (item) => item.idProducto === producto.idProducto &&
                 item.idVariante === producto.idVariante
     );
 
