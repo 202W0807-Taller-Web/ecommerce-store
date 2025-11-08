@@ -16,7 +16,6 @@ export const useProductDetail = (): UseProductDetailResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Instancia única del servicio usando useMemo
   const catalogService = useMemo(() => new CatalogService(), []);
 
   const fetchProductDetail = useCallback(async (productId: number) => {

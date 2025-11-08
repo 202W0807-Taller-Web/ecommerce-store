@@ -51,11 +51,10 @@ export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
     onClose();
   };
 
-  const handleValueClick = (attribute: Atributo, value: string) => {
+  const handleValueClick = (value: string) => {
     // Navegar al catálogo con el valor específico seleccionado
     const searchParams = new URLSearchParams();
-    searchParams.set('category', attribute.nombre);
-    searchParams.set('value', value);
+    searchParams.set('category', value);
     
     navigate(`/catalog?${searchParams.toString()}`);
     onClose();
@@ -235,7 +234,7 @@ export const CategoriesModal = ({ isOpen, onClose }: CategoriesModalProps) => {
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <button
-                        onClick={() => handleValueClick(hoveredAttribute, value.valor)}
+                        onClick={() => handleValueClick(value.valor)}
                         className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200 group transform hover:scale-[1.02] hover:shadow-md"
                       >
                         <h5 className="font-medium text-gray-900 group-hover:text-primary transition-colors duration-200">

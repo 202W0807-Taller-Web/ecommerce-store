@@ -53,4 +53,10 @@ export const AtributosProvider: React.FC<AtributosProviderProps> = ({ children }
   );
 };
 
-// Hook movido a un archivo separado para compatibilidad con Fast Refresh
+
+
+
+
+
+
+

@@ -11,9 +11,7 @@ import {
 } from '../types';
 import { enhanceProduct } from '../utils/variants.utils';
 
-/**
- * Funciones de transformación de datos
- */
+
 
 // Formatear producto para listado con datos de UI
 function formatearProducto(producto: ProductSummary): FrontendProductSummary {
@@ -26,7 +24,7 @@ function formatearProducto(producto: ProductSummary): FrontendProductSummary {
     imagen: producto.imagen,
     tienePromocion,
     precioOriginal: tienePromocion ? producto.precio * 1.3 : undefined,
-    rating: 0, // Se pasará como parámetro en el componente
+    rating: 0, 
     reviewCount: 0, 
     isPromo: tienePromocion
   };
@@ -38,25 +36,103 @@ export class CatalogService {
   constructor() {
 
     this.baseUrl = import.meta.env.DEV 
-      ? '' // Usar proxy de Vite en desarrollo
+      ? '' 
       : import.meta.env.VITE_CATALOG_API_URL || '';
   }
 
   /**
    * Obtener lista de productos desde la API (GET /api/productos/listado)
    */
-  private async fetchProducts(): Promise<ProductSummary[]> {
-    // En desarrollo, usar proxy (baseUrl vacío)
+  private async fetchProducts(
+    pagination?: PaginationParams, 
+    filters?: ProductFilters,
+    sortBy?: string
+  ): Promise<{
+    data: ProductSummary[];
+    total: number;
+    currentPage: number;
+    itemsPerPage: number;
+    totalPages: number;
+  }> {
+    
     if (!import.meta.env.DEV && !this.baseUrl) {
       throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
     }
 
     try {
       const url = import.meta.env.DEV 
-        ? '/api/productos/listado'  // Proxy en desarrollo
-        : `${this.baseUrl}/api/productos/listado`;  // URL directa en producción
+        ? '/api/productos/listado'  
+        : `${this.baseUrl}/api/productos/listado`;  
       
-      const response: AxiosResponse<ProductSummary[]> = await axios.get(url);
+      
+      const params = new URLSearchParams();
+      
+      // Parámetros de paginación
+      if (pagination) {
+        if (pagination.page != null) {
+          params.append('PageNumber', pagination.page.toString());
+        }
+        if (pagination.limit != null) {
+          params.append('PageSize', pagination.limit.toString());
+        }
+      }
+      
+      // Parámetros de ordenamiento
+      if (sortBy) {
+        if (sortBy === 'price_asc') {
+          params.append('SortBy', 'Precio');
+          params.append('IsDescending', 'false');
+        } else if (sortBy === 'price_desc') {
+          params.append('SortBy', 'Precio');
+          params.append('IsDescending', 'true');
+        }
+      }
+      
+      // Parámetros de filtros
+      if (filters) {
+        const categorias: string[] = [];
+        if (filters.category && filters.category.length > 0) {
+          categorias.push(...filters.category);
+        }
+        
+        if (filters.tags && filters.tags.length > 0) {
+          categorias.push(...filters.tags);
+        }
+        
+        if (categorias.length > 0) {
+          params.append('Categoria', categorias.join(','));
+        }
+        
+        if (filters.color && filters.color.length > 0) {
+          params.append('Color', filters.color.join(','));
+        }
+        
+        if (filters.size && filters.size.length > 0) {
+          params.append('Talla', filters.size.join(','));
+        }
+        
+        if (filters.priceMin != null) {
+          params.append('PrecioMin', filters.priceMin.toString());
+        }
+        
+        if (filters.priceMax != null) {
+          params.append('PrecioMax', filters.priceMax.toString());
+        }
+        
+        if (filters.search && filters.search.trim() !== '') {
+          params.append('Search', filters.search);
+        }
+      }
+      
+      const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
+      const response: AxiosResponse<{
+        data: ProductSummary[];
+        total: number;
+        currentPage: number;
+        itemsPerPage: number;
+        totalPages: number;
+      }> = await axios.get(fullUrl);
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching products from API:', error);
@@ -74,8 +150,8 @@ export class CatalogService {
 
     try {
       const url = import.meta.env.DEV 
-        ? `/api/productos/${id}`  // Proxy en desarrollo
-        : `${this.baseUrl}/api/productos/${id}`;  // URL directa en producción
+        ? `/api/productos/${id}`  
+        : `${this.baseUrl}/api/productos/${id}`;  
       
       const response: AxiosResponse<Product> = await axios.get(url);
       return response.data;
@@ -93,88 +169,27 @@ export class CatalogService {
    */
   async getProducts(
     filters: ProductFilters = {}, 
-    pagination: PaginationParams = { page: 1, limit: 12 }
+    pagination: PaginationParams = { page: 1, limit: 9 },
+    sortBy?: string
   ): Promise<PaginationResult<FrontendProductSummary>> {
-    // Obtener datos de la API real
-    const apiProducts = await this.fetchProducts();
+    // Obtener datos de la API real con paginación y filtros
+    const apiResponse = await this.fetchProducts(pagination, filters, sortBy);
     
     // Formatear productos para UI
-    const productSummaries: FrontendProductSummary[] = apiProducts.map((apiProduct) => 
+    const productSummaries: FrontendProductSummary[] = apiResponse.data.map((apiProduct) => 
       formatearProducto(apiProduct)
     );
 
-    // Aplicar filtros (simulados en el frontend por ahora)
     let filteredProducts = [...productSummaries];
 
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      filteredProducts = filteredProducts.filter(p => 
-        p.nombre.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    if (filters.priceMin) {
-      filteredProducts = filteredProducts.filter(p => p.precio >= filters.priceMin!);
-    }
-
-    if (filters.priceMax) {
-      filteredProducts = filteredProducts.filter(p => p.precio <= filters.priceMax!);
-    }
-
-    if (filters.rating) {
-      filteredProducts = filteredProducts.filter(p => p.rating >= filters.rating!);
-    }
-
-    // Aplicar ordenamiento
-    if (filters.sortBy) {
-      filteredProducts.sort((a, b) => {
-        let valueA: string | number;
-        let valueB: string | number;
-        
-        switch (filters.sortBy) {
-          case 'price':
-            valueA = a.precio;
-            valueB = b.precio;
-            break;
-          case 'rating':
-            valueA = a.rating;
-            valueB = b.rating;
-            break;
-          case 'popularity':
-            valueA = a.reviewCount;
-            valueB = b.reviewCount;
-            break;
-          default:
-            valueA = a.nombre;
-            valueB = b.nombre;
-        }
-
-        if (typeof valueA === 'string' && typeof valueB === 'string') {
-          valueA = valueA.toLowerCase();
-          valueB = valueB.toLowerCase();
-        }
-
-        const multiplier = filters.sortOrder === 'desc' ? -1 : 1;
-        if (valueA > valueB) return multiplier;
-        if (valueA < valueB) return -multiplier;
-        return 0;
-      });
-    }
-
-    // Aplicar paginación
-    const total = filteredProducts.length;
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-
     return {
-      data: paginatedProducts,
-      total,
-      page: pagination.page,
-      limit: pagination.limit,
-      totalPages: Math.ceil(total / pagination.limit),
-      hasNext: pagination.page < Math.ceil(total / pagination.limit),
-      hasPrev: pagination.page > 1
+      data: filteredProducts,
+      total: apiResponse.total,
+      page: apiResponse.currentPage,
+      limit: apiResponse.itemsPerPage,
+      totalPages: apiResponse.totalPages,
+      hasNext: apiResponse.currentPage < apiResponse.totalPages,
+      hasPrev: apiResponse.currentPage > 1
     };
   }
 
@@ -189,33 +204,19 @@ export class CatalogService {
   }
 
 
-
-  /**
-   * Obtener productos con descuento
-   */
-  async getDiscountedProducts(limit: number = 8): Promise<FrontendProductSummary[]> {
-    const apiProducts = await this.fetchProducts();
-    const transformedProducts = apiProducts
-      .map((apiProduct) => formatearProducto(apiProduct))
-      .filter(p => p.isPromo); // Solo productos en promoción
-    
-    return transformedProducts.slice(0, limit);
-  }
-
   /**
    * Buscar productos por query
    */
-  async searchProducts(query: string, filters?: Partial<ProductFilters>): Promise<FrontendProductSummary[]> {
-    const allProducts = await this.fetchProducts();
-    const transformedProducts = allProducts.map((apiProduct) => formatearProducto(apiProduct));
+  async searchProducts(query: string, filters?: Partial<ProductFilters>, sortBy?: string): Promise<FrontendProductSummary[]> {
+    const searchFilters: ProductFilters = {
+      search: query,
+      ...filters
+    };
     
-    // Aplicar búsqueda
-    const searchTerm = query.toLowerCase();
-    let filteredProducts = transformedProducts.filter(p => 
-      p.nombre.toLowerCase().includes(searchTerm)
-    );
-
-    // Aplicar filtros adicionales si se proporcionan
+    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }, searchFilters, sortBy);
+    const transformedProducts = apiResponse.data.map((apiProduct) => formatearProducto(apiProduct));
+    
+    let filteredProducts = transformedProducts;
     if (filters) {
       if (filters.priceMin) {
         filteredProducts = filteredProducts.filter(p => p.precio >= filters.priceMin!);
@@ -238,8 +239,8 @@ export class CatalogService {
 
     try {
       const url = import.meta.env.DEV 
-        ? '/api/atributos'  // Proxy en desarrollo
-        : `${this.baseUrl}/api/atributos`;  // URL directa en producción
+        ? '/api/atributos'  
+        : `${this.baseUrl}/api/atributos`;  
       
       const response: AxiosResponse<Atributo[]> = await axios.get(url);
       return response.data;

@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type ProductFilters, type Atributo } from '../../types';
-import { obtenerColorPorNombre } from '../../data/colors';
+import { getColorHex } from '../../utils/colorMapper';
 import { useAtributos } from '../../contexts';
 
 interface FilterSidebarProps {
   filters: ProductFilters;
   onFilterChange: (key: keyof ProductFilters, value: unknown) => void;
   onClearFilters: () => void;
+  onApplyFilters: () => void;
+  priceErrors?: {
+    priceMin?: string;
+    priceMax?: string;
+  };
+  onPriceChange?: (key: 'priceMin' | 'priceMax', value: number | undefined) => void;
 }
 
 // Estados de filtros seleccionados
@@ -14,27 +20,107 @@ interface SelectedFilters {
   [atributoNombre: string]: string[];
 }
 
-export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: FilterSidebarProps) => {
+export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApplyFilters, priceErrors, onPriceChange}: FilterSidebarProps) => {
   const { atributos, loading } = useAtributos();
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({});
 
+  // Sincronizar filtros de la URL con el estado interno
+  useEffect(() => {
+    const newSelectedFilters: SelectedFilters = {};
+    
+    // Mapear filtros de la URL al estado interno
+    if (filters.color && filters.color.length > 0) {
+      newSelectedFilters['Color'] = filters.color;
+    }
+    if (filters.size && filters.size.length > 0) {
+      newSelectedFilters['Talla'] = filters.size;
+    }
+    if (filters.unit && filters.unit.length > 0) {
+      newSelectedFilters['Unidad'] = filters.unit;
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      newSelectedFilters['Etiquetas'] = filters.tags;
+    }
+    
+    // Distribuir categorías entre los atributos correspondientes
+    if (filters.category && filters.category.length > 0) {
+      // Si hay atributos disponibles, distribuir los valores
+      if (atributos && atributos.length > 0) {
+        filters.category.forEach(categoria => {
+          // Buscar en qué atributo pertenece esta categoría
+          const atributoEncontrado = atributos.find(atributo => 
+            atributo.atributoValores.some(valor => valor.valor === categoria)
+          );
+          
+          if (atributoEncontrado) {
+            const nombreAtributo = atributoEncontrado.nombre;
+            if (!newSelectedFilters[nombreAtributo]) {
+              newSelectedFilters[nombreAtributo] = [];
+            }
+            newSelectedFilters[nombreAtributo].push(categoria);
+          } else {
+            // Si no se encuentra en ningún atributo, ponerlo en 'Categoría'
+            if (!newSelectedFilters['Categoría']) {
+              newSelectedFilters['Categoría'] = [];
+            }
+            newSelectedFilters['Categoría'].push(categoria);
+          }
+        });
+      } else {
+        // Si no hay atributos disponibles, poner todo en 'Categoría'
+        newSelectedFilters['Categoría'] = filters.category;
+      }
+    }
+    
+    // Siempre actualizar el estado, incluso si está vacío
+    setSelectedFilters(newSelectedFilters);
+  }, [filters, atributos]);
+
   const handleApplyFilters = () => {
-    // Aplicar todos los filtros seleccionados
+    // Combinar todos los atributos que no sean talla, color o unidad de medida
+    const categorias: string[] = [];
+    const colores: string[] = [];
+    const tallas: string[] = [];
+    const unidades: string[] = [];
+    
     Object.entries(selectedFilters).forEach(([atributoNombre, valores]) => {
       if (valores && valores.length > 0) {
-        if (atributoNombre === 'Categoría') {
-          onFilterChange('category', valores[0]);
-        } else if (atributoNombre === 'Color') {
-          onFilterChange('tags', valores);
+        if (atributoNombre === 'Color') {
+          colores.push(...valores);
+        } else if (atributoNombre === 'Talla') {
+          tallas.push(...valores);
+        } else if (atributoNombre === 'Unidad') {
+          unidades.push(...valores);
+        } else {
+          // Todos los demás atributos (género, deporte, tipo, etc.) van a categorías
+          categorias.push(...valores);
         }
-        // Agregar más mapeos según necesites
       }
     });
+    
+    // Aplicar todos los filtros de una vez para evitar múltiples re-renders
+    const newFilters: Partial<ProductFilters> = {};
+    if (categorias.length > 0) newFilters.category = categorias;
+    if (colores.length > 0) newFilters.color = colores;
+    if (tallas.length > 0) newFilters.size = tallas;
+    if (unidades.length > 0) newFilters.unit = unidades;
+    
+    // Aplicar todos los filtros de una vez
+    Object.entries(newFilters).forEach(([key, value]) => {
+      onFilterChange(key as keyof ProductFilters, value);
+    });
+    
+    // Llamar a la función de aplicar filtros del componente padre
+    onApplyFilters();
   };
 
   const handleClearAllFilters = () => {
     setSelectedFilters({});
     onClearFilters();
+    // También limpiar errores de precio si existen
+    if (priceErrors?.priceMin || priceErrors?.priceMax) {
+      // Los errores se limpiarán cuando se llame a onClearFilters desde CatalogPage
+    }
   };
 
   const handleFilterToggle = (atributoNombre: string, valor: string) => {
@@ -67,8 +153,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
 
   const renderFilterValue = (atributo: Atributo, valor: { id: number; valor: string }) => {
     if (atributo.nombre === 'Color') {
-      const colorData = obtenerColorPorNombre(valor.valor);
-      const hexColor = colorData?.hex || '#000000';
+      const hexColor = getColorHex(valor.valor);
       const isSelected = isFilterSelected(atributo.nombre, valor.valor);
       
       return (
@@ -76,12 +161,12 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
           key={valor.id}
           onClick={() => handleFilterToggle(atributo.nombre, valor.valor)}
           className={`
-            w-6 h-6 rounded-lg border-1 transition-all duration-200 my-1
+            w-6 h-6 rounded-lg transition-all duration-200
             ${isSelected 
-              ? 'border-primary scale-105 shadow-md ring-2 ring-primary/20' 
-              : 'border-primary hover:scale-105 hover:shadow-sm'
+              ? 'border-[3px] border-primary scale-110 shadow-lg shadow-primary/40' 
+              : 'border-2 border-gray-300 hover:scale-105 hover:shadow-sm'
             }
-            cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1
+            cursor-pointer focus:outline-none
           `}
           style={{ backgroundColor: hexColor }}
           title={valor.valor}
@@ -149,8 +234,8 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
                   </label>
                   
                   {/* Scrollable area for each filter category */}
-                  <div className={`max-h-32 overflow-y-auto ${
-                    atributo.nombre === 'Color' ? 'grid grid-cols-4 gap-1' : 'space-y-2'
+                  <div className={`${
+                    atributo.nombre === 'Color' ? 'grid grid-cols-6 gap-2 p-2' : 'max-h-32 overflow-y-auto space-y-2'
                   }`}>
                     {atributo.atributoValores
                       .filter(valor => valor.valor && valor.valor.trim() !== '')
@@ -177,10 +262,17 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
                     type="number"
                     placeholder="0.00"
                     value={filters.priceMin || ''}
-                    onChange={(e) => onFilterChange('priceMin', e.target.value ? Number(e.target.value) : undefined)}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    onChange={(e) => onPriceChange?.('priceMin', e.target.value ? Number(e.target.value) : undefined)}
+                    className={`flex-1 px-3 py-2 text-sm border rounded-r-md transition-colors ${
+                      priceErrors?.priceMin 
+                        ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary'
+                    }`}
                   />
                 </div>
+                {priceErrors?.priceMin && (
+                  <p className="text-red-500 text-xs mt-1">{priceErrors.priceMin}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Hasta</label>
@@ -192,10 +284,17 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
                     type="number"
                     placeholder="100.00"
                     value={filters.priceMax || ''}
-                    onChange={(e) => onFilterChange('priceMax', e.target.value ? Number(e.target.value) : undefined)}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    onChange={(e) => onPriceChange?.('priceMax', e.target.value ? Number(e.target.value) : undefined)}
+                    className={`flex-1 px-3 py-2 text-sm border rounded-r-md transition-colors ${
+                      priceErrors?.priceMax 
+                        ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary'
+                    }`}
                   />
                 </div>
+                {priceErrors?.priceMax && (
+                  <p className="text-red-500 text-xs mt-1">{priceErrors.priceMax}</p>
+                )}
               </div>
             </div>
           </div>
@@ -207,7 +306,13 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters }: Filte
         <div className="flex gap-3">
           <button
             onClick={handleApplyFilters}
-            className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            disabled={!!(priceErrors?.priceMin || priceErrors?.priceMax)}
+            className={`flex-1 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              priceErrors?.priceMin || priceErrors?.priceMax
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-primary hover:bg-primary/90 text-white focus:ring-primary'
+            }`}
+            title={priceErrors?.priceMin || priceErrors?.priceMax ? 'Corrige los errores de precio antes de filtrar' : ''}
           >
             Filtrar
           </button>

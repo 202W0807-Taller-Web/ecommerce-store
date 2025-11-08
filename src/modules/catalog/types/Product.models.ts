@@ -93,7 +93,10 @@ export interface FrontendProductSummary extends ProductSummary {
 
 export interface ProductFilters {
   search?: string;
-  category?: string;
+  category?: string[]; // Cualquier atributo que no sea talla, color, unidad de medida
+  color?: string[];
+  size?: string[]; // talla
+  unit?: string[]; // unidad de medida
   priceMin?: number;
   priceMax?: number;
   rating?: number;

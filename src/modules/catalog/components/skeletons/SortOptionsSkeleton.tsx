@@ -5,7 +5,7 @@ export const SortOptionsSkeleton = () => {
         <div className="h-4 bg-gray-200 rounded w-20"></div>
         <div className="flex space-x-1">
           {/* Botones de ordenamiento skeleton */}
-          {[...Array(3)].map((_, i) => (
+          {[...Array(1)].map((_, i) => (
             <div key={i} className="w-20 h-10 bg-gray-200 rounded-lg"></div>
           ))}
         </div>
