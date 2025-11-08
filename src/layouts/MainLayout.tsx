@@ -376,6 +376,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     Soporte
                   </a>
                 </li>
+                <li>
+                  <Link
+                    to="/politica-de-privacidad"
+                    className="hover:text-white transition-colors">
+                    Política de privacidad
+                  </Link>
+                </li>
               </ul>
             </div>
 
