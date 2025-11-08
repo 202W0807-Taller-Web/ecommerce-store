@@ -100,7 +100,7 @@ export default function CarrierSelection({
         }));
 
         const res = await fetch(
-          `${import.meta.env.VITE_API_INVENTORY_URL}/api/cotizaciones`,
+          `${import.meta.env.VITE_API_SHIPPING_URL}/api/cotizaciones`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
