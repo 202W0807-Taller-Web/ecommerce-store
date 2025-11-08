@@ -7,6 +7,7 @@ interface ProductInfoProps {
   onAddToCart: (quantity: number, variant?: Variante) => void;
   onVariantChange?: (variant: Variante | null) => void;
   onColorChange?: (colorId: number | null) => void;
+  isAddingToCart?: boolean;
   // Datos hardcodeados que se pasan como parámetros
   mockRating?: number;
   mockReviewCount?: number;
@@ -18,6 +19,7 @@ export const ProductInfo = ({
   onVariantChange,
   onColorChange,
   mockReviewCount,
+  isAddingToCart = false,
 }: ProductInfoProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<Variante | null>(null);
@@ -100,14 +102,16 @@ export const ProductInfo = ({
         <div className="flex items-center border border-gray-300 rounded">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-3 py-1 text-gray-600 hover:text-gray-800"
+            disabled={isAddingToCart}
+            className="px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             -
           </button>
           <span className="px-4 py-1 border-x border-gray-300">{quantity}</span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="px-3 py-1 text-gray-600 hover:text-gray-800"
+            disabled={isAddingToCart}
+            className="px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             +
           </button>
@@ -118,32 +122,47 @@ export const ProductInfo = ({
       <div className="flex space-x-3">
         <button
           onClick={handleAddToCart}
-          disabled={!selectedVariant}
+          disabled={!selectedVariant || isAddingToCart}
           className={`flex-1 font-medium py-3 px-6 rounded-lg flex items-center justify-center space-x-2 transition-colors ${
-            selectedVariant
+            selectedVariant && !isAddingToCart
               ? "bg-primary hover:bg-primary/90 text-white cursor-pointer"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-          <span>
-            {selectedVariant ? "Añadir al carrito" : "Selecciona variante"}
-          </span>
+          {isAddingToCart ? (
+            <>
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Agregando...</span>
+            </>
+          ) : (
+            <>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span>
+                {selectedVariant ? "Añadir al carrito" : "Selecciona variante"}
+              </span>
+            </>
+          )}
         </button>
 
-        <button className="w-12 h-12 border-2 border-primary rounded-lg flex items-center justify-center hover:bg-primary/10">
+        <button 
+          disabled={isAddingToCart}
+          className="w-12 h-12 border-2 border-primary rounded-lg flex items-center justify-center hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <svg
             className="w-6 h-6 text-primary"
             fill="none"
