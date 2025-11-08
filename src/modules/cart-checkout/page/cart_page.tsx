@@ -1,28 +1,75 @@
+// CartPage.tsx
+import { useState } from "react";
 import { useCart } from "../hooks/useCart";
 import { useNavigate } from "react-router-dom";
-import OrderSummary from "../components/orderSummary"; // 👈 importa tu componente
+import OrderSummary from "../components/orderSummary";
 
 export default function CartPage() {
-  const { cart, loading, error, updateQuantity, removeFromCart } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart } = useCart();
   const navigate = useNavigate();
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
 
-  const itemCount = cart.reduce((acc, it) => acc + it.cantidad, 0);
-  const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
+  const items = cart?.items || [];
+
+  const itemCount = items.reduce((acc, it) => acc + it.cantidad, 0);
+  const subtotal = items.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
   const iva = subtotal * 0.19;
   const total = subtotal + iva;
 
-  if (loading) return <p className="text-center text-gray-300 mt-10">Cargando carrito...</p>;
-  if (error) return <p className="text-center text-red-400 mt-10">Error: {error}</p>;
+  // Mostrar toast temporal
+  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
-  // 🧾 Transformamos el carrito al formato que OrderSummary necesita
-  const products = cart.map((item) => ({
+  // Manejar actualización de cantidad con error handling
+  const handleUpdateQuantity = async (
+    idProducto: number,
+    nuevaCantidad: number,
+    idVariante?: number | null
+  ) => {
+    try {
+      await updateQuantity(idProducto, nuevaCantidad, idVariante);
+    } catch (err) {
+      showToast("Error al actualizar cantidad. Intenta de nuevo.");
+    }
+  };
+
+  // Manejar eliminación con error handling
+  const handleRemove = async (idProducto: number, idVariante?: number | null) => {
+    try {
+      await removeFromCart(idProducto, idVariante);
+      showToast("Producto eliminado", "success");
+    } catch (err) {
+      showToast("Error al eliminar producto. Intenta de nuevo.");
+    }
+  };
+
+  if (loading && !cart) {
+    return <p className="text-center text-gray-300 mt-10">Cargando carrito...</p>;
+  }
+
+  const products = items.map((item) => ({
     name: item.nombre || "Producto sin nombre",
     quantity: item.cantidad,
-    price: `$${item.precio.toFixed(2)}`,
+    price: `$${item.precio.toFixed(2)}`
   }));
 
   return (
     <div className="max-w-6xl mx-auto p-8 text-[#EBC431]">
+      {/* Toast de notificaciones */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in ${
+            toast.type === 'error'
+              ? 'bg-red-500 text-white'
+              : 'bg-green-500 text-white'
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <h2 className="text-3xl font-bold mb-8 text-center md:text-left">
         TU CARRITO ({itemCount} producto{itemCount !== 1 ? "s" : ""})
       </h2>
@@ -30,15 +77,14 @@ export default function CartPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* 🛒 Lista de productos */}
         <div className="md:col-span-2 space-y-6">
-          {cart.length === 0 ? (
+          {items.length === 0 ? (
             <p className="text-center text-[#F5F5F5]/70">Tu carrito está vacío.</p>
           ) : (
-            cart.map((item) => (
+            items.map((item) => (
               <div
-                key={item.idProducto}
+                key={`${item.idProducto}-${item.idVariante || 0}`}
                 className="flex items-center justify-between bg-[#333027] border border-[#C0A648]/40 rounded-2xl p-5 hover:bg-[#413F39] transition-all duration-200 shadow-md"
               >
-                {/* 🖼️ Imagen + info */}
                 <div className="flex items-center gap-4">
                   <img
                     src={item.imagenUrl || "/placeholder.png"}
@@ -53,25 +99,25 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* 🔢 Controles */}
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => updateQuantity(item.idProducto, item.cantidad - 1)}
+                    onClick={() => handleUpdateQuantity(item.idProducto, item.cantidad - 1, item.idVariante)}
                     disabled={item.cantidad <= 1}
-                    className="px-3 py-1 bg-[#6B644C] rounded text-white hover:bg-[#7E775B] transition disabled:opacity-50"
+                    className="px-3 py-1 bg-[#6B644C] rounded text-white hover:bg-[#7E775B] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     -
                   </button>
                   <span className="text-[#F5F5F5] font-medium text-lg">{item.cantidad}</span>
                   <button
-                    onClick={() => updateQuantity(item.idProducto, item.cantidad + 1)}
+                    onClick={() => handleUpdateQuantity(item.idProducto, item.cantidad + 1, item.idVariante)}
                     className="px-3 py-1 bg-[#6B644C] rounded text-white hover:bg-[#7E775B] transition"
                   >
                     +
                   </button>
                   <button
-                    onClick={() => removeFromCart(item.idProducto)}
+                    onClick={() => handleRemove(item.idProducto, item.idVariante)}
                     className="ml-3 text-red-400 hover:text-red-300 transition"
+                    title="Eliminar producto"
                   >
                     🗑️
                   </button>
@@ -92,13 +138,34 @@ export default function CartPage() {
           />
 
           <button
-            onClick={() => navigate("/checkout/step1" , { state: {cart}})}
-            className="mt-6 w-60 bg-[#EBC431] text-[#333027] rounded-lg py-2 font-semibold text-lg hover:bg-[#F5E27A] transition-all duration-200 shadow-md"
+            onClick={() =>
+              navigate("/checkout/step1", {
+                state: { cart: items, cartId: cart?.id || 7 }
+              })
+            }
+            disabled={items.length === 0}
+            className="mt-6 w-60 bg-[#EBC431] text-[#333027] rounded-lg py-2 font-semibold text-lg hover:bg-[#F5E27A] transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continuar Compra
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
