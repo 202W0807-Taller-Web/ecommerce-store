@@ -3,6 +3,7 @@ import CheckoutSteps from "../components/checkoutSteps";
 import OrderSummary from "../components/orderSummary";
 import ShippingForm from "../components/shippingForm";
 import PickupSelection from "../components/pickupSelection";
+import CarrierSelection from "../components/carrierSelection";
 import { useState } from "react";
 
 interface CartItem {
@@ -22,6 +23,20 @@ export default function Checkout_Step3() {
 
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
 
+  // Para RECOJO EN TIENDA - guardamos toda la info necesaria
+  const [pickupInfo, setPickupInfo] = useState<{
+    tienda: any;
+    almacenOrigen: any;
+    recojoInfo: any;
+  } | null>(null);
+
+  // Para ENVÍO A DOMICILIO - guardamos toda la info necesaria
+  const [carrierInfo, setCarrierInfo] = useState<{
+    carrier: any;
+    almacenOrigen: any;
+    distanciaKm: number;
+  } | null>(null);
+
   if (!cart) {
     return (
       <div className="text-center text-gray-300 mt-10">
@@ -34,10 +49,64 @@ export default function Checkout_Step3() {
   }
 
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
-  const shippingCost =
-    method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
+
+  // Calcular costo de envío según el método y selección
+  let shippingCost = 0;
+  if (method === "pickup") {
+    shippingCost = 0; // Recojo en tienda siempre es gratis
+  } else if (carrierInfo) {
+    shippingCost = carrierInfo.carrier.costo_envio;
+  }
+
   const taxes = subtotal * 0.18;
   const total = subtotal + shippingCost + taxes;
+
+  // Determinar si se puede continuar
+  const canContinue = method === "pickup" 
+    ? pickupInfo !== null 
+    : (selectedAddress !== null && carrierInfo !== null);
+
+  const handleContinue = () => {
+    if (!canContinue) return;
+
+    // Construir el objeto de entrega según el tipo
+    let deliveryInfo;
+
+    if (method === "pickup" && pickupInfo) {
+      deliveryInfo = {
+        tipo: "RECOJO_EN_TIENDA",
+        almacenOrigen: pickupInfo.almacenOrigen,
+        tiendaSeleccionada: pickupInfo.tienda,
+        costoEnvio: 0,
+        tiempoEstimadoDias: pickupInfo.recojoInfo.tiempo_estimado_dias,
+        fechaEntregaEstimada: pickupInfo.recojoInfo.fecha_entrega_estimada,
+        descripcion: pickupInfo.recojoInfo.descripcion,
+      };
+    } else if (carrierInfo) {
+      deliveryInfo = {
+        tipo: "ENVIO_A_DOMICILIO",
+        almacenOrigen: carrierInfo.almacenOrigen,
+        carrierSeleccionado: carrierInfo.carrier,
+        direccionEnvioId: selectedAddress?.id || null,
+      };
+    }
+
+    navigate("/checkout/step4", {
+      state: {
+        method: method,
+        passedCart: cart,
+        selectedAddress: selectedAddress,
+        userInfo: userInfo,
+        deliveryInfo: deliveryInfo, // Toda la info necesaria para el JSON final
+        costos: {
+          subtotal: subtotal,
+          impuestos: taxes,
+          envio: shippingCost,
+          total: total,
+        },
+      },
+    });
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -51,17 +120,45 @@ export default function Checkout_Step3() {
               <h1 className="text-3xl font-bold mb-6 text-[#EBC431]">
                 Selecciona tu tienda de recojo
               </h1>
-              <PickupSelection />
-            </section>
-          ) : (
-            <section>
-              <h1 className="text-3xl font-bold mb-6 text-[#EBC431]">
-                Dirección de envío
-              </h1>
-              <ShippingForm
-                onSelectAddress={(addr) => setSelectedAddress(addr)}
+              <PickupSelection
+                cart={cart.map((item) => ({
+                  idProducto: item.idProducto,
+                  cantidad: item.cantidad,
+                }))}
+                onSelectPickupInfo={(info) => setPickupInfo(info)}
               />
             </section>
+          ) : (
+            <>
+              <section>
+                <h1 className="text-3xl font-bold mb-6 text-[#EBC431]">
+                  Dirección de envío
+                </h1>
+                <ShippingForm
+                  onSelectAddress={(addr) => setSelectedAddress(addr)}
+                />
+              </section>
+
+              {selectedAddress && (
+                <section>
+                  <h2 className="text-2xl font-bold mb-6 text-[#EBC431]">
+                    Selecciona el método de envío
+                  </h2>
+                  <CarrierSelection
+                    cart={cart.map((item) => ({
+                      idProducto: item.idProducto,
+                      cantidad: item.cantidad,
+                    }))}
+                    destinationAddress={{
+                      lat: selectedAddress.latitud,
+                      lng: selectedAddress.longitud,
+                      direccion: selectedAddress.direccion,
+                    }}
+                    onSelectCarrier={(info) => setCarrierInfo(info)}
+                  />
+                </section>
+              )}
+            </>
           )}
 
           {/* Botones de navegación */}
@@ -77,26 +174,18 @@ export default function Checkout_Step3() {
               ← Volver
             </button>
 
-            <Link
-              to="/checkout/step4"
-              state={{
-                method: method,
-                passedCart: cart,
-                selectedAddress: selectedAddress,
-                userInfo: userInfo,
-              }}
+            <button
+              onClick={handleContinue}
+              disabled={!canContinue}
               className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-medium
     ${
-      selectedAddress
-        ? "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md"
+      canContinue
+        ? "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md cursor-pointer"
         : "bg-[#6B644C]/50 text-gray-400 cursor-not-allowed"
     }`}
-              onClick={(e) => {
-                if (!selectedAddress) e.preventDefault();
-              }}
             >
               Continuar al pago →
-            </Link>
+            </button>
           </div>
         </div>
 
