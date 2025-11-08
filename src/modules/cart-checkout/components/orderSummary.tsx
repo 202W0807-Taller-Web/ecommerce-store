@@ -8,7 +8,6 @@ interface OrderSummaryProps {
   products: ProductItem[];
   subtotal: string;
   shipping: string;
-  taxes: string;
   total: string;
 }
 
@@ -16,7 +15,6 @@ export default function OrderSummary({
   products,
   subtotal,
   shipping,
-  taxes,
   total,
 }: OrderSummaryProps) {
   return (
@@ -46,10 +44,6 @@ export default function OrderSummary({
         <div className="flex justify-between">
           <span>Envío</span>
           <span>{shipping}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Impuestos</span>
-          <span>{taxes}</span>
         </div>
       </div>
 
