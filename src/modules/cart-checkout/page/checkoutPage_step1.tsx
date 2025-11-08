@@ -31,8 +31,7 @@ export default function Checkout_Step1() {
   ];
 
   const shipping = selected ? shippingOptions.find(o => o.id === selected)?.price || 0 : 0;
-  const taxes = subtotal * 0.18;
-  const total = subtotal + shipping + taxes;
+  const total = subtotal + shipping;
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -108,7 +107,6 @@ export default function Checkout_Step1() {
             }))}
             subtotal={`$${subtotal.toFixed(2)}`}
             shipping={shipping === 0 ? "GRATIS" : `$${shipping.toFixed(2)}`}
-            taxes={`$${taxes.toFixed(2)}`}
             total={`$${total.toFixed(2)}`}
           />
         </div>

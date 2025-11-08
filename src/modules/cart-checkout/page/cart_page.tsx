@@ -13,8 +13,7 @@ export default function CartPage() {
 
   const itemCount = items.reduce((acc, it) => acc + it.cantidad, 0);
   const subtotal = items.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
-  const iva = subtotal * 0.19;
-  const total = subtotal + iva;
+  const total = subtotal;
 
   // Mostrar toast temporal
   const showToast = (message: string, type: 'error' | 'success' = 'error') => {
@@ -133,7 +132,6 @@ export default function CartPage() {
             products={products}
             subtotal={`$${subtotal.toFixed(2)}`}
             shipping="$0.00"
-            taxes={`$${iva.toFixed(2)}`}
             total={`$${total.toFixed(2)}`}
           />
 

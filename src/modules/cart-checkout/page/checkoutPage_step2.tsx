@@ -56,8 +56,7 @@ export default function Checkout_Step2() {
 
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
   const shippingCost = method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
-  const taxes = subtotal * 0.18;
-  const total = subtotal + shippingCost + taxes;
+  const total = subtotal + shippingCost;
 
   const handleContinue = async () => {
     const { nombreCompleto, email, telefono } = userInfo;
@@ -147,7 +146,6 @@ export default function Checkout_Step2() {
               }))}
               subtotal={`$${subtotal.toFixed(2)}`}
               shipping={shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`}
-              taxes={`$${taxes.toFixed(2)}`}
               total={`$${total.toFixed(2)}`}
             />
           ) : (

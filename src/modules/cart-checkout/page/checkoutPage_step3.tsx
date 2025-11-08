@@ -58,8 +58,7 @@ export default function Checkout_Step3() {
     shippingCost = carrierInfo.carrier.costo_envio;
   }
 
-  const taxes = subtotal * 0.18;
-  const total = subtotal + shippingCost + taxes;
+  const total = subtotal + shippingCost;
 
   // Determinar si se puede continuar
   const canContinue = method === "pickup" 
@@ -100,7 +99,7 @@ export default function Checkout_Step3() {
         deliveryInfo: deliveryInfo, // Toda la info necesaria para el JSON final
         costos: {
           subtotal: subtotal,
-          impuestos: taxes,
+          impuestos: 0,
           envio: shippingCost,
           total: total,
         },
@@ -202,7 +201,6 @@ export default function Checkout_Step3() {
               shipping={
                 shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`
               }
-              taxes={`$${taxes.toFixed(2)}`}
               total={`$${total.toFixed(2)}`}
             />
           ) : (

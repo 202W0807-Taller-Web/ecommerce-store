@@ -7,10 +7,6 @@ interface UserLocation {
   error: string | null;
 }
 
-/**
- * Obtiene la ubicación del usuario usando Geolocation API o, en su defecto, IP pública.
- * Retorna { lat, lng, loading, error }.
- */
 export function useUserLocation(): UserLocation {
   const [location, setLocation] = useState<UserLocation>({
     lat: null,
@@ -21,58 +17,42 @@ export function useUserLocation(): UserLocation {
 
   useEffect(() => {
     async function getLocation() {
-      // Intenta primero con geolocalización del navegador
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setLocation({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              loading: false,
-              error: null,
-            });
-          },
-          async () => {
-            // Si falla o el usuario niega permiso, usar IP
-            try {
-              const res = await fetch("https://ipapi.co/json/");
-              const data = await res.json();
+      try {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
               setLocation({
-                lat: data.latitude,
-                lng: data.longitude,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
                 loading: false,
                 error: null,
               });
-            } catch (err) {
+            },
+            async () => {
+              const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL;
+              const res = await fetch(`${baseUrl}/api/location`);
+              const data = await res.json();
+
+              if (data.error) throw new Error(data.error);
               setLocation({
-                lat: null,
-                lng: null,
+                lat: data.lat,
+                lng: data.lng,
                 loading: false,
-                error: "No se pudo obtener la ubicación por IP.",
+                error: null,
               });
-            }
-          },
-          { enableHighAccuracy: false, timeout: 5000 }
-        );
-      } else {
-        // Si el navegador no soporta geolocalización
-        try {
-          const res = await fetch("https://ipapi.co/json/");
-          const data = await res.json();
-          setLocation({
-            lat: data.latitude,
-            lng: data.longitude,
-            loading: false,
-            error: null,
-          });
-        } catch (err) {
-          setLocation({
-            lat: null,
-            lng: null,
-            loading: false,
-            error: "No se pudo obtener ubicación por IP.",
-          });
+            },
+            { enableHighAccuracy: false, timeout: 5000 }
+          );
+        } else {
+          throw new Error("Geolocalización no disponible en este navegador.");
         }
+      } catch (err) {
+        setLocation({
+          lat: null,
+          lng: null,
+          loading: false,
+          error: "No se pudo obtener ubicación.",
+        });
       }
     }
 
