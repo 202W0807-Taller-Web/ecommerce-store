@@ -100,7 +100,7 @@ export default function CarrierSelection({
         }));
 
         const res = await fetch(
-          "https://shipping-service-814404078279.us-central1.run.app/api/cotizaciones",
+          `${import.meta.env.VITE_API_INVENTORY_URL}/api/cotizaciones`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -127,7 +127,6 @@ export default function CarrierSelection({
           setCarriers([]);
         }
 
-        // 🔹 Marcar que ya hicimos el fetch
         hasFetchedRef.current = true;
         lastRequestRef.current = requestKey;
       } catch (error) {
@@ -142,7 +141,6 @@ export default function CarrierSelection({
   }, [lat, lng, cart, locationLoading, destinationAddress]);
 
   const handleCarrierSelection = (carrier: Carrier) => {
-    // 🔹 Actualizar selección sin recargar
     setSelected(carrier.cotizacion_id);
 
     if (quoteResponse && onSelectCarrier) {
