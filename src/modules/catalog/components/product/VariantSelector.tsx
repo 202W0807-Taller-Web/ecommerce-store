@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { type Variante, type Atributo } from '../../types';
-import { obtenerColorPorNombre } from '../../data/colors';
+import { getColorHex } from '../../utils/colorMapper';
 import { useAtributos } from '../../contexts';
 
 interface VariantSelectorProps {
@@ -173,8 +173,7 @@ export const VariantSelector = ({ variants, onVariantChange, onColorChange }: Va
           {availableColors.map(colorId => {
             const isSelected = selectedAttributes['Color'] === colorId;
             const colorName = getAttributeValueName(colorAttribute, colorId);
-            const colorData = obtenerColorPorNombre(colorName);
-            const hexColor = colorData?.hex || '#000000';
+            const hexColor = getColorHex(colorName);
             
             return (
               <button

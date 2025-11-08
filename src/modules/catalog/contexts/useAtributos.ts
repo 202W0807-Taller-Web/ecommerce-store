@@ -3,7 +3,6 @@ import { AtributosContext, type AtributosContextType } from './AtributosContext'
 
 /**
  * Hook para acceder al contexto de atributos
- * Separado del contexto para compatibilidad con Fast Refresh
  */
 export const useAtributos = (): AtributosContextType => {
   const context = useContext(AtributosContext);
