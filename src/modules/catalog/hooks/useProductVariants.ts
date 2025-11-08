@@ -37,7 +37,6 @@ interface UseProductVariantsReturn {
 
 /**
  * Hook para manejar la lógica de selección de variantes de productos
- * Implementa la lógica: seleccionar color -> mostrar tallas disponibles -> seleccionar talla
  */
 export function useProductVariants(producto: FrontendProduct): UseProductVariantsReturn {
   const { atributos, loading } = useAtributos();
@@ -192,7 +191,7 @@ export function useProductVariants(producto: FrontendProduct): UseProductVariant
     return mockStock > 0;
   }, [varianteSeleccionada, coloresDisponibles.length]);
 
-  // Verificar si se puede comprar (selección completa)
+  
   const puedeComprar = useMemo(() => {
     return !!varianteSeleccionada && hayStock;
   }, [varianteSeleccionada, hayStock]);

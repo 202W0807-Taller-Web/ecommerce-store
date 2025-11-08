@@ -11,9 +11,7 @@ import {
 } from '../types';
 import { enhanceProduct } from '../utils/variants.utils';
 
-/**
- * Funciones de transformación de datos
- */
+
 
 // Formatear producto para listado con datos de UI
 function formatearProducto(producto: ProductSummary): FrontendProductSummary {
@@ -26,7 +24,7 @@ function formatearProducto(producto: ProductSummary): FrontendProductSummary {
     imagen: producto.imagen,
     tienePromocion,
     precioOriginal: tienePromocion ? producto.precio * 1.3 : undefined,
-    rating: 0, // Se pasará como parámetro en el componente
+    rating: 0, 
     reviewCount: 0, 
     isPromo: tienePromocion
   };
@@ -38,7 +36,7 @@ export class CatalogService {
   constructor() {
 
     this.baseUrl = import.meta.env.DEV 
-      ? '' // Usar proxy de Vite en desarrollo
+      ? '' 
       : import.meta.env.VITE_CATALOG_API_URL || '';
   }
 
@@ -47,7 +45,8 @@ export class CatalogService {
    */
   private async fetchProducts(
     pagination?: PaginationParams, 
-    filters?: ProductFilters
+    filters?: ProductFilters,
+    sortBy?: string
   ): Promise<{
     data: ProductSummary[];
     total: number;
@@ -55,42 +54,74 @@ export class CatalogService {
     itemsPerPage: number;
     totalPages: number;
   }> {
-    // En desarrollo, usar proxy (baseUrl vacío)
+    
     if (!import.meta.env.DEV && !this.baseUrl) {
       throw new Error('VITE_CATALOG_API_URL no está configurada. Configura la variable de entorno para conectar con el backend.');
     }
 
     try {
       const url = import.meta.env.DEV 
-        ? '/api/productos/listado'  // Proxy en desarrollo
-        : `${this.baseUrl}/api/productos/listado`;  // URL directa en producción
+        ? '/api/productos/listado'  
+        : `${this.baseUrl}/api/productos/listado`;  
       
-      // Agregar parámetros de paginación y filtros a la URL
+      
       const params = new URLSearchParams();
       
       // Parámetros de paginación
       if (pagination) {
-        params.append('PageNumber', pagination.page.toString());
-        params.append('PageSize', pagination.limit.toString());
+        if (pagination.page != null) {
+          params.append('PageNumber', pagination.page.toString());
+        }
+        if (pagination.limit != null) {
+          params.append('PageSize', pagination.limit.toString());
+        }
+      }
+      
+      // Parámetros de ordenamiento
+      if (sortBy) {
+        if (sortBy === 'price_asc') {
+          params.append('SortBy', 'Precio');
+          params.append('IsDescending', 'false');
+        } else if (sortBy === 'price_desc') {
+          params.append('SortBy', 'Precio');
+          params.append('IsDescending', 'true');
+        }
       }
       
       // Parámetros de filtros
       if (filters) {
-        // Combinar todos los atributos que no sean talla, color o unidad de medida bajo "Categoria"
-        const categorias = [];
+        const categorias: string[] = [];
         if (filters.category && filters.category.length > 0) {
           categorias.push(...filters.category);
         }
-        // Agregar otros atributos que no sean talla, color o unidad de medida
+        
         if (filters.tags && filters.tags.length > 0) {
           categorias.push(...filters.tags);
         }
         
-        params.append('Categoria', categorias.join(',') || '');
-        params.append('Color', filters.color?.join(',') || '');
-        params.append('Talla', filters.size?.join(',') || '');
-        params.append('PrecioMin', filters.priceMin?.toString() || '');
-        params.append('PrecioMax', filters.priceMax?.toString() || '');
+        if (categorias.length > 0) {
+          params.append('Categoria', categorias.join(','));
+        }
+        
+        if (filters.color && filters.color.length > 0) {
+          params.append('Color', filters.color.join(','));
+        }
+        
+        if (filters.size && filters.size.length > 0) {
+          params.append('Talla', filters.size.join(','));
+        }
+        
+        if (filters.priceMin != null) {
+          params.append('PrecioMin', filters.priceMin.toString());
+        }
+        
+        if (filters.priceMax != null) {
+          params.append('PrecioMax', filters.priceMax.toString());
+        }
+        
+        if (filters.search && filters.search.trim() !== '') {
+          params.append('Search', filters.search);
+        }
       }
       
       const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
@@ -119,8 +150,8 @@ export class CatalogService {
 
     try {
       const url = import.meta.env.DEV 
-        ? `/api/productos/${id}`  // Proxy en desarrollo
-        : `${this.baseUrl}/api/productos/${id}`;  // URL directa en producción
+        ? `/api/productos/${id}`  
+        : `${this.baseUrl}/api/productos/${id}`;  
       
       const response: AxiosResponse<Product> = await axios.get(url);
       return response.data;
@@ -138,70 +169,19 @@ export class CatalogService {
    */
   async getProducts(
     filters: ProductFilters = {}, 
-    pagination: PaginationParams = { page: 1, limit: 9 }
+    pagination: PaginationParams = { page: 1, limit: 9 },
+    sortBy?: string
   ): Promise<PaginationResult<FrontendProductSummary>> {
     // Obtener datos de la API real con paginación y filtros
-    const apiResponse = await this.fetchProducts(pagination, filters);
+    const apiResponse = await this.fetchProducts(pagination, filters, sortBy);
     
     // Formatear productos para UI
     const productSummaries: FrontendProductSummary[] = apiResponse.data.map((apiProduct) => 
       formatearProducto(apiProduct)
     );
 
-    // Los filtros principales (categoría, precio) ya se aplican en la API
-    // Solo aplicamos filtros adicionales del frontend
     let filteredProducts = [...productSummaries];
 
-    // Búsqueda por texto (si no está soportada en la API)
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      filteredProducts = filteredProducts.filter(p => 
-        p.nombre.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    // Filtro por rating (si no está soportado en la API)
-    if (filters.rating) {
-      filteredProducts = filteredProducts.filter(p => p.rating >= filters.rating!);
-    }
-
-    // Aplicar ordenamiento (si no está soportado en la API)
-    if (filters.sortBy) {
-      filteredProducts.sort((a, b) => {
-        let valueA: string | number;
-        let valueB: string | number;
-        
-        switch (filters.sortBy) {
-          case 'price':
-            valueA = a.precio;
-            valueB = b.precio;
-            break;
-          case 'rating':
-            valueA = a.rating;
-            valueB = b.rating;
-            break;
-          case 'popularity':
-            valueA = a.reviewCount;
-            valueB = b.reviewCount;
-            break;
-          default:
-            valueA = a.nombre;
-            valueB = b.nombre;
-        }
-
-        if (typeof valueA === 'string' && typeof valueB === 'string') {
-          valueA = valueA.toLowerCase();
-          valueB = valueB.toLowerCase();
-        }
-
-        const multiplier = filters.sortOrder === 'desc' ? -1 : 1;
-        if (valueA > valueB) return multiplier;
-        if (valueA < valueB) return -multiplier;
-        return 0;
-      });
-    }
-
-    // Usar los datos de paginación de la API
     return {
       data: filteredProducts,
       total: apiResponse.total,
@@ -224,33 +204,18 @@ export class CatalogService {
   }
 
 
-
-  /**
-   * Obtener productos con descuento
-   */
-  async getDiscountedProducts(limit: number = 8): Promise<FrontendProductSummary[]> {
-    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }); // Obtener más productos para filtrar
-    const transformedProducts = apiResponse.data
-      .map((apiProduct) => formatearProducto(apiProduct))
-      .filter(p => p.isPromo); // Solo productos en promoción
-    
-    return transformedProducts.slice(0, limit);
-  }
-
   /**
    * Buscar productos por query
    */
-  async searchProducts(query: string, filters?: Partial<ProductFilters>): Promise<FrontendProductSummary[]> {
-    // Crear filtros de búsqueda combinando query con filtros existentes
+  async searchProducts(query: string, filters?: Partial<ProductFilters>, sortBy?: string): Promise<FrontendProductSummary[]> {
     const searchFilters: ProductFilters = {
       search: query,
       ...filters
     };
     
-    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }, searchFilters);
+    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }, searchFilters, sortBy);
     const transformedProducts = apiResponse.data.map((apiProduct) => formatearProducto(apiProduct));
     
-    // Aplicar filtros adicionales si se proporcionan
     let filteredProducts = transformedProducts;
     if (filters) {
       if (filters.priceMin) {
@@ -274,8 +239,8 @@ export class CatalogService {
 
     try {
       const url = import.meta.env.DEV 
-        ? '/api/atributos'  // Proxy en desarrollo
-        : `${this.baseUrl}/api/atributos`;  // URL directa en producción
+        ? '/api/atributos'  
+        : `${this.baseUrl}/api/atributos`;  
       
       const response: AxiosResponse<Atributo[]> = await axios.get(url);
       return response.data;

@@ -121,8 +121,8 @@ export const CatalogPage = () => {
     fetchProducts(filters, {
       page: pagination.currentPage,
       limit: pagination.itemsPerPage,
-    });
-  }, [filters, pagination.currentPage, pagination.itemsPerPage, fetchProducts]);
+    }, pagination.currentSort);
+  }, [filters, pagination.currentPage, pagination.itemsPerPage, pagination.currentSort, fetchProducts]);
 
   // Cargar productos solo cuando se presione el botón de aplicar filtros (con precios locales)
   useEffect(() => {
@@ -135,10 +135,10 @@ export const CatalogPage = () => {
       fetchProducts(filtersWithPrice, {
         page: pagination.currentPage,
         limit: pagination.itemsPerPage,
-      });
+      }, pagination.currentSort);
       setShouldApplyFilters(false);
     }
-  }, [shouldApplyFilters, filters, priceFilters, pagination.currentPage, pagination.itemsPerPage, fetchProducts]);
+  }, [shouldApplyFilters, filters, priceFilters, pagination.currentPage, pagination.itemsPerPage, pagination.currentSort, fetchProducts]);
 
   // Sincronizar filtros desde la URL cuando cambien los searchParams
   useEffect(() => {

@@ -210,15 +210,15 @@ export const FilterMobile = ({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-      {/* Header */}
+      
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-bold text-primary">Filtros</h3>
       </div>
       
-      {/* Content */}
+      
       <div className="max-h-96 overflow-y-auto">
         <div className="p-4 space-y-4">
-          {/* Loading state */}
+          
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -226,7 +226,7 @@ export const FilterMobile = ({
             </div>
           ) : (
             <>
-              {/* Filtros dinámicos basados en los atributos */}
+              
               {atributos
                 .filter(atributo => atributo.atributoValores && atributo.atributoValores.length > 0)
                 .map((atributo) => (
@@ -247,7 +247,7 @@ export const FilterMobile = ({
             </>
           )}
 
-          {/* Precio */}
+          
           <div className="pb-4">
             <label className="block text-sm font-bold text-gray-800 mb-2">
               Precio
@@ -302,7 +302,7 @@ export const FilterMobile = ({
         </div>
       </div>
 
-      {/* Footer with Action Buttons */}
+      
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
         <div className="flex gap-2">
           <button
