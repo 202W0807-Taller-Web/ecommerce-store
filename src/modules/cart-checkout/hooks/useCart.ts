@@ -2,83 +2,180 @@ import { useCallback, useEffect, useState } from "react";
 
 export interface CartItem {
   idProducto: number;
+  idVariante?: number | null;
   nombre: string;
   precio: number;
   cantidad: number;
-  imagenUrl: string; // 👈 esto debe existir
+  imagenUrl?: string;
 }
 
+export interface Carrito {
+  id: number;
+  idUsuario?: number | null;
+  items: CartItem[];
+}
 
-export function useCart(userId = 1) {
-  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/carritos`;
-
-  const [cart, setCart] = useState<CartItem[]>([]);
+export function useCart() {
+  const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL + "api/carritos";
+  const cartId = 7; // 🔹 temporalmente hardcodeado
+  const [cart, setCart] = useState<Carrito | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Obtener carrito del usuario
+  // ---------- Obtener carrito ----------
   const fetchCart = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/usuario/${userId}`);
+      const res = await fetch(`${baseUrl}/${cartId}`);
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
-      setCart(data.items ?? []);
+      setCart(data);
+      setError(null);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, userId]);
+  }, [baseUrl, cartId]);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  // Agregar producto al carrito
+  // ---------- Agregar producto ----------
   const addToCart = async (producto: CartItem) => {
-    setLoading(true);
+    if (!cart) return;
+
+    // Optimistic update
+    const previousCart = cart;
+    const existingItemIndex = cart.items.findIndex(
+      (item) => item.idProducto === producto.idProducto && 
+                item.idVariante === producto.idVariante
+    );
+
+    if (existingItemIndex >= 0) {
+      // Incrementar cantidad si ya existe
+      const updatedItems = [...cart.items];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        cantidad: updatedItems[existingItemIndex].cantidad + producto.cantidad
+      };
+      setCart({ ...cart, items: updatedItems });
+    } else {
+      // Agregar nuevo item
+      setCart({ ...cart, items: [...cart.items, producto] });
+    }
+
     try {
-      await fetch(`${apiUrl}/usuario/${userId}/items`, {
+      const url = `${baseUrl}/${cartId}/anonimo/items`;
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(producto),
       });
-      await fetchCart();
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const updated = await res.json();
+      setCart(updated);
+      setError(null);
     } catch (err) {
+      // Revertir en caso de error
+      setCart(previousCart);
       setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
 
-  // Actualizar cantidad
-  const updateQuantity = async (idProducto: number, nuevaCantidad: number) => {
-    setLoading(true);
+  // ---------- Actualizar cantidad ----------
+  const updateQuantity = async (
+    idProducto: number,
+    nuevaCantidad: number,
+    idVariante?: number | null
+  ) => {
+    if (!cart || nuevaCantidad < 1) return;
+
+    // Optimistic update
+    const previousCart = cart;
+    const updatedItems = cart.items.map((item) =>
+      item.idProducto === idProducto && item.idVariante === idVariante
+        ? { ...item, cantidad: nuevaCantidad }
+        : item
+    );
+    setCart({ ...cart, items: updatedItems });
+
     try {
-      await fetch(`${apiUrl}/${userId}/items/${idProducto}?nuevaCantidad=${nuevaCantidad}`, {
-        method: "PATCH",
-      });
-      await fetchCart();
+      const url = `${baseUrl}/${cartId}/anonimo/items/${idProducto}/${idVariante ?? 0}?nuevaCantidad=${nuevaCantidad}`;
+      const res = await fetch(url, { method: "PATCH" });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const updated = await res.json();
+      setCart(updated);
+      setError(null);
     } catch (err) {
+      // Revertir en caso de error
+      setCart(previousCart);
       setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
 
-  // Eliminar item
-  const removeFromCart = async (idProducto: number) => {
-    setLoading(true);
+  // ---------- Eliminar producto ----------
+  const removeFromCart = async (idProducto: number, idVariante?: number | null) => {
+    if (!cart) return;
+
+    // Optimistic update
+    const previousCart = cart;
+    const updatedItems = cart.items.filter(
+      (item) => !(item.idProducto === idProducto && item.idVariante === idVariante)
+    );
+    setCart({ ...cart, items: updatedItems });
+
     try {
-      await fetch(`${apiUrl}/${userId}/items/${idProducto}`, { method: "DELETE" });
-      await fetchCart();
+      const url = `${baseUrl}/${cartId}/anonimo/items/${idProducto}/${idVariante ?? 0}`;
+      const res = await fetch(url, { method: "DELETE" });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const updated = await res.json();
+      setCart(updated);
+      setError(null);
     } catch (err) {
+      // Revertir en caso de error
+      setCart(previousCart);
       setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
 
-  return { cart, loading, error, addToCart, updateQuantity, removeFromCart };
+  // ---------- Vaciar carrito ----------
+  const clearCart = async () => {
+    if (!cart) return;
+
+    // Optimistic update
+    const previousCart = cart;
+    setCart({ ...cart, items: [] });
+
+    try {
+      const url = `${baseUrl}/${cartId}/anonimo/items`;
+      const res = await fetch(url, { method: "DELETE" });
+
+      if (!res.ok && res.status !== 204) throw new Error(`Error ${res.status}`);
+      setError(null);
+    } catch (err) {
+      // Revertir en caso de error
+      setCart(previousCart);
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  return {
+    cart,
+    loading,
+    error,
+    fetchCart,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+  };
 }
