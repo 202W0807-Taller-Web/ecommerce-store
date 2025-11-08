@@ -16,7 +16,7 @@ export interface Carrito {
 }
 
 export function useCart() {
-  const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL + "api/carritos";
+  const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL + "/api/carritos";
   const cartId = 7; // 🔹 temporalmente hardcodeado
   const [cart, setCart] = useState<Carrito | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export function useCart() {
     // Optimistic update
     const previousCart = cart;
     const existingItemIndex = cart.items.findIndex(
-      (item) => item.idProducto === producto.idProducto && 
+      (item) => item.idProducto === producto.idProducto &&
                 item.idVariante === producto.idVariante
     );
 
