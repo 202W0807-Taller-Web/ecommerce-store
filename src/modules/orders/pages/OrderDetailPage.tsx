@@ -5,7 +5,7 @@ import { usePedidoDetail } from '../hooks/usePedidoDetail';
 
 interface DetalleProducto {
     nombre: string;
-    marca: string;
+    descripcion: string;
     imagen: string;
 }
 
@@ -17,7 +17,20 @@ interface OrderItemType {
 }
 
 // Componente para un item individual del pedido - AHORA CON ESTILO
-function OrderItem({ item }: { item: any }) {
+function OrderItem({ item, entrega }: { item: any, entrega: any }) {
+
+    const tiempoEstimadoDias =
+        entrega?.tipo === "RECOJO_TIENDA"
+            ? entrega?.tiempoEstimadoDias
+            : entrega?.carrierSeleccionado?.tiempo_estimado_dias;
+
+    // Construir el mensaje
+    const mensajeEntrega =
+        tiempoEstimadoDias !== undefined && tiempoEstimadoDias !== null
+            ? `Llegada estimada en un plazo de ${tiempoEstimadoDias} días`
+            : "Tiempo estimado no disponible";
+
+
     return (
         // Se añade borde inferior y padding
         <div className="flex items-start gap-x-6 py-6 last:pb-0 first:pt-0 border-b border-gray-200 last:border-b-0">
@@ -30,9 +43,10 @@ function OrderItem({ item }: { item: any }) {
                 <p className="font-semibold text-lg text-gray-800">{item.detalle_producto?.nombre || 'Nombre no disponible'}</p>
                 {/* CORRECCIÓN: Se muestra el precio unitario correcto */}
                 <p className="text-sm text-gray-600 mb-1">S/{(item.precioUnitario || 0).toFixed(2)}</p>
-                <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.marca || 'Marca no disponible'}</p>
+                {/* <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.marca || 'Marca no disponible'}</p> */}
+                <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.descripcion || 'Descripción no disponible'}</p>
                  {/* AÑADIDO: Texto de devolución como en el mockup */}
-                <p className="text-xs text-gray-500 mt-2">Devolución elegible hasta el 27 de Agosto de 2025</p>
+                <p className="text-xs text-gray-500 mt-2">{mensajeEntrega}</p>
             </div>
             <span className="text-gray-600">x {item.cantidad || 1}</span>
         </div>
@@ -95,7 +109,7 @@ export default function OrderDetailPage() {
                         {/* 2. EL CONTENIDO AHORA TIENE SU PROPIO DIV CON PADDING */}
                         <div className="px-6">
                             {pedido.items?.map((item: OrderItemType, index: number) => (
-                                <OrderItem key={index} item={item} />
+                                <OrderItem key={index} item={item} entrega={pedido.entrega} />
                             ))}
                         </div>
                     </div>
@@ -103,17 +117,66 @@ export default function OrderDetailPage() {
                     {/* La columna de detalles ahora usa el componente InfoCard */}
                     <div className="space-y-6">
                         <InfoCard title="Envío" icon="/icons/camion.png">
-                            <p className="font-semibold">{pedido.direccionEnvio?.nombreCompleto || 'N/A'}</p>
-                            <p>{pedido.direccionEnvio?.direccionLinea1 || 'N/A'}</p>
+                            {/* Etiqueta tipo de entrega */}
+                            {pedido.entrega?.tipo && (
+                                <div className="inline-block bg-[#F6E8C2] text-[#C9B35E] font-bold text-sm px-3 py-1 rounded-md shadow-sm whitespace-nowrap">
+                                    {pedido.entrega.tipo === 'RECOJO_TIENDA' ? 'RECOJO EN TIENDA' : 'ENVÍO A DOMICILIO'}
+                                </div>
+                            )}
+
+                                {/* Mostrar datos según tipo de entrega */}
+                                {pedido.entrega?.tipo === 'RECOJO_TIENDA' && (
+                                    <>
+                                        <p className="font-semibold">
+                                            {pedido.entrega?.tiendaSeleccionada?.nombre || 'N/A'}
+                                        </p>
+                                        <p><span className="font-bold">Dirección:</span> {pedido.entrega?.tiendaSeleccionada?.direccion || 'N/A'}</p>
+                                        <p><span className="font-bold">Fecha entrega estimada:</span>{" "}
+                                            {pedido.entrega?.fechaEntregaEstimada 
+                                                ? new Date(pedido.entrega.fechaEntregaEstimada).toLocaleDateString('es-ES', {
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                })
+                                                : 'N/A'}
+                                        </p>
+                                        <br />
+                                        <p className="font-semibold text-[#C9B35E]">{pedido.entrega?.descripcion || 'N/A'}</p>
+                                    </>
+                                )}
+
+                                {pedido.entrega?.tipo === 'DOMICILIO' && (
+                                    <>
+                                        <p className="font-semibold">
+                                            <span className="font-bold">Servicio de mensajería:</span> {pedido.entrega?.carrierSeleccionado?.carrier_nombre || 'N/A'}
+                                        </p>
+                                        <p><span className="font-bold">Enviar a:</span> {pedido.direccionEnvio?.nombreCompleto || 'N/A'}</p>
+                                        <p><span className="font-bold">Dirección:</span> {pedido.direccionEnvio?.direccionLinea1 || 'N/A'} - {pedido.direccionEnvio?.direccionLinea2 || 'N/A'}</p>
+                                        <p><span className="font-bold">Fecha entrega estimada:</span>{" "}
+                                            {pedido.entrega?.carrierSeleccionado.fecha_entrega_estimada 
+                                                ? new Date(pedido.entrega.carrierSeleccionado.fecha_entrega_estimada).toLocaleDateString('es-ES', {
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                })
+                                                : 'N/A'}
+                                        </p>
+                                    </>
+                                )}
+
                         </InfoCard>
 
                         {/* AÑADIDO: Tarjeta de método de pago */}
                         <InfoCard title="Método Pago" icon="/icons/tarjeta.png">
                             <p>{pedido.metodoPago || 'No especificado'}</p>
                             <p>
-                                {pedido.pago?.fecha_pago
-                                    ? `${new Date(pedido.pago.fecha_pago).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} | #${pedido.pago.estado}`
-                                    : 'Pago no realizado'}
+                                {pedido.pago?.fecha_pago ? (
+                                <>
+                                    {new Date(pedido.pago.fecha_pago).toLocaleDateString('es-ES', {day: 'numeric',month: 'long',})}{" "}
+                                    |{" "}
+                                    {pedido.pago.estado === 'PAGO_EXITOSO'? <span className="text-green-600 font-semibold">PAGO EXITOSO</span> : pedido.pago.estado}
+                                </>
+                                ) : (
+                                    'Pago no realizado'
+                                )}
                             </p>
                         </InfoCard>
                         
@@ -124,7 +187,7 @@ export default function OrderDetailPage() {
                                {/* CORRECCIÓN 2: Especificar tipos aquí también */}
                                {pedido.items?.map((item: OrderItemType, index: number) => (
                                    <div key={index} className="flex justify-between">
-                                        <span>{item.detalle_producto?.nombre}</span>
+                                        <span>{item.detalle_producto?.nombre || "No disponible"}</span>
                                         <span>S/{(item.subTotal || 0).toFixed(2)}</span>
                                    </div>
                                ))}
@@ -136,7 +199,7 @@ export default function OrderDetailPage() {
                                )}
                                 <div className="flex justify-between">
                                     <span>Envío</span>
-                                    <span className="font-bold text-[#C9B35E]">{pedido.costos?.envio === 0 ? 'Gratis' : `S/${pedido.costos?.envio.toFixed(2)}`}</span>
+                                    <span className={pedido.costos?.envio === 0 ? "font-bold text-[#C9B35E]":""}>{pedido.costos?.envio === 0 ? 'Gratis' : `S/${pedido.costos?.envio.toFixed(2)}`}</span>
                                 </div>
                                 {pedido.costos?.impuestos !== undefined && (
                                     <div className="flex justify-between text-gray-700">
@@ -158,7 +221,9 @@ export default function OrderDetailPage() {
                 <div className="mt-8 px-4 py-3 text-sm text-gray-800 border-t border-gray-200 bg-white rounded-lg shadow-sm">
                     <div className="flex justify-end space-x-6">
                         <div>
-                            <span className="font-medium text-[#766F5D]">{pedido.items?.length || 0} Artículos:</span>{' '}
+                            <span className="font-medium text-[#766F5D]">
+                                {pedido.items?.reduce((acc, item) => acc + (item.cantidad || 0), 0)} Artículos:
+                            </span>{' '}
                             <span className="font-semibold text-gray-900">S/ {pedido.costos?.total.toFixed(2)}</span>
                         </div>
                         <div>

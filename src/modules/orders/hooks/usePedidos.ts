@@ -7,7 +7,7 @@ export function usePedidos(page = 1, limit = 5) {
     const [meta, setMeta] = useState({ total: 0, page: 1, lastPage: 1 });
 
     useEffect(() => {
-        getMisPedidos('user-456781', page, limit).then(response => {
+        getMisPedidos(123, page, limit).then(response => {
         setPedidos(response.data);
         setMeta({ total: response.total, page: response.page, lastPage: response.lastPage });
         setLoading(false);
