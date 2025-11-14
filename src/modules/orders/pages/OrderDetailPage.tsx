@@ -222,8 +222,8 @@ export default function OrderDetailPage() {
                     <div className="flex justify-end space-x-6">
                         <div>
                             <span className="font-medium text-[#766F5D]">
-                                {pedido.items?.reduce((acc, item) => acc + (item.cantidad || 0), 0)} Artículos:
-                            </span>{' '}
+                                {pedido.items?.reduce((acc:number, item:OrderItemType) => acc + (item.cantidad || 0), 0)} Artículos:
+                            </span>{' '}    
                             <span className="font-semibold text-gray-900">S/ {pedido.costos?.total.toFixed(2)}</span>
                         </div>
                         <div>
