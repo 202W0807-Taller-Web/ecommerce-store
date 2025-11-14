@@ -1,12 +1,15 @@
 // src/orders/services/ordersApi.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3002/api/orders';
-// const API_BASE_URL = 'https://orders-query-833583666995.us-central1.run.app/api/orders';
+
+const API_BASE_URL =
+    import.meta.env.MODE === "production"
+        ? "https://orders-query-833583666995.us-central1.run.app"
+        : "http://localhost:3002";
 
 export async function getMisPedidos(usuarioId: number, page = 1, limit = 5) {
     try {
-        const response = await axios.get(`${API_BASE_URL}/usuario/${usuarioId}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/orders/usuario/${usuarioId}`, {
             params: { page, limit },
         });
         return response.data;
@@ -20,7 +23,7 @@ export async function getMisPedidos(usuarioId: number, page = 1, limit = 5) {
 export async function getPedidoById(orderId: string) {
     try {
         // Asumimos que el endpoint para un pedido es /api/orders/:orderId
-        const response = await axios.get(`${API_BASE_URL}/${orderId}`);
+        const response = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`);
         
         // ¡YA NO HAY MOCK! Simplemente devolvemos los datos reales del backend.
         return response.data;
