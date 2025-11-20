@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from "react";
 
 type Address = {
-  id: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+  id: number;
+  calle: string;
+  ciudad: string;
+  estado?: string;
+  pais: string;
+  codigo_postal?: string;
   isDefault: boolean;
 };
+
 
 type AddressesProps = {
   addresses: Address[];
   onAddAddress: (address: Omit<Address, "id" | "isDefault">) => void;
-  onUpdateAddress: (id: string, address: Partial<Address>) => void;
-  onDeleteAddress: (id: string) => void;
-  onSetDefault: (id: string) => void;
+  onUpdateAddress: (id: number, address: Partial<Address>) => void;
+  onDeleteAddress: (id: number) => void;
+  onSetDefault: (id: number) => void;
 };
 
 export const Addresses = ({
@@ -26,14 +27,14 @@ export const Addresses = ({
   onSetDefault,
 }: AddressesProps) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Address, "id" | "isDefault">>({
-    street: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "Perú",
+    calle: "",
+    ciudad: "",
+    estado: "",
+    codigo_postal: "",
+    pais: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,11 +51,11 @@ export const Addresses = ({
       onAddAddress(formData);
     }
     setFormData({
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "Perú",
+      calle: "",
+      ciudad: "",
+      estado: "",
+      codigo_postal: "",
+      pais: "",
     });
     setIsAdding(false);
   };
@@ -67,7 +68,7 @@ export const Addresses = ({
     setIsAdding(true);
   };
 
-  const toggleMenu = (id: string, e: React.MouseEvent) => {
+  const toggleMenu = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenMenuId(openMenuId === id ? null : id);
   };
@@ -81,11 +82,11 @@ export const Addresses = ({
     setIsAdding(false);
     setEditingId(null);
     setFormData({
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "Perú",
+      calle: "",
+      ciudad: "",
+      estado: "",
+      codigo_postal: "",
+      pais: "",
     });
   };
 
@@ -160,8 +161,8 @@ export const Addresses = ({
                 </label>
                 <input
                   type="text"
-                  name="street"
-                  value={formData.street}
+                  name="calle"
+                  value={formData.calle}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Calle y número"
@@ -175,8 +176,8 @@ export const Addresses = ({
                 </label>
                 <input
                   type="text"
-                  name="city"
-                  value={formData.city}
+                  name="ciudad"
+                  value={formData.ciudad}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Ej: Lima"
@@ -190,8 +191,8 @@ export const Addresses = ({
                 </label>
                 <input
                   type="text"
-                  name="state"
-                  value={formData.state}
+                  name="estado"
+                  value={formData.estado}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Ej: Lima"
@@ -205,8 +206,8 @@ export const Addresses = ({
                 </label>
                 <input
                   type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
+                  name="codigo_postal"
+                  value={formData.codigo_postal}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Ej: 15001"
@@ -221,10 +222,11 @@ export const Addresses = ({
                 <div className="relative">
                   <input
                     type="text"
-                    name="country"
-                    value={formData.country}
+                    name="pais"
+                    value={formData.pais}
+                    onChange={handleInputChange}   
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm sm:text-base"
-                    disabled
+                    placeholder="Ej: Perú"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
@@ -328,11 +330,10 @@ export const Addresses = ({
           {addresses.map((address) => (
             <div
               key={address.id}
-              className={`p-4 sm:p-5 border rounded-lg transition-all ${
-                address.isDefault
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
+              className={`p-4 sm:p-5 border rounded-lg transition-all ${address.isDefault
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
             >
               <div className="flex flex-col h-full">
                 <div className="flex-grow">
@@ -351,13 +352,13 @@ export const Addresses = ({
                         </span>
                       )}
                       <h3 className="text-base font-medium text-gray-900 mb-1">
-                        {address.street}
+                        {address.calle}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {address.city}, {address.state}
+                        {address.ciudad}, {address.estado}
                       </p>
-                      <p className="text-sm text-gray-600">{address.zipCode}</p>
-                      <p className="text-sm text-gray-600">{address.country}</p>
+                      <p className="text-sm text-gray-600">{address.codigo_postal}</p>
+                      <p className="text-sm text-gray-600">{address.pais}</p>
                     </div>
 
                     <div className="ml-2 flex-shrink-0">

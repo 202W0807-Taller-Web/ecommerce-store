@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   UserMenu,
   UserProfile,
@@ -6,6 +6,10 @@ import {
   Addresses,
   SecuritySettings,
 } from "../components/user-panel";
+
+//Para cargar direcciones y datos del usuario
+import { getUserAddresses, updateAddress, addAddress, deleteAddress, setDefaultAddress } from "../api/addresses";
+import { useAuth } from "../hooks/useAuth";
 
 type UserData = {
   name: string;
@@ -31,12 +35,71 @@ type Order = {
 
 const UserPanel = () => {
   const [activeTab, setActiveTab] = useState("profile");
+
+  // ⬇️ AQUI va perfectamente
+  const { user, loading } = useAuth();
+
+  const [addresses, setAddresses] = useState<any[]>([]);
+
   const [userData, setUserData] = useState<UserData>({
-    name: "Juan Pérez",
-    email: "juan.perez@example.com",
-    phone: "+51 987 654 321",
-    memberSince: "Enero 2024",
+    name: "Loading...",
+    email: "",
+    phone: "",
+    memberSince: "",
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAddresses = async () => {
+      try {
+        const data = await getUserAddresses(user.id);
+        setAddresses(data);
+      } catch (error) {
+        console.error("Error al obtener direcciones:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, [user]);
+
+  // OJO: este useEffect debe esperar a `user`
+  useEffect(() => {
+
+    if (!user) return;
+
+
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/usuarios/${user.id}`);
+        const data = await response.json();
+
+        setUserData({
+          name: `${data.nombres} ${data.apellido_p} ${data.apellido_m}`,
+          email: data.correo,
+          phone: data.celular ?? "",
+          memberSince: new Date(data.created_at).toLocaleDateString("es-PE", {
+            year: "numeric",
+            month: "long",
+          }),
+        });
+
+      } catch (error) {
+        console.error("Error al obtener información del usuario:", error);
+      }
+    };
+
+    fetchUserInfo();
+  }, [user]);
+
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!user) {
+    return <div>Debes iniciar sesión para ver esta página.</div>;
+  }
 
   // Mock data for orders
   const recentOrders: Order[] = [
@@ -71,27 +134,6 @@ const UserPanel = () => {
     },
   ];
 
-  const [addresses, setAddresses] = useState([
-    {
-      id: "1",
-      street: "Av. Arequipa 1234",
-      city: "Lima",
-      state: "Lima",
-      zipCode: "15001",
-      country: "Perú",
-      isDefault: true,
-    },
-    {
-      id: "2",
-      street: "Calle Los Pinos 456",
-      city: "Arequipa",
-      state: "Arequipa",
-      zipCode: "04001",
-      country: "Perú",
-      isDefault: false,
-    },
-  ]);
-
   const handleUpdateUserData = (newData: Partial<UserData>) => {
     setUserData((prev) => ({ ...prev, ...newData }));
     // Here you would typically make an API call to update the user data
@@ -107,6 +149,8 @@ const UserPanel = () => {
     console.log("Tracking order:", orderId);
     // Navigate to tracking page or show tracking info
   };
+
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -128,33 +172,53 @@ const UserPanel = () => {
         return (
           <Addresses
             addresses={addresses}
-            onAddAddress={(newAddress) => {
-              setAddresses([
-                ...addresses,
-                {
-                  ...newAddress,
-                  id: Date.now().toString(),
-                  isDefault: addresses.length === 0,
-                },
-              ]);
+            onAddAddress={async (newAddress) => {
+              /*try {
+                const created = await addAddress(user.id, newAddress);
+                setAddresses([...addresses, created]);
+              } catch (err) {
+                console.error(err);
+                alert("No se pudo crear la dirección");
+              }*/
+              try {
+                await addAddress(user.id, newAddress);
+                
+              } catch (error: any) {
+                console.log("➡️ Datos a enviar:", newAddress);
+                console.error("ERROR AL CREAR DIRECCIÓN:", error.response?.data || error);
+                alert("No se pudo crear la dirección");
+              }
+
             }}
-            onUpdateAddress={(id, updatedAddress) => {
-              setAddresses(
-                addresses.map((addr) =>
-                  addr.id === id ? { ...addr, ...updatedAddress } : addr
-                )
-              );
+
+            onUpdateAddress={async (id, updatedAddress) => {
+              try {
+                const updated = await updateAddress(id, updatedAddress);
+
+                // Actualiza el estado con lo que devolvió el backend
+                setAddresses(addresses.map(a => a.id === id ? updated : a));
+
+              } catch (err) {
+                console.error("Error al actualizar dirección:", err);
+                alert("Hubo un problema al actualizar la dirección.");
+              }
             }}
-            onDeleteAddress={(id) => {
-              setAddresses(addresses.filter((addr) => addr.id !== id));
+            onDeleteAddress={async (id) => {
+              try {
+                await deleteAddress(id);
+                setAddresses(addresses.filter(addr => addr.id !== id));
+              } catch (err) {
+                console.error("Error al eliminar dirección:", err);
+                alert("No se pudo eliminar");
+              }
             }}
-            onSetDefault={(id) => {
-              setAddresses(
-                addresses.map((addr) => ({
-                  ...addr,
-                  isDefault: addr.id === id,
-                }))
-              );
+            onSetDefault={async (id) => {
+              try {
+                const updatedList = await setDefaultAddress(id);
+                setAddresses(updatedList);
+              } catch (err) {
+                console.error("Error al establecer default:", err);
+              }
             }}
           />
         );

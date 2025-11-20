@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { updateUser } from "../../api/users";
+import { useAuth } from "../../hooks/useAuth";
 
 type UserData = {
   name: string;
@@ -14,6 +16,11 @@ type UserProfileProps = {
 
 export const UserProfile = ({ userData, onUpdate }: UserProfileProps) => {
   const [formData, setFormData] = useState(userData);
+  const { user } = useAuth(); // ⬅ Necesitamos el ID del usuario
+
+  useEffect(() => {
+    setFormData(userData);
+  }, [userData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -23,9 +30,39 @@ export const UserProfile = ({ userData, onUpdate }: UserProfileProps) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(formData);
+
+    if (!user) return alert("Error: usuario no autenticado");
+
+    // Dividir el nombre completo
+    const partes = formData.name.trim().split(" ");
+    const nombres = partes.shift() || "";
+    const apellido_p = partes.shift() || "";
+    const apellido_m = partes.join(" ") || "";
+
+    try {
+      const updated = await updateUser(user.id, {
+        nombres,
+        apellido_p,
+        apellido_m,
+        correo: formData.email,
+        celular: formData.phone,
+      });
+
+      // Actualiza el panel con los nuevos datos
+      onUpdate({
+        name: `${updated.nombres} ${updated.apellido_p} ${updated.apellido_m}`,
+        email: updated.correo,
+        phone: updated.celular ?? "",
+      });
+
+      alert("Datos actualizados correctamente");
+
+    } catch (error: any) {
+      console.error("Error al actualizar usuario:", error);
+      alert("Error al guardar cambios");
+    }
   };
 
   return (
@@ -82,7 +119,7 @@ export const UserProfile = ({ userData, onUpdate }: UserProfileProps) => {
             </div>
           </div>
           <div className="mt-6">
-            <button 
+            <button
               type="submit"
               className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
             >
