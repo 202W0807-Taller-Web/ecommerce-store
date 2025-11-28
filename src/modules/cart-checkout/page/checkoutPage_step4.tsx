@@ -80,7 +80,15 @@ export default function Checkout_Step4() {
         : {
             tipo: "DOMICILIO",
             almacenOrigen: deliveryInfo.almacenOrigen,
-            carrierSeleccionado: deliveryInfo.carrierSeleccionado,
+            carrierSeleccionado: deliveryInfo.carrierSeleccionado ? {
+              carrier_id: deliveryInfo.carrierSeleccionado.carrier_id,
+              carrier_nombre: deliveryInfo.carrierSeleccionado.carrier_nombre,
+              carrier_codigo: deliveryInfo.carrierSeleccionado.carrier_codigo,
+              costo_envio: deliveryInfo.carrierSeleccionado.costo_envio,
+              tiempo_estimado_dias: deliveryInfo.carrierSeleccionado.tiempo_estimado_dias,
+              fecha_entrega_estimada: deliveryInfo.carrierSeleccionado.fecha_entrega_estimada,
+              cotizacion_id: deliveryInfo.carrierSeleccionado.cotizacion_id,
+            } : undefined,
             direccionEnvioId: deliveryInfo.direccionEnvioId ?? address?.id,
           };
 
@@ -106,11 +114,11 @@ export default function Checkout_Step4() {
       })),
       costos: costos || {
         subtotal: cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-        impuestos: 0,
-        envio: deliveryInfo?.costoEnvio ?? 0,
+        impuestos: 0.0,
+        envio: deliveryInfo?.costoEnvio ?? 0.0,
         total:
           cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +
-          (deliveryInfo?.costoEnvio ?? 0),
+          (deliveryInfo?.costoEnvio ?? 0.0),
       },
       entrega: entregaPayload,
       metodoPago: "SIMULADO",
