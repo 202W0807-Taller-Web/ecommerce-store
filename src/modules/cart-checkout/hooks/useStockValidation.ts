@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { StockInfo, ProductStockStatus } from "../entities";
-
-// Re-exportar para retrocompatibilidad
 export type { StockInfo, ProductStockStatus } from "../entities";
 
 export function useStockValidation(productIds: number[]) {
@@ -11,6 +9,8 @@ export function useStockValidation(productIds: number[]) {
 
   const hasFetchedRef = useRef(false);
   const lastRequestRef = useRef<string>("");
+
+  const API_URL = import.meta.env.VITE_API_INVENTORY_URL;
 
   const fetchStock = useCallback(async () => {
     if (!productIds || productIds.length === 0) {
@@ -29,7 +29,7 @@ export function useStockValidation(productIds: number[]) {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_INVENTORY_URL}/api/stock/bulk`,
+        `${API_URL}/api/stock/bulk`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
