@@ -172,11 +172,6 @@ describe('useCart', () => {
   });
 
   it('should clear cart', async () => {
-    const clearedCart: Carrito = {
-      ...mockCart,
-      items: [],
-    };
-
     // Mock para fetchCart inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
