@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import CheckoutSteps from "../components/checkoutSteps";
 import { useOrdersService } from "../hooks/useOrdersService";
 import { useCart } from "../hooks/useCart";
+import type { Address, Carrier, AlmacenOrigen, Store } from "../entities";
 
 type CartItem = {
   idProducto: number;
@@ -10,18 +11,6 @@ type CartItem = {
   cantidad: number;
   precio: number;
   imagen?: string;
-};
-
-type Address = {
-  id?: number;
-  direccionLinea1: string;
-  direccionLinea2?: string;
-  ciudad: string;
-  provincia: string;
-  codigoPostal: string;
-  pais: string;
-  latitud?: number;
-  longitud?: number;
 };
 
 type UserInfo = {
@@ -32,9 +21,9 @@ type UserInfo = {
 
 type DeliveryInfo = {
   tipo: "RECOJO_EN_TIENDA" | "ENVIO_A_DOMICILIO";
-  almacenOrigen: any;
-  tiendaSeleccionada?: any;
-  carrierSeleccionado?: any;
+  almacenOrigen: AlmacenOrigen;
+  tiendaSeleccionada?: Store;
+  carrierSeleccionado?: Carrier;
   costoEnvio?: number;
   tiempoEstimadoDias?: number;
   fechaEntregaEstimada?: string;
