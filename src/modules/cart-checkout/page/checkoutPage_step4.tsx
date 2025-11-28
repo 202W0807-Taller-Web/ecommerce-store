@@ -112,13 +112,14 @@ export default function Checkout_Step4() {
         precioUnitario: it.precio,
         subTotal: it.precio * it.cantidad,
       })),
-      costos: costos || {
-        subtotal: cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-        impuestos: 0.0,
-        envio: deliveryInfo?.costoEnvio ?? 0.0,
-        total:
+      costos: {
+        subtotal: costos?.subtotal ?? cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
+        impuestos: Number(costos?.impuestos ?? 0.0),
+        envio: costos?.envio ?? deliveryInfo?.costoEnvio ?? 0.0,
+        total: costos?.total ?? (
           cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +
-          (deliveryInfo?.costoEnvio ?? 0.0),
+          (deliveryInfo?.costoEnvio ?? 0.0)
+        ),
       },
       entrega: entregaPayload,
       metodoPago: "SIMULADO",
