@@ -4,14 +4,14 @@ export function useOrdersService() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL;
+  const apiUrl = import.meta.env.VITE_API_ORDERS_URL;
 
   const createOrder = async (payload: any) => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`${apiUrl}/api/proxy/orders`, {
+      const res = await fetch(`${apiUrl}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

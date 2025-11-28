@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-
-interface UserLocation {
-  lat: number | null;
-  lng: number | null;
-  loading: boolean;
-  error: string | null;
-}
+import type { UserLocation } from "../entities";
 
 export function useUserLocation(): UserLocation {
   const [location, setLocation] = useState<UserLocation>({
