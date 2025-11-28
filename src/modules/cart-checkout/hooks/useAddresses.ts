@@ -1,17 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+import type { Address, AddressForm } from "../entities";
 
-export type Address = {
-  id: number;
-  direccionLinea1: string;
-  direccionLinea2?: string;
-  ciudad: string;
-  provincia: string;
-  codigoPostal: string;
-  pais: string;
-  principal: boolean;
-};
-
-export type AddressForm = Omit<Address, "id">;
+// Re-exportar para retrocompatibilidad
+export type { Address, AddressForm } from "../entities";
 
 export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
   const [addresses, setAddresses] = useState<Address[]>([]);
