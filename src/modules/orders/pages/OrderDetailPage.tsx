@@ -18,58 +18,6 @@ interface OrderItemType {
     detalle_producto: DetalleProducto;
 }
 
-// Componente para un item individual del pedido - AHORA CON ESTILO
-// function OrderItem({ item, entrega }: { item: any, entrega: any }) {
-
-//     const tiempoEstimadoDias =
-//         entrega?.tipo === "RECOJO_TIENDA"
-//             ? entrega?.tiempoEstimadoDias
-//             : entrega?.carrierSeleccionado?.tiempo_estimado_dias;
-
-//     // Construir el mensaje
-//     const mensajeEntrega =
-//         tiempoEstimadoDias !== undefined && tiempoEstimadoDias !== null
-//             ? `Llegada estimada en un plazo de ${tiempoEstimadoDias} días`
-//             : "Tiempo estimado no disponible";
-
-
-//     return (
-//         // Se añade borde inferior y padding
-//         <div className="flex items-start gap-x-6 py-6 last:pb-0 first:pt-0 border-b border-gray-200 last:border-b-0">
-//             <img 
-//                 src={item.detalle_producto?.imagen || '/placeholder.png'} 
-//                 alt={item.detalle_producto?.nombre || 'Producto'} 
-//                 className="w-24 h-24 object-cover rounded-lg bg-gray-100" 
-//             />
-//             <div className="flex-1">
-//                 <p className="font-semibold text-lg text-gray-800">{item.detalle_producto?.nombre || 'Nombre no disponible'}</p>
-//                 {/* CORRECCIÓN: Se muestra el precio unitario correcto */}
-//                 <p className="text-sm text-gray-600 mb-1">S/{(item.precioUnitario || 0).toFixed(2)}</p>
-//                 {/* <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.marca || 'Marca no disponible'}</p> */}
-//                 <p className="text-sm text-gray-500 font-medium">{item.detalle_producto?.descripcion || 'Descripción no disponible'}</p>
-//                  {/* AÑADIDO: Texto de devolución como en el mockup */}
-//                 <p className="text-xs text-gray-500 mt-2">{mensajeEntrega}</p>
-//             </div>
-//             <span className="text-gray-600">x {item.cantidad || 1}</span>
-//         </div>
-//     );
-// }
-
-// // NUEVO: Componente reutilizable para las tarjetas de información
-// function InfoCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
-//     return (
-//         // Estilos de la tarjeta como en el mockup
-//         <div className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
-//             <div className="flex items-center gap-x-3 mb-3">
-//                 <img src={icon} alt={title} className="w-6 h-6" />
-//                 <h3 className="font-bold text-gray-700">{title}</h3>
-//             </div>
-//             <div className="text-sm text-gray-600 space-y-1">
-//                 {children}
-//             </div>
-//         </div>
-//     );
-// }
 
 
 export default function OrderDetailPage() {
