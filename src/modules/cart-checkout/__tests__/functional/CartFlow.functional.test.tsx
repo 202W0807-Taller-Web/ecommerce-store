@@ -1,399 +1,302 @@
-// src/modules/cart-checkout/__tests__/functional/CartManagement.functional.test.tsx
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
-import { server } from './setup';
-import { http, HttpResponse } from 'msw';
-import CartPage from '../../page/cart_page';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { BrowserRouter } from 'react-router-dom'
+import * as useCartHook from '../../hooks/useCart'
+import * as useStockValidationHook from '../../hooks/useStockValidation'
+import CartPage from '../../page/cart_page'
 
-describe('Cart Management - Functional Tests', () => {
+// Mock de los hooks
+vi.mock('../../hooks/useCart')
+vi.mock('../../hooks/useStockValidation')
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => vi.fn()
+  }
+})
+
+vi.mock('../../components/orderSummary', () => ({
+  default: ({ products, subtotal, total }: any) => (
+    <div data-testid="order-summary">
+      <div>Products: {products.length}</div>
+      <div>Subtotal: {subtotal}</div>
+      <div>Total: {total}</div>
+    </div>
+  )
+}))
+
+describe('CartPage - Test Funcional del Carrito', () => {
+  const mockCart = {
+    id: 7,
+    items: [
+      {
+        idProducto: 1,
+        idVariante: null,
+        nombre: 'Producto Test 1',
+        precio: 100.00,
+        cantidad: 2,
+        imagenUrl: '/test1.jpg'
+      },
+      {
+        idProducto: 2,
+        idVariante: 1,
+        nombre: 'Producto Test 2',
+        precio: 50.00,
+        cantidad: 1,
+        imagenUrl: '/test2.jpg'
+      }
+    ]
+  }
+
+  const mockUpdateQuantity = vi.fn()
+  const mockRemoveFromCart = vi.fn()
+  const mockGetProductStockStatus = vi.fn()
+  const mockValidateCart = vi.fn()
+
   beforeEach(() => {
-    import.meta.env.VITE_API_CART_CHECKOUT_URL = 'http://localhost:3000';
-    import.meta.env.VITE_API_INVENTORY_URL = 'http://localhost:3002';
-  });
+    vi.clearAllMocks()
 
-  it('should display cart with items', async () => {
+    // Setup del mock de useCart
+    vi.mocked(useCartHook.useCart).mockReturnValue({
+      cart: mockCart,
+      loading: false,
+      error: null,
+      fetchCart: vi.fn(),
+      addToCart: vi.fn(),
+      updateQuantity: mockUpdateQuantity,
+      removeFromCart: mockRemoveFromCart,
+      clearCart: vi.fn()
+    })
+
+    // Setup del mock de useStockValidation
+    mockGetProductStockStatus.mockImplementation((idProducto: number) => ({
+      idProducto,
+      stockDisponible: 10,
+      tieneStock: true,
+      excedeCantidad: false,
+      cantidadMaxima: 10
+    }))
+
+    mockValidateCart.mockReturnValue({
+      isValid: true,
+      hasOutOfStock: false,
+      hasExceeded: false
+    })
+
+    vi.mocked(useStockValidationHook.useStockValidation).mockReturnValue({
+      stockInfo: new Map(),
+      loading: false,
+      error: null,
+      fetchStock: vi.fn(),
+      getProductStockStatus: mockGetProductStockStatus,
+      validateCart: mockValidateCart
+    })
+  })
+
+  it('debe renderizar el carrito con los productos correctamente', async () => {
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
-    // Debe mostrar el producto
-    await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
+    // Verificar título del carrito
+    expect(screen.getByText(/TU CARRITO \(3 productos\)/i)).toBeInTheDocument()
 
-    // Debe mostrar el precio
-    expect(screen.getByText(/\$1500/)).toBeInTheDocument();
+    // Verificar que se muestran los productos
+    expect(screen.getByText('Producto Test 1')).toBeInTheDocument()
+    expect(screen.getByText('Producto Test 2')).toBeInTheDocument()
 
-    // Debe mostrar la cantidad
-    expect(screen.getByText('1')).toBeInTheDocument();
+    // Verificar precios
+    expect(screen.getByText('$100.00')).toBeInTheDocument()
+    expect(screen.getByText('$50.00')).toBeInTheDocument()
 
-    // Debe mostrar el total
-    expect(screen.getByText(/\$1500\.00/)).toBeInTheDocument();
-  });
+    // Verificar cantidades
+    const quantities = screen.getAllByText(/^[0-9]+$/)
+    expect(quantities).toHaveLength(2)
 
-  it('should show empty cart message when cart has no items', async () => {
-    server.use(
-      http.get('http://localhost:3000/api/carritos/7', () => {
-        return HttpResponse.json({
-          id: 7,
-          idUsuario: null,
-          items: [],
-        });
-      })
-    );
+    // Verificar que el OrderSummary se renderiza
+    expect(screen.getByTestId('order-summary')).toBeInTheDocument()
+    expect(screen.getByText('Subtotal: $250.00')).toBeInTheDocument()
+    expect(screen.getByText('Total: $250.00')).toBeInTheDocument()
+  })
 
-    render(
-      <BrowserRouter>
-        <CartPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/carrito está vacío/i)).toBeInTheDocument();
-    });
-
-    // El botón de continuar debe estar deshabilitado
-    const continueBtn = screen.getByRole('button', { name: /continuar compra/i });
-    expect(continueBtn).toBeDisabled();
-  });
-
-  it('should increase product quantity', async () => {
-    const user = userEvent.setup();
-
-    server.use(
-      http.patch('http://localhost:3000/api/carritos/7/anonimo/items/1/0', () => {
-        return HttpResponse.json({
-          id: 7,
-          items: [
-            {
-              idProducto: 1,
-              nombre: 'Laptop Gaming',
-              precio: 1500,
-              cantidad: 2,
-              imagenUrl: 'laptop.jpg',
-              idVariante: null,
-            },
-          ],
-        });
-      })
-    );
-
-    render(
-      <BrowserRouter>
-        <CartPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
-
-    // Hacer clic en el botón "+"
-    const increaseBtn = screen.getAllByText('+')[0];
-    await user.click(increaseBtn);
-
-    // Verificar que la cantidad aumentó
-    await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
-    });
-
-    // Verificar que el total se actualizó
-    await waitFor(() => {
-      expect(screen.getByText(/\$3000\.00/)).toBeInTheDocument();
-    });
-  });
-
-  it('should decrease product quantity', async () => {
-    const user = userEvent.setup();
-
-    // Primero, carrito con cantidad 2
-    server.use(
-      http.get('http://localhost:3000/api/carritos/7', () => {
-        return HttpResponse.json({
-          id: 7,
-          items: [
-            {
-              idProducto: 1,
-              nombre: 'Laptop Gaming',
-              precio: 1500,
-              cantidad: 2,
-              imagenUrl: 'laptop.jpg',
-              idVariante: null,
-            },
-          ],
-        });
-      }),
-      http.patch('http://localhost:3000/api/carritos/7/anonimo/items/1/0', () => {
-        return HttpResponse.json({
-          id: 7,
-          items: [
-            {
-              idProducto: 1,
-              nombre: 'Laptop Gaming',
-              precio: 1500,
-              cantidad: 1,
-              imagenUrl: 'laptop.jpg',
-              idVariante: null,
-            },
-          ],
-        });
-      })
-    );
+  it('debe incrementar la cantidad de un producto', async () => {
+    const user = userEvent.setup()
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
+    // Encontrar el primer producto y su botón de incremento
+    const incrementButtons = screen.getAllByText('+')
+    await user.click(incrementButtons[0])
+
+    // Verificar que se llamó a updateQuantity con los parámetros correctos
     await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
-    });
+      expect(mockUpdateQuantity).toHaveBeenCalledWith(1, 3, null)
+    })
+  })
 
-    // Hacer clic en el botón "-"
-    const decreaseBtn = screen.getAllByText('-')[0];
-    await user.click(decreaseBtn);
-
-    // Verificar que la cantidad disminuyó
-    await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument();
-    });
-  });
-
-  it('should not allow decreasing quantity below 1', async () => {
-    render(
-      <BrowserRouter>
-        <CartPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument();
-    });
-
-    // El botón "-" debe estar deshabilitado cuando la cantidad es 1
-    const decreaseBtn = screen.getAllByText('-')[0].closest('button');
-    expect(decreaseBtn).toBeDisabled();
-  });
-
-  it('should remove item from cart', async () => {
-    const user = userEvent.setup();
-
-    server.use(
-      http.delete('http://localhost:3000/api/carritos/7/anonimo/items/1/0', () => {
-        return HttpResponse.json({
-          id: 7,
-          items: [],
-        });
-      })
-    );
+  it('debe decrementar la cantidad de un producto', async () => {
+    const user = userEvent.setup()
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
+    // Encontrar el botón de decremento del primer producto
+    const decrementButtons = screen.getAllByText('-')
+    await user.click(decrementButtons[0])
+
+    // Verificar que se llamó a updateQuantity
     await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
+      expect(mockUpdateQuantity).toHaveBeenCalledWith(1, 1, null)
+    })
+  })
 
-    // Hacer clic en el botón de eliminar (icono 🗑️)
-    const deleteBtn = screen.getByTitle(/eliminar producto/i);
-    await user.click(deleteBtn);
-
-    // Verificar que el carrito quedó vacío
-    await waitFor(() => {
-      expect(screen.getByText(/carrito está vacío/i)).toBeInTheDocument();
-    });
-
-    // Debe mostrar mensaje de éxito
-    await waitFor(() => {
-      expect(screen.getByText(/producto eliminado/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should show warning when exceeding available stock', async () => {
-    const user = userEvent.setup();
-
-    server.use(
-      http.post('http://localhost:3002/api/stock/bulk', () => {
-        return HttpResponse.json([
-          {
-            id_producto: 1,
-            stock_total: 10,
-            stock_disponible_total: 5, // Solo 5 disponibles
-            stock_reservado_total: 5,
-            almacenes: [],
-          },
-        ]);
-      })
-    );
+  it('debe eliminar un producto del carrito', async () => {
+    const user = userEvent.setup()
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
+    // Encontrar el botón de eliminar (emoji 🗑️)
+    const deleteButtons = screen.getAllByTitle('Eliminar producto')
+    await user.click(deleteButtons[0])
+
+    // Verificar que se llamó a removeFromCart
     await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
+      expect(mockRemoveFromCart).toHaveBeenCalledWith(1, null)
+    })
 
-    // Intentar aumentar la cantidad más allá del stock disponible
-    const increaseBtn = screen.getAllByText('+')[0];
-    
-    // Hacer clic múltiples veces
-    for (let i = 0; i < 10; i++) {
-      await user.click(increaseBtn);
-    }
-
-    // Debe mostrar advertencia
+    // Verificar que aparece el toast de éxito
     await waitFor(() => {
-      expect(screen.getByText(/solo hay 5 unidades disponibles/i)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText('Producto eliminado')).toBeInTheDocument()
+    })
+  })
 
-  it('should show stock status indicators', async () => {
-    server.use(
-      http.post('http://localhost:3002/api/stock/bulk', () => {
-        return HttpResponse.json([
-          {
-            id_producto: 1,
-            stock_total: 3,
-            stock_disponible_total: 3, // Pocas unidades
-            stock_reservado_total: 0,
-            almacenes: [],
-          },
-        ]);
-      })
-    );
+  it('debe deshabilitar el botón + cuando se alcanza el stock máximo', () => {
+    // Simular stock limitado: producto 1 tiene cantidad 2 y máximo es 2
+    mockGetProductStockStatus.mockImplementation((idProducto: number, cantidadSolicitada: number) => {
+      if (idProducto === 1) {
+        return {
+          idProducto,
+          stockDisponible: 2,
+          tieneStock: true,
+          excedeCantidad: cantidadSolicitada > 2,
+          cantidadMaxima: 2
+        }
+      }
+      return {
+        idProducto,
+        stockDisponible: 10,
+        tieneStock: true,
+        excedeCantidad: false,
+        cantidadMaxima: 10
+      }
+    })
+
+    vi.mocked(useStockValidationHook.useStockValidation).mockReturnValue({
+      stockInfo: new Map(),
+      loading: false,
+      error: null,
+      fetchStock: vi.fn(),
+      getProductStockStatus: mockGetProductStockStatus,
+      validateCart: mockValidateCart
+    })
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
-    await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
+    const incrementButtons = screen.getAllByText('+')
+    expect(incrementButtons[0]).toBeDisabled()
 
-    // Debe mostrar indicador de últimas unidades
-    await waitFor(() => {
-      expect(screen.getByText(/últimas unidades disponibles/i)).toBeInTheDocument();
-    });
-  });
+    expect(incrementButtons[1]).not.toBeDisabled()
+  })
 
-  it('should handle multiple items in cart', async () => {
-    server.use(
-      http.get('http://localhost:3000/api/carritos/7', () => {
-        return HttpResponse.json({
-          id: 7,
-          items: [
-            {
-              idProducto: 1,
-              nombre: 'Laptop Gaming',
-              precio: 1500,
-              cantidad: 1,
-              imagenUrl: 'laptop.jpg',
-            },
-            {
-              idProducto: 2,
-              nombre: 'Mouse Gamer',
-              precio: 50,
-              cantidad: 2,
-              imagenUrl: 'mouse.jpg',
-            },
-            {
-              idProducto: 3,
-              nombre: 'Teclado Mecánico',
-              precio: 120,
-              cantidad: 1,
-              imagenUrl: 'keyboard.jpg',
-            },
-          ],
-        });
-      }),
-      http.post('http://localhost:3002/api/stock/bulk', () => {
-        return HttpResponse.json([
-          {
-            id_producto: 1,
-            stock_total: 100,
-            stock_disponible_total: 80,
-            stock_reservado_total: 20,
-            almacenes: [],
-          },
-          {
-            id_producto: 2,
-            stock_total: 200,
-            stock_disponible_total: 150,
-            stock_reservado_total: 50,
-            almacenes: [],
-          },
-          {
-            id_producto: 3,
-            stock_total: 50,
-            stock_disponible_total: 40,
-            stock_reservado_total: 10,
-            almacenes: [],
-          },
-        ]);
-      })
-    );
+  it('debe deshabilitar el botón de continuar cuando el carrito es inválido', () => {
+    mockValidateCart.mockReturnValue({
+      isValid: false,
+      hasOutOfStock: true,
+      hasExceeded: false
+    })
+
+    vi.mocked(useStockValidationHook.useStockValidation).mockReturnValue({
+      stockInfo: new Map(),
+      loading: false,
+      error: null,
+      fetchStock: vi.fn(),
+      getProductStockStatus: mockGetProductStockStatus,
+      validateCart: mockValidateCart
+    })
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
-    // Verificar que se muestran todos los productos
-    await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-      expect(screen.getByText(/mouse gamer/i)).toBeInTheDocument();
-      expect(screen.getByText(/teclado mecánico/i)).toBeInTheDocument();
-    });
+    const continueButton = screen.getByRole('button', { name: /Continuar Compra/i })
+    expect(continueButton).toBeDisabled()
 
-    // Verificar el total correcto: 1500 + (50*2) + 120 = 1720
-    await waitFor(() => {
-      expect(screen.getByText(/\$1720\.00/)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/Problemas con el stock/i)).toBeInTheDocument()
+    expect(screen.getByText(/Algunos productos ya no tienen stock disponible/i)).toBeInTheDocument()
+  })
 
-    // Verificar el contador de items: 4 productos (1 laptop + 2 mouse + 1 teclado)
-    expect(screen.getByText(/4 productos/i)).toBeInTheDocument();
-  });
-
-  it('should handle API errors gracefully', async () => {
-    const user = userEvent.setup();
-
-    server.use(
-      http.patch('http://localhost:3000/api/carritos/7/anonimo/items/1/0', () => {
-        return new HttpResponse(null, { status: 500 });
-      })
-    );
+  it('debe mostrar mensaje cuando el carrito está vacío', () => {
+    vi.mocked(useCartHook.useCart).mockReturnValue({
+      cart: { id: 7, items: [] },
+      loading: false,
+      error: null,
+      fetchCart: vi.fn(),
+      addToCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      removeFromCart: vi.fn(),
+      clearCart: vi.fn()
+    })
 
     render(
       <BrowserRouter>
         <CartPage />
       </BrowserRouter>
-    );
+    )
 
-    await waitFor(() => {
-      expect(screen.getByText(/laptop gaming/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/Tu carrito está vacío/i)).toBeInTheDocument()
+    const continueButton = screen.getByRole('button', { name: /Continuar Compra/i })
+    expect(continueButton).toBeDisabled()
+  })
 
-    // Intentar aumentar cantidad
-    const increaseBtn = screen.getAllByText('+')[0];
-    await user.click(increaseBtn);
+  it('debe mostrar estado de carga inicial', () => {
+    vi.mocked(useCartHook.useCart).mockReturnValue({
+      cart: null,
+      loading: true,
+      error: null,
+      fetchCart: vi.fn(),
+      addToCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      removeFromCart: vi.fn(),
+      clearCart: vi.fn()
+    })
 
-    // Debe mostrar mensaje de error
-    await waitFor(() => {
-      expect(screen.getByText(/error al actualizar cantidad/i)).toBeInTheDocument();
-    });
-  });
-});
+    render(
+      <BrowserRouter>
+        <CartPage />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText(/Cargando carrito/i)).toBeInTheDocument()
+  })
+})

@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:functional:cartcheckout": "vitest run src/modules/cart-checkout/__tests__/functional"
+    "test:unit": "vitest run src/modules/cart-checkout/__tests__/unit",
+    "test:functional": "vitest run src/modules/cart-checkout/__tests__/functional"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

@@ -126,7 +126,7 @@ export default function Checkout_Step4() {
       estadoInicial: "PENDIENTE",
     };
 
-    console.log("🟡 Enviando pedido a API:", orderPayload);
+    console.log("Enviando pedido a API:", orderPayload);
 
     try {
       const res = await createOrder(orderPayload);
@@ -144,6 +144,18 @@ export default function Checkout_Step4() {
       console.error(err);
       alert("Hubo un error al crear la orden.");
     }
+
+    // TEST LAST PAGE
+    // navigate("/checkout/success", {
+    //     replace: true,
+    //     state: {
+    //       order: {
+    //         orderId: 'MOCK-123',
+    //         total: total,
+    //         items: cart
+    //       }
+    //     },
+    //   });
   };
 
   const total =
