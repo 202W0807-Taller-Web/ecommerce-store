@@ -8,6 +8,8 @@ import PrivateRoute from "../../client-auth/components/helpers/PrivateRoutes";
 import Login from "../../client-auth/pages/Login";
 import Register from "../../client-auth/pages/Register";
 import Profile from "../../client-auth/pages/Profile";
+import ForgotPassword from "../../client-auth/pages/ForgotPassword";
+import ResetPassword from "../../client-auth/pages/ResetPassword";
 
 import MainRoutesLayout from '../layout/MainRoutesLayout';
 
@@ -19,6 +21,8 @@ export default function AppRoutes() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+          <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
         </Route>
 
         {/* All other routes use MainLayout */}

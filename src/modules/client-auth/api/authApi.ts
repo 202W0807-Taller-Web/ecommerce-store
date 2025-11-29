@@ -56,3 +56,33 @@ export const getCurrentUser = async () => {
   });
   return res.json();
 };
+
+// Password recovery
+export const forgotPassword = async (correo: string) => {
+  const res = await fetch(`${API_URL}/forgot`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ correo }),
+    credentials: "include",
+  });
+  return res.json();
+};
+
+export const validateResetToken = async (token: string) => {
+  const url = new URL(`${API_URL}/reset/validate`);
+  url.searchParams.append("token", token);
+  const res = await fetch(url.toString(), {
+    credentials: "include",
+  });
+  return res.json();
+};
+
+export const resetPassword = async (payload: { token: string; nuevaContrasena: string }) => {
+  const res = await fetch(`${API_URL}/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  return res.json();
+};
