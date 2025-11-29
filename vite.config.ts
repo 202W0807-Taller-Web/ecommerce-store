@@ -17,5 +17,10 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+    rollupOptions: {
+      external: ['cypress']
+    }
+  }
   };
 });

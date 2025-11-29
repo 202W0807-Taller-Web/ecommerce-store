@@ -4,5 +4,5 @@
  */
 export const SERVICE_CONFIG = {
   // 🔧 CAMBIA ESTA LÍNEA PARA ALTERNAR ENTRE SERVICIOS
-  USE_SEARCH_SERVICE: false, // true = SearchService, false = CatalogService
+  USE_SEARCH_SERVICE: true, // true = SearchService, false = CatalogService
 } as const;

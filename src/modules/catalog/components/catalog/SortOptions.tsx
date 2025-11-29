@@ -7,25 +7,25 @@ interface SortOptionsProps {
 
 export const SortOptions = ({ currentSort, onSortChange }: SortOptionsProps) => {
   const handlePriceSort = () => {
-    if (currentSort === 'price_asc') {
-      onSortChange('price_desc');
-    } else if (currentSort === 'price_desc') {
+    if (currentSort === 'price asc') {
+      onSortChange('price desc');
+    } else if (currentSort === 'price desc') {
       onSortChange(''); // Desactivar sort
     } else {
-      onSortChange('price_asc');
+      onSortChange('price asc');
     }
   };
 
   const getPriceIcon = () => {
-    if (currentSort === 'price_asc') {
+    if (currentSort === 'price asc') {
       return <FiChevronUp className="w-4 h-4" />;
-    } else if (currentSort === 'price_desc') { 
+    } else if (currentSort === 'price desc') { 
       return <FiChevronDown className="w-4 h-4" />;
     }
     return null;
   };
 
-  const isPriceSelected = currentSort === 'price_asc' || currentSort === 'price_desc';
+  const isPriceSelected = currentSort === 'price asc' || currentSort === 'price desc';
 
   return (
     <div className="px-4 ">
@@ -33,6 +33,7 @@ export const SortOptions = ({ currentSort, onSortChange }: SortOptionsProps) => 
         <span className="text-sm font-medium text-gray-700">Ordenar por:</span>
         <div className="flex space-x-1">
           <button
+           data-testid="sort-select"
             onClick={handlePriceSort}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 ${
               isPriceSelected

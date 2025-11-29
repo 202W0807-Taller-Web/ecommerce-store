@@ -18,7 +18,7 @@ export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
           </svg>
         </button>
 
-        <Link to={`/catalog/product/${product.id}`} className="block">
+        <Link data-testid={`product-link-${product.id}`}  to={`/catalog/product/${product.id}`} className="block">
           <div className="aspect-square overflow-hidden bg-gray-50">
             <img
               src={product.imagen || ''}
@@ -43,11 +43,11 @@ export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
             {/* Precio en formato S/ */}
             <div className="mb-2">
               <span className="text-lg font-medium text-gray-900">
-                S/ {product.precio.toFixed(2)}
+                S/ {product.precio ? product.precio.toFixed(2) : "0.00"}
               </span>
               {product.precioOriginal && (
                 <span className="text-sm text-gray-500 line-through ml-2">
-                  S/ {product.precioOriginal.toFixed(2)}
+                  S/ {product.precioOriginal ? product.precioOriginal.toFixed(2): "0.00"}
                 </span>
               )}
             </div>
