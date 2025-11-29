@@ -253,7 +253,7 @@ export class SearchService {
    * Obtener sugerencias de autocompletado
    * GET /api/search/autocomplete?q=
    */
-  async autocomplete(query: string): Promise<AutocompleteItem[]> {
+  async autocomplete(query: string): Promise<string[]> {
     this.validateConfig();
 
     if (!query || query.trim() === "") {
@@ -263,9 +263,15 @@ export class SearchService {
     try {
       const url = `${this.baseUrl}/api/search/autocomplete`;
 
-      const response: AxiosResponse<AutocompleteItem[]> = await axios.get(url, {
-        params: { q: query },
+      console.log(`🔍 Autocomplete request: ${query}`);
+
+      const response: AxiosResponse<string[]> = await axios.get(url, {
+        params: { q: query.trim() },
+        // Timeout corto para autocomplete (3 segundos)
+        timeout: 3000,
       });
+
+      console.log(`✅ Autocomplete results: ${response.data.length} items`);
 
       return response.data;
     } catch (error) {

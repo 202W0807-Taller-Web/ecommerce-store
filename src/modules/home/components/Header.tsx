@@ -1,28 +1,96 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CategoriesModal } from './CategoriesModal';
+import { SearchAutocomplete } from '../../catalog/components/SearchAutocomplete';
+import { useSearchAutocomplete } from '../../catalog/hooks/useSearchAutocomplete';
 import { FaBars, FaSearch, FaGraduationCap } from 'react-icons/fa';
-import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart, } from 'react-icons/fi';
+import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart } from 'react-icons/fi';
 
 export const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
-  // Los atributos ahora se manejan directamente en CategoriesModal
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Hook de autocomplete con debounce de 300ms y mínimo 2 caracteres
+  const {
+    suggestions,
+    loading,
+    showSuggestions,
+    setShowSuggestions,
+    fetchSuggestions,
+    clearSuggestions,
+  } = useSearchAutocomplete(300, 2);
+
+  /**
+   * Manejar búsqueda al enviar formulario
+   */
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
+      performSearch(searchQuery.trim());
     }
   };
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  /**
+   * Realizar búsqueda y limpiar estado
+   */
+  const performSearch = (query: string) => {
+    navigate(`/catalog?search=${encodeURIComponent(query)}`);
+    clearSuggestions();
+    setShowSuggestions(false);
+    searchInputRef.current?.blur();
   };
 
+  /**
+   * Manejar cambio en el input de búsqueda
+   */
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Activar autocomplete
+    fetchSuggestions(value);
+  };
+
+  /**
+   * Manejar selección de sugerencia
+   */
+  const handleSuggestionSelect = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    performSearch(suggestion);
+  };
+
+  /**
+   * Manejar foco en el input
+   */
+  const handleSearchFocus = () => {
+    if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  /**
+   * Manejar teclas especiales
+   */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      searchInputRef.current?.blur();
+    }
+  };
+
+  /**
+   * Limpiar sugerencias al navegar
+   */
+  useEffect(() => {
+    return () => {
+      clearSuggestions();
+    };
+  }, [clearSuggestions]);
+
   return (
-    <header className="bg-white sticky top-0 z-50">
+    <header className="bg-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-24">
           {/* Logo Section */}
@@ -45,9 +113,9 @@ export const Header = () => {
           {/* Navigation and Search Section */}
           <div className="flex-1 flex items-center justify-center mx-8">
             <div className="flex items-center space-x-4 w-full max-w-2xl">
-
               {/* Categories Button */}
               <button
+                data-testid="categories-btn"
                 onClick={() => setIsCategoriesModalOpen(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -55,22 +123,42 @@ export const Header = () => {
                 <span className="text-sm font-medium text-gray-700">Categorías</span>
               </button>
 
-              {/* Search Bar */}
+              {/* Search Bar with Autocomplete */}
               <form onSubmit={handleSearch} className="relative flex-1">
                 <div className="relative">
                   <input
+                    ref={searchInputRef}
+                    data-testid="search-input"
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchInputChange}
+                    onFocus={handleSearchFocus}
+                    onKeyDown={handleKeyDown}
                     placeholder="Buscar productos..."
+                    autoComplete="off"
                     className="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm placeholder-gray-400"
                   />
                   <button
                     type="submit"
+                    data-testid="search-btn"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors"
                   >
-                    <FaSearch className="w-5 h-5" />
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    ) : (
+                      <FaSearch className="w-5 h-5" />
+                    )}
                   </button>
+
+                  {/* Autocomplete Dropdown */}
+                  <SearchAutocomplete
+                    suggestions={suggestions}
+                    loading={loading}
+                    show={showSuggestions}
+                    onSelect={handleSuggestionSelect}
+                    onClose={() => setShowSuggestions(false)}
+                    searchQuery={searchQuery}
+                  />
                 </div>
               </form>
             </div>
@@ -79,30 +167,35 @@ export const Header = () => {
           {/* User Actions Section */}
           <div className="flex items-center space-x-4">
             {/* Shopping Bag */}
-            <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <button
+              data-testid="shopping-bag-btn"
+              className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+            >
               <FiShoppingBag className="w-6 h-6" />
-              {/* Cart badge */}
-              {/* <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                3
-              </span> */}
             </button>
 
             {/* Heart/Wishlist */}
-            <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <button
+              data-testid="wishlist-btn"
+              className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+            >
               <FiHeart className="w-6 h-6" />
             </button>
 
             {/* Shopping Cart */}
             <Link
               to="/cart"
+              data-testid="cart-btn"
               className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
             >
               <FiShoppingCart className="w-6 h-6" />
-              {/* Cart badge */}
             </Link>
 
             {/* User Profile */}
-            <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <button
+              data-testid="user-profile-btn"
+              className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+            >
               <FiUser className="w-6 h-6" />
             </button>
           </div>
