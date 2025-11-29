@@ -111,9 +111,9 @@ export class SearchService {
     // Parámetros de ordenamiento
     if (sortBy) {
       if (sortBy === "price asc") {
-        payload.orderBy = "precio asc";
+        payload.orderBy = "precio-asc";
       } else if (sortBy === "price desc") {
-        payload.orderBy = "precio desc";
+        payload.orderBy = "precio-desc";
       }
     }
 

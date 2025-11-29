@@ -9,7 +9,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
   return (
-    <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
+    <article data-testid={`product-card-${product.nombre}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
         {/* Corazón/Favorito en esquina superior derecha */}
         <button className="absolute top-3 right-3 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-gray-100 transition-colors">

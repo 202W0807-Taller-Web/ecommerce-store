@@ -9,7 +9,7 @@ describe('Agregar Producto al Carrito', () => {
 
   describe('Navegación a Detalle de Producto', () => {
     it('debe navegar al detalle del producto al hacer clic', () => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       
       cy.get('[data-testid^="product-link-"]').first().click();
       
@@ -18,7 +18,7 @@ describe('Agregar Producto al Carrito', () => {
     });
 
     it('debe mostrar información completa del producto', () => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       
       cy.get('[data-testid^="product-link-"]').first().click();
       
@@ -33,7 +33,7 @@ describe('Agregar Producto al Carrito', () => {
 
   describe('Selección de Variantes', () => {
     beforeEach(() => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
     });
@@ -148,7 +148,7 @@ describe('Agregar Producto al Carrito', () => {
 
   describe('Gestión de Cantidad', () => {
     beforeEach(() => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
     });
@@ -232,7 +232,7 @@ describe('Agregar Producto al Carrito', () => {
 
   describe('Estado del Botón Agregar al Carrito', () => {
     beforeEach(() => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
     });
@@ -262,7 +262,7 @@ describe('Agregar Producto al Carrito', () => {
 
   describe('Agregar al Carrito - Casos de Éxito', () => {
     beforeEach(() => {
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
     });
@@ -362,7 +362,7 @@ describe('Agregar Producto al Carrito', () => {
         body: { message: 'Error al agregar al carrito' }
       }).as('addToCartError');
       
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
@@ -391,7 +391,7 @@ describe('Agregar Producto al Carrito', () => {
         delayMs: 30000,
       }).as('addToCartTimeout');
       
-      cy.viewport(1280, 720);
+      cy.viewport(1440, 1080);
       
       cy.get('[data-testid^="product-link-"]').first().click();
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');

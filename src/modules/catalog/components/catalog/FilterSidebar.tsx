@@ -158,7 +158,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
       
       return (
         <button
-          data-testid={`filter-checkbox-${atributo.nombre}`}
+          data-testid={`filter-checkbox-${valor.valor}`}
           key={valor.id}
           onClick={() => handleFilterToggle(atributo.nombre, valor.valor)}
           className={`
@@ -181,7 +181,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
       <label key={valor.id} className="flex items-center space-x-3 cursor-pointer">
         <div className="relative">
           <input
-            data-testid={`filter-checkbox-${atributo.nombre}`}
+            data-testid={`filter-checkbox-${valor.valor}`}
             type="checkbox"
             checked={isSelected}
             onChange={() => handleFilterToggle(atributo.nombre, valor.valor)}
