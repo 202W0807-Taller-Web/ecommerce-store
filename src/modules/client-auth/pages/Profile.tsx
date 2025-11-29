@@ -69,31 +69,28 @@ export default function Profile() {
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                  activeTab === "profile"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "profile"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 Perfil
               </button>
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                  activeTab === "orders"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "orders"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 Mis Pedidos
               </button>
               <button
                 onClick={() => setActiveTab("wishlist")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                  activeTab === "wishlist"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "wishlist"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 Lista de deseos
               </button>
@@ -120,24 +117,34 @@ export default function Profile() {
                     <p className="text-sm text-gray-900">{user.correo}</p>
                   </div>
                 </div>
-                {user.celular && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500">Teléfono</h4>
-                    <div className="mt-1 flex items-center">
-                      <FiPhone className="h-4 w-4 text-gray-400 mr-2" />
-                      <p className="text-sm text-gray-900">{user.celular}</p>
-                    </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Teléfono</h4>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {user.celular
+                      ? formatDate(user.celular)
+                      : "Sin registrar"}
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Fecha de nacimiento</h4>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {user.f_nacimiento
+                      ? formatDate(user.f_nacimiento)
+                      : "Sin registrar"}
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Dirección Principal</h4>
+                  <div className="mt-1 flex items-start">
+                    <FiMapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-900">
+                      {user.direccion ? user.direccion : "Sin registrar"}
+                    </p>
                   </div>
-                )}
-                {user.direccion && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500">Dirección</h4>
-                    <div className="mt-1 flex items-start">
-                      <FiMapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-gray-900">{user.direccion}</p>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-100">

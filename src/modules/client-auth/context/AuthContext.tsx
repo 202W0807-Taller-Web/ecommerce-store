@@ -7,6 +7,7 @@ import React, {
 import * as authApi from "../api/authApi";
 import type { ReactNode } from "react";
 
+/*
 interface User {
   id: number;
   nombres: string;
@@ -16,6 +17,38 @@ interface User {
   created_at: string;
   celular: string;
   //roles?: any[];
+}
+*/
+
+interface User {
+  id: number;
+  nombres: string;
+  apellido_p: string;
+  apellido_m?: string;
+
+  correo: string;
+
+  // Campos personales
+  pais_celular?: string | null;
+  celular?: string | null;
+  f_nacimiento?: string | null;
+  genero?: string | null;
+  direccion?: string | null;
+
+  // Documentos
+  tipo_documento: string;
+  nro_documento: string;
+
+  // Estado y rol
+  activo: boolean;
+  rolInt: number;
+
+  // Opcionales del backend
+  avatar?: string | null;
+
+  // Fechas
+  created_at: string;
+  updated_at: string;
 }
 
 interface AuthContextProps {

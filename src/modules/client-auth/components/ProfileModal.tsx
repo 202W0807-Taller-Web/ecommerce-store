@@ -1,8 +1,8 @@
 import { useContext, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { 
-  FiUser, FiShoppingBag, FiHeart, 
+import {
+  FiUser, FiShoppingBag, FiHeart,
   FiCreditCard, FiMapPin, FiBell, FiLogOut, FiSettings,
   FiChevronRight
 } from 'react-icons/fi';
@@ -15,19 +15,19 @@ interface ProfileModalProps {
 }
 
 // Componente para los ítems del menú
-const MenuItem = ({ 
-  icon, 
-  text, 
+const MenuItem = ({
+  icon,
+  text,
   onClick,
-  showArrow = false 
-}: { 
-  icon: ReactNode; 
-  text: string; 
+  showArrow = false
+}: {
+  icon: ReactNode;
+  text: string;
   onClick: () => void;
   showArrow?: boolean;
 }) => (
   <li>
-    <button 
+    <button
       onClick={onClick}
       className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left"
     >
@@ -45,13 +45,16 @@ const MenuItem = ({
 export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) => {
   const { user, logout } = useContext(AuthContext)!;
   const navigate = useNavigate();
+
+  console.log("USER", user); // ⬅️ AGRÉGALO AQUÍ
+
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar el menú al hacer clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node) && 
-          anchorEl && !anchorEl.contains(event.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        anchorEl && !anchorEl.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -79,31 +82,31 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
   // Función para actualizar solo la posición horizontal del menú
   const updateHorizontalPosition = useCallback(() => {
     if (!anchorEl) return;
-    
+
     const anchorRect = anchorEl.getBoundingClientRect();
     const menuWidth = Math.min(320, window.innerWidth - 40);
     const triangleOffset = 20;
-    
+
     // Calcular la posición horizontal
     const menuRight = window.innerWidth - anchorRect.right + (anchorRect.width / 2) - triangleOffset - 25;
-    
+
     setMenuPosition(prev => ({
       ...prev,
       right: Math.max(10, Math.min(menuRight, window.innerWidth - menuWidth - 10)),
       width: menuWidth
     }));
   }, [anchorEl]);
-  
+
   // Función para establecer la posición inicial (solo se llama una vez)
   const setInitialPosition = useCallback(() => {
     if (!anchorEl) return;
-    
+
     const anchorRect = anchorEl.getBoundingClientRect();
     const menuWidth = Math.min(320, window.innerWidth - 40);
     const triangleOffset = 20;
-    
+
     const menuRight = window.innerWidth - anchorRect.right + (anchorRect.width / 2) - triangleOffset - 25;
-    
+
     setMenuPosition({
       top: anchorRect.bottom + 8, // Usamos la posición inicial sin scrollY
       right: Math.max(10, Math.min(menuRight, window.innerWidth - menuWidth - 10)),
@@ -114,22 +117,22 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
   // Configurar posición inicial al abrir el menú
   useEffect(() => {
     if (!isOpen || !anchorEl) return;
-    
+
     // Establecer posición inicial
     setInitialPosition();
-    
+
     // Solo actualizar posición horizontal al redimensionar
     const handleResize = () => updateHorizontalPosition();
-    
+
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [isOpen, anchorEl, setInitialPosition, updateHorizontalPosition]);
 
   if (!isOpen || !anchorEl) return null;
-  
+
   const menuStyle = {
     position: 'fixed' as const,
     top: `${menuPosition.top}px`,
@@ -154,7 +157,7 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
   };
 
   return (
-    <div 
+    <div
       ref={menuRef}
       className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-visible relative"
       style={menuStyle}
@@ -172,6 +175,17 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
               {user?.nombres} {user?.apellido_p}
             </h3>
             <p className="text-xs text-gray-500">{user?.correo}</p>
+
+            <p className="text-xs text-gray-500">
+              Celular: {user?.celular ? user.celular : "Sin registrar"}
+            </p>
+
+            <p className="text-xs text-gray-500">
+              Fecha de nacimiento:{" "}
+              {user?.f_nacimiento
+                ? new Date(user.f_nacimiento).toLocaleDateString()
+                : "Sin registrar"}
+            </p>
           </div>
         </div>
       </div>
@@ -179,52 +193,52 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
       <div className="py-1">
         <nav>
           <ul>
-            <MenuItem 
-              icon={<FiUser className="w-5 h-5" />} 
-              text="Mi perfil" 
+            <MenuItem
+              icon={<FiUser className="w-5 h-5" />}
+              text="Mi perfil"
               onClick={() => {
                 onClose();
                 navigate('/profile');
               }}
             />
-            <MenuItem 
-              icon={<FiShoppingBag className="w-5 h-5" />} 
-              text="Mis pedidos" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiShoppingBag className="w-5 h-5" />}
+              text="Mis pedidos"
+              onClick={() => { }}
               showArrow
             />
-            <MenuItem 
-              icon={<FiHeart className="w-5 h-5" />} 
-              text="Lista de deseos" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiHeart className="w-5 h-5" />}
+              text="Lista de deseos"
+              onClick={() => { }}
               showArrow
             />
-            <MenuItem 
-              icon={<FiCreditCard className="w-5 h-5" />} 
-              text="Métodos de pago" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiCreditCard className="w-5 h-5" />}
+              text="Métodos de pago"
+              onClick={() => { }}
             />
-            <MenuItem 
-              icon={<FiMapPin className="w-5 h-5" />} 
-              text="Direcciones" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiMapPin className="w-5 h-5" />}
+              text="Direcciones"
+              onClick={() => { }}
               showArrow
             />
-            <MenuItem 
-              icon={<FiBell className="w-5 h-5" />} 
-              text="Notificaciones" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiBell className="w-5 h-5" />}
+              text="Notificaciones"
+              onClick={() => { }}
             />
-            <MenuItem 
-              icon={<FiSettings className="w-5 h-5" />} 
-              text="Configuración" 
-              onClick={() => {}}
+            <MenuItem
+              icon={<FiSettings className="w-5 h-5" />}
+              text="Configuración"
+              onClick={() => { }}
             />
           </ul>
         </nav>
 
         <div className="border-t border-gray-100 my-1"></div>
-        
+
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
