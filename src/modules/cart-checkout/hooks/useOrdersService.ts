@@ -22,7 +22,11 @@ export function useOrdersService() {
         throw new Error(errData?.message || "Error creando la orden");
       }
 
-      return await res.json();
+      return {
+        success: res.ok,
+        status: res.status,
+        data: await res.json(),
+      };
     } catch (err: any) {
       setError(err.message);
       throw err;
