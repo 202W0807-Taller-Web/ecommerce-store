@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { loginUser } from "../api/auth";
 
 export default function LoginPage() {
@@ -46,6 +47,12 @@ export default function LoginPage() {
         />
 
         <button type="submit">Login</button>
+
+        <div style={{ marginTop: "8px" }}>
+          <Link to="/auth/forgot" style={{ fontSize: "0.9rem", color: "#2563eb" }}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
