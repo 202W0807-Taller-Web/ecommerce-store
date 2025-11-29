@@ -38,7 +38,7 @@ export default function CheckoutSuccess() {
   };
 
   const handleViewOrders = () => {
-    navigate("/mis-pedidos", { replace: true });
+    navigate("/catalog", { replace: true });
   };
 
   return (
@@ -50,14 +50,14 @@ export default function CheckoutSuccess() {
             <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
             <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full translate-x-20 translate-y-20"></div>
           </div>
-          
+
           <div className="relative z-10">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 animate-bounce">
               <svg className="w-12 h-12 text-[#EBC431]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            
+
             <h1 className="text-4xl font-bold text-[#333027] mb-2">
               ¡Pedido Confirmado!
             </h1>
@@ -108,7 +108,7 @@ export default function CheckoutSuccess() {
                         ? "Recojo en Tienda"
                         : "Envío a Domicilio"}
                     </p>
-                    
+
                     {orderData.entrega.tipo === "RECOJO_TIENDA" &&
                       orderData.entrega.tiendaSeleccionada && (
                         <div className="mt-2 text-[#F5F5F5]/80">
@@ -120,7 +120,7 @@ export default function CheckoutSuccess() {
                           </p>
                         </div>
                       )}
-                    
+
                     {orderData.entrega.tipo === "DOMICILIO" &&
                       orderData.entrega.carrierSeleccionado && (
                         <p className="text-[#F5F5F5]/80 mt-2">
@@ -190,9 +190,9 @@ export default function CheckoutSuccess() {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              Ver mis pedidos
+              Seguir comprando
             </button>
-            
+
             <button
               onClick={handleGoHome}
               className="flex-1 px-6 py-4 rounded-xl bg-[#EBC431] text-[#333027] font-semibold hover:bg-[#C0A648] hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
