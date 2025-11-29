@@ -114,7 +114,6 @@ export default function Checkout_Step4() {
       })),
       costos: {
         subtotal: costos?.subtotal ?? cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-        impuestos: Number(costos?.impuestos ?? 0.0),
         envio: costos?.envio ?? deliveryInfo?.costoEnvio ?? 0.0,
         total: costos?.total ?? (
           cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +

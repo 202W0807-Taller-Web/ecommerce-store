@@ -98,7 +98,6 @@ export default function Checkout_Step3() {
         deliveryInfo: deliveryInfo, // Toda la info necesaria para el JSON final
         costos: {
           subtotal: subtotal,
-          impuestos: 0.0,
           envio: shippingCost,
           total: total,
         },
