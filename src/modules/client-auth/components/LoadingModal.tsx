@@ -7,11 +7,16 @@ interface LoadingModalProps {
   anchorEl: HTMLElement | null;
 }
 
+
+
 export const LoadingModal = ({ 
   isOpen, 
   onClose, // eslint-disable-line @typescript-eslint/no-unused-vars
   anchorEl 
 }: LoadingModalProps) => {
+
+  void onClose;
+  
   const [menuPosition, setMenuPosition] = useState({
     top: 0,
     right: 0,

@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import {
   FiUser,
   FiMail,
-  FiPhone,
+  //FiPhone,
   FiMapPin,
   FiEdit2,
   FiShoppingBag,
