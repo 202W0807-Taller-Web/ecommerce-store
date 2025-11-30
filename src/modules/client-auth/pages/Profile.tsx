@@ -11,10 +11,135 @@ import {
   FiHeart,
   FiLock,
 } from "react-icons/fi";
+const API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
+
+function EditProfileForm({ user, onClose }: any) {
+
+  const { refreshUser } = useContext(AuthContext)!; ;
+
+  const [formData, setFormData] = useState({
+    nombres: user.nombres || "",
+    apellido_p: user.apellido_p || "",
+    apellido_m: user.apellido_m || "",
+    celular: user.celular || "",
+    f_nacimiento: user.f_nacimiento || "",
+  });
+
+  const handleChange = (e: any) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(`${API_URL}/api/usuarios/${user.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // actualizar AuthContext con la nueva info
+        await refreshUser();
+        onClose();
+      } else {
+        alert("Error al actualizar perfil");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Ocurrió un error en el servidor");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Nombres</label>
+        <input
+          type="text"
+          name="nombres"
+          value={formData.nombres}
+          onChange={handleChange}
+          className="mt-1 w-full border rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Apellido Paterno</label>
+        <input
+          type="text"
+          name="apellido_p"
+          value={formData.apellido_p}
+          onChange={handleChange}
+          className="mt-1 w-full border rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Apellido Materno</label>
+        <input
+          type="text"
+          name="apellido_m"
+          value={formData.apellido_m}
+          onChange={handleChange}
+          className="mt-1 w-full border rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Celular</label>
+        <input
+          type="text"
+          name="celular"
+          value={formData.celular}
+          onChange={handleChange}
+          className="mt-1 w-full border rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+        <input
+          type="date"
+          name="f_nacimiento"
+          value={formData.f_nacimiento || ""}
+          onChange={handleChange}
+          className="mt-1 w-full border rounded-md px-3 py-2"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-3 pt-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary-dark"
+        >
+          Guardar
+        </button>
+      </div>
+
+    </form>
+  );
+}
 
 export default function Profile() {
   const { user } = useContext(AuthContext)!;
   const [activeTab, setActiveTab] = useState("profile");
+  const [isEditing, setIsEditing] = useState(false);
 
   if (!user) {
     return (
@@ -59,10 +184,14 @@ export default function Profile() {
                 </p>
               </div>
             </div>
-            <button className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
               <FiEdit2 className="-ml-1 mr-2 h-4 w-4 text-gray-500" />
               Editar perfil
             </button>
+
           </div>
 
           <div className="border-t border-gray-200">
@@ -121,9 +250,7 @@ export default function Profile() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500">Teléfono</h4>
                   <p className="mt-1 text-sm text-gray-900">
-                    {user.celular
-                      ? formatDate(user.celular)
-                      : "Sin registrar"}
+                    {user.celular || "Sin registrar"}
                   </p>
                 </div>
 
@@ -189,8 +316,24 @@ export default function Profile() {
               </div>
             </div>
           )}
+
+          {isEditing && (
+            <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full">
+                <h2 className="text-xl font-semibold mb-4">Editar Perfil</h2>
+                <EditProfileForm
+                  user={user}
+                  onClose={() => setIsEditing(false)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
+
+
+
   );
+
 }
