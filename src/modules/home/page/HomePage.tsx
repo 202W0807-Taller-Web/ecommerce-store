@@ -14,7 +14,7 @@ export default function HomePage() {
           Explora nuestra colección y encuentra productos increíbles al mejor precio.
         </p>
         <Link
-          to="/products"
+          to="/catalog"
           className="bg-[#EBC431] text-[#333027] font-semibold px-6 py-3 rounded-full shadow hover:bg-[#C0A648] transition"
         >
           Ver Todos los Productos

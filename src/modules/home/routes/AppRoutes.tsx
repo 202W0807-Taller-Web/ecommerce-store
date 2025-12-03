@@ -1,10 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "../page/HomePage";
-import MainLayout from "../layout/MainLayout";
-import CustomerOrdersPage from "../../orders/pages/customerOrders_page";
-
-// --- 1. Importa la nueva página de detalle ---
-import OrderDetailPage from "../../orders/pages/OrderDetailPage"; // Asegúrate que la ruta sea correcta
+import { MainLayout } from "../layout/MainLayout";
+import CatalogRoutes from "../../catalog/routes/CatalogRoutes";
+import CartCheckoutRoutes from "../../cart-checkout/routes/CartCheckoutRoutes"
 
 export default function AppRoutes() {
   return (
@@ -12,13 +10,11 @@ export default function AppRoutes() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/mis-pedidos" element={<CustomerOrdersPage />} />
-          
-          {/* --- 2. Agrega la nueva ruta para el detalle del pedido --- */}
-          <Route path="/mis-pedidos/:orderId" element={<OrderDetailPage />} />
+          {/* Rutas del módulo de catálogo */}
+          <Route path="/catalog/*" element={<CatalogRoutes />} />        
+          <Route path="/*" element={<CartCheckoutRoutes />} />
 
           {/* Aquí agregas las rutas de otros módulos */}
-          {/* <Route path="/products" element={<ProductsPage />} /> */}
           {/* <Route path="/cart" element={<CartPage />} /> */}
         </Routes>
       </MainLayout>
