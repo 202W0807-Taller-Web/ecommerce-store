@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getMisPedidos } from '../services/ordersApi';
+import { useAuth } from './useAuth';
 
 export function usePedidos(page = 1, limit = 5,filter = "todos",search="") {
+    const { user, isAuth } = useAuth(); 
     const [pedidos, setPedidos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [meta, setMeta] = useState({ total: 0, page: 1, lastPage: 1 });
@@ -9,10 +11,16 @@ export function usePedidos(page = 1, limit = 5,filter = "todos",search="") {
 
 
     useEffect(() => {
+        if (!isAuth || !user?.id) {
+            setPedidos([]);
+            setMeta({ total: 0, page, lastPage: 1 });
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         // setError(null); 
 
-        getMisPedidos(123, page, limit,filter,search)
+        getMisPedidos(user.id, page, limit,filter,search)
             .then(response => {
                 setPedidos(response.data || []);
                 setMeta({
@@ -31,7 +39,7 @@ export function usePedidos(page = 1, limit = 5,filter = "todos",search="") {
             .finally(() => {
                 setLoading(false);
             });
-    }, [page, limit,filter,search]);
+    }, [user?.id, isAuth,page, limit,filter,search]);
 
     return { pedidos,meta,loading,error };
 }

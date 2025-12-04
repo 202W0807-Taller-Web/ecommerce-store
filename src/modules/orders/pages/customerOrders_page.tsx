@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { usePedidos } from '../hooks/usePedidos';
 import PedidoCard from '../components/PedidoCard';
-
+import { useAuth } from '../hooks/useAuth';
 
 export default function CustomerOrdersPage() {
     const [page, setPage] = useState(1);
     const [filter, setFilter] = useState("todos");
     const [search, setSearch] = useState("");
+    const { user,isAuth, loading: authLoading } = useAuth();
     const {  pedidos , meta ,loading ,error } = usePedidos(page,5,filter,search);
+
+    if (authLoading) {
+        return <p className="p-6">Cargando sesión...</p>;
+    }
+
 
     return (
         <div className="p-6">
@@ -61,18 +67,22 @@ export default function CustomerOrdersPage() {
                 </div>
             </div>
 
+        {/* Mensaje si no hay sesión */}
+        {!isAuth || !user?.id ? (
+            <p className="text-red-600 mx-[120px]">Debes iniciar sesión para ver tus pedidos.</p>
+        ) : (
+            <>
+            {/* Lista de pedidos */}
             {loading && <p>Cargando pedidos...</p>}
-            {!loading && error && (
-                <p className="text-red-600">{error}</p>
-            )}
+            {!loading && error && <p className="text-red-600">{error}</p>}
             {!loading && !error && pedidos.length === 0 && (
                 <p className="text-gray-600">No tienes pedidos registrados.</p>
             )}
             {!loading && !error && pedidos.length > 0 && (
                 <div className="space-y-4">
-                    {pedidos.map((p: any) => (
-                        <PedidoCard key={p.cod_orden} pedido={p} />
-                    ))}
+                {pedidos.map((p: any) => (
+                    <PedidoCard key={p.cod_orden} pedido={p} />
+                ))}
                 </div>
             )}
 
@@ -94,6 +104,8 @@ export default function CustomerOrdersPage() {
                     Siguiente
                 </button>
             </div>
+            </>
+            )}
         </div>
     );
 }

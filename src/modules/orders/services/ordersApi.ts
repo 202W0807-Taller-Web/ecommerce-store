@@ -1,11 +1,7 @@
-// src/orders/services/ordersApi.ts
 import axios from 'axios';
 
 
-const API_BASE_URL =
-    import.meta.env.MODE === "production"
-        ? "https://orders-query-833583666995.us-central1.run.app"
-        : "http://localhost:3002";
+const API_BASE_URL = import.meta.env.VITE_API_ORDERS_URL || "http://localhost:3002";
 
 export async function getMisPedidos(usuarioId: number, page = 1, limit = 5,filter="todos",search="") {
     try {
