@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useAddresses, type Address, type AddressForm } from "../hooks/useAddresses";
+import { useAddresses } from "../hooks/useAddresses";
+import type { Address, AddressForm } from "../entities";
 
 interface ShippingFormProps {
-  onSelectAddress?: (address: any) => void;
+  onSelectAddress?: (address: Address) => void;
 }
 
 export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
-  const API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}api/envio`;
+  const API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
   const idUsuarioEnvio = 20; // HARDCODED (luego puedes reemplazarlo)
 
   const {
@@ -23,7 +24,7 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
   const [newAddress, setNewAddress] = useState<Partial<AddressForm>>({ principal: false });
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
-  const handleSelect = (addr: any) => {
+  const handleSelect = (addr: Address) => {
     setSelectedAddressId(addr.id);
     onSelectAddress?.(addr);
   };

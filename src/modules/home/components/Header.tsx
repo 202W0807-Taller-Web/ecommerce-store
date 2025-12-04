@@ -1,3 +1,4 @@
+import { useState, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { CategoriesModal } from './CategoriesModal';
@@ -5,11 +6,18 @@ import { SearchAutocomplete } from '../../catalog/components/SearchAutocomplete'
 import { useSearchAutocomplete } from '../../catalog/hooks/useSearchAutocomplete';
 import { FaBars, FaSearch, FaGraduationCap } from 'react-icons/fa';
 import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart } from 'react-icons/fi';
+import { RegisterModal } from '../../client-auth/components/RegisterModal';
+import { ProfileModal } from '../../client-auth/components/ProfileModal';
+import { AuthContext } from '../../client-auth/context/AuthContext';
+import { LoadingModal } from '../../client-auth/components/LoadingModal';
 
 export const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const { isAuth, loading } = useContext(AuthContext)!;
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Hook de autocomplete con debounce de 300ms y mínimo 2 caracteres
@@ -192,9 +200,10 @@ export const Header = () => {
             </Link>
 
             {/* User Profile */}
-            <button
-              data-testid="user-profile-btn"
+            <button 
               className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
+              ref={profileButtonRef}
             >
               <FiUser className="w-6 h-6" />
             </button>
@@ -207,6 +216,28 @@ export const Header = () => {
         isOpen={isCategoriesModalOpen}
         onClose={() => setIsCategoriesModalOpen(false)}
       />
+
+      {/* Modales de autenticación */}
+      {loading ? (
+        <LoadingModal
+          isOpen={loading}
+          onClose={() => setIsProfileModalOpen(false)}
+          anchorEl={profileButtonRef.current}
+        />
+      ) : (
+        isAuth ? (
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            anchorEl={profileButtonRef.current}
+          />
+        ) : (
+          <RegisterModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
+        )
+      )}
     </header>
   );
 };

@@ -1,29 +1,34 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import CheckoutSteps from "../components/checkoutSteps";
+import { useOrdersService } from "../hooks/useOrdersService";
+import { useCart } from "../hooks/useCart";
+import type { Address, Carrier, AlmacenOrigen, Store } from "../entities";
 
 type CartItem = {
-  id: number;
-  nombre: string;
+  idProducto: number;
+  nombre: string | null;
   cantidad: number;
-  precioUnitario: number;
+  precio: number;
   imagen?: string;
-};
-
-type Address = {
-  direccionLinea1: string;
-  direccionLinea2?: string;
-  ciudad: string;
-  provincia: string;
-  codigoPostal: string;
-  pais: string;
-  principal: boolean;
 };
 
 type UserInfo = {
   nombreCompleto: string;
   email: string;
   telefono: string;
+};
+
+type DeliveryInfo = {
+  tipo: "RECOJO_EN_TIENDA" | "ENVIO_A_DOMICILIO";
+  almacenOrigen: AlmacenOrigen;
+  tiendaSeleccionada?: Store;
+  carrierSeleccionado?: Carrier;
+  costoEnvio?: number;
+  tiempoEstimadoDias?: number;
+  fechaEntregaEstimada?: string;
+  descripcion?: string;
+  direccionEnvioId?: number;
 };
 
 export default function Checkout_Step4() {
@@ -33,6 +38,12 @@ export default function Checkout_Step4() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [address, setAddress] = useState<Address | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null);
+  const [costos, setCostos] = useState<any>(null);
+  const [method, setMethod] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { createOrder} = useOrdersService();
+  const { clearCart } = useCart();
 
   useEffect(() => {
     const state = location.state;
@@ -40,21 +51,118 @@ export default function Checkout_Step4() {
       setCart(state.passedCart || []);
       setAddress(state.selectedAddress || null);
       setUserInfo(state.userInfo || null);
+      setDeliveryInfo(state.deliveryInfo || null);
+      setCostos(state.costos || null);
+      setMethod(state.method || "");
     }
   }, [location.state]);
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.cantidad * item.precioUnitario,
-    0
-  );
+  const handleConfirm = async () => {
+    if (!userInfo || !deliveryInfo || !cart.length) {
+      alert("Faltan datos requeridos para confirmar el pedido.");
+      return;
+    }
 
-  const handleConfirm = () => {
-    console.log("Confirmando pedido...");
-    navigate("/checkout/success", { replace: true });
+    setIsLoading(true);
+
+    // Construir el objeto de entrega según el tipo
+    const entregaPayload =
+      deliveryInfo.tipo === "RECOJO_EN_TIENDA"
+        ? {
+            tipo: "RECOJO_TIENDA",
+            almacenOrigen: deliveryInfo.almacenOrigen,
+            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada,
+            costoEnvio: 0.0,
+            tiempoEstimadoDias: deliveryInfo.tiempoEstimadoDias ?? 0,
+            fechaEntregaEstimada: deliveryInfo.fechaEntregaEstimada,
+            descripcion: deliveryInfo.descripcion,
+          }
+        : {
+            tipo: "DOMICILIO",
+            almacenOrigen: deliveryInfo.almacenOrigen,
+            carrierSeleccionado: deliveryInfo.carrierSeleccionado ? {
+              carrier_id: deliveryInfo.carrierSeleccionado.carrier_id,
+              carrier_nombre: deliveryInfo.carrierSeleccionado.carrier_nombre,
+              carrier_codigo: deliveryInfo.carrierSeleccionado.carrier_codigo,
+              costo_envio: deliveryInfo.carrierSeleccionado.costo_envio,
+              tiempo_estimado_dias: deliveryInfo.carrierSeleccionado.tiempo_estimado_dias,
+              fecha_entrega_estimada: deliveryInfo.carrierSeleccionado.fecha_entrega_estimada,
+              cotizacion_id: deliveryInfo.carrierSeleccionado.cotizacion_id,
+            } : undefined,
+            direccionEnvioId: deliveryInfo.direccionEnvioId ?? address?.id,
+          };
+
+    // OBJETO PARA EL NUEVO ENDPOINT
+    const orderPayload = {
+      usuarioId: 20, // Temporalmente hardcodeado
+      direccionEnvio: {
+        nombreCompleto: userInfo.nombreCompleto,
+        telefono: userInfo.telefono,
+        direccionLinea1: address?.direccionLinea1 ?? "",
+        direccionLinea2: address?.direccionLinea2 ?? "",
+        ciudad: address?.ciudad ?? "",
+        provincia: address?.provincia ?? "",
+        codigoPostal: address?.codigoPostal ?? "",
+        pais: address?.pais ?? "",
+      },
+      items: cart.map((it) => ({
+        productoId: it.idProducto,
+        nombreProducto: it.nombre ?? `Producto #${it.idProducto}`,
+        cantidad: it.cantidad,
+        precioUnitario: it.precio,
+        subTotal: it.precio * it.cantidad,
+      })),
+      costos: {
+        subtotal: costos?.subtotal ?? cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
+        envio: costos?.envio ?? deliveryInfo?.costoEnvio ?? 0.0,
+        total: costos?.total ?? (
+          cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +
+          (deliveryInfo?.costoEnvio ?? 0.0)
+        ),
+      },
+      entrega: entregaPayload,
+      metodoPago: "SIMULADO",
+      estadoInicial: "PENDIENTE",
+    };
+
+    console.log("Enviando pedido a API:", orderPayload);
+
+    try {
+      const res = await createOrder(orderPayload);
+
+      if (res?.success) {
+        await clearCart();
+
+        // Navegar al success
+        navigate("/checkout/success", {
+          replace: true,
+          state: { order: res.data },
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al crear la orden.");
+    }
+
+    // TEST LAST PAGE
+    // navigate("/checkout/success", {
+    //     replace: true,
+    //     state: {
+    //       order: {
+    //         orderId: 'MOCK-123',
+    //         total: total,
+    //         items: cart
+    //       }
+    //     },
+    //   });
   };
 
+  const total =
+    costos?.total ??
+    cart.reduce((sum, item) => sum + item.cantidad * item.precio, 0);
+
   return (
-    <div className="max-w-4xl mx-auto bg-[#333027] p-8 rounded-2xl shadow-2xl text-[#F5F5F5] space-y-8 border border-[#C0A648]/30">
+    <div className="max-w-5xl mx-auto bg-[#333027] p-8 rounded-2xl shadow-2xl text-[#F5F5F5] space-y-8 border border-[#C0A648]/30">
       <CheckoutSteps currentStep={4} />
 
       <h2 className="text-3xl font-bold text-center text-[#EBC431] mb-8">
@@ -63,7 +171,7 @@ export default function Checkout_Step4() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
-          Resumen del carrito
+          Productos del carrito
         </h3>
         {cart.length === 0 ? (
           <p className="italic text-[#F5F5F5]/70">
@@ -73,14 +181,14 @@ export default function Checkout_Step4() {
           <div className="space-y-3">
             {cart.map((item) => (
               <div
-                key={item.id}
+                key={item.idProducto}
                 className="flex justify-between border-b border-[#6B644C]/50 pb-3"
               >
                 <div className="flex gap-4">
                   {item.imagen && (
                     <img
                       src={item.imagen}
-                      alt={item.nombre}
+                      alt={item.nombre || "Producto"}
                       className="w-16 h-16 rounded-lg object-cover border border-[#C0A648]/30"
                     />
                   )}
@@ -92,7 +200,7 @@ export default function Checkout_Step4() {
                   </div>
                 </div>
                 <p className="font-medium text-[#EBC431]">
-                  S/. {(item.cantidad * item.precioUnitario).toFixed(2)}
+                  S/. {(item.cantidad * item.precio).toFixed(2)}
                 </p>
               </div>
             ))}
@@ -100,11 +208,68 @@ export default function Checkout_Step4() {
         )}
       </section>
 
-      <section>
-        <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
-          Dirección de envío
-        </h3>
-        {address ? (
+      {deliveryInfo && (
+        <section>
+          <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
+            Detalles de entrega
+          </h3>
+
+          {deliveryInfo.tipo === "RECOJO_EN_TIENDA" ? (
+            <div className="space-y-3 bg-[#413F39]/70 p-4 rounded-lg border border-[#C0A648]/40">
+              <p>
+                <strong className="text-[#EBC431]">Tipo:</strong> Recojo en
+                tienda
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Tienda:</strong>{" "}
+                {deliveryInfo.tiendaSeleccionada?.nombre}
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Dirección:</strong>{" "}
+                {deliveryInfo.tiendaSeleccionada?.direccion}
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Descripción:</strong>{" "}
+                {deliveryInfo.descripcion}
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Fecha estimada:</strong>{" "}
+                {new Date(
+                  deliveryInfo.fechaEntregaEstimada ?? ""
+                ).toLocaleDateString()}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 bg-[#413F39]/70 p-4 rounded-lg border border-[#C0A648]/40">
+              <p>
+                <strong className="text-[#EBC431]">Tipo:</strong> Envío a
+                domicilio
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Transportista:</strong>{" "}
+                {deliveryInfo.carrierSeleccionado?.carrier_nombre} (
+                {deliveryInfo.carrierSeleccionado?.carrier_codigo})
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Costo envío:</strong> S/.{" "}
+                {deliveryInfo.carrierSeleccionado?.costo_envio.toFixed(2)}
+              </p>
+              <p>
+                <strong className="text-[#EBC431]">Entrega estimada:</strong>{" "}
+                {new Date(
+                  deliveryInfo.carrierSeleccionado?.fecha_entrega_estimada ?? ""
+                ).toLocaleDateString()}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {method === "carrier" && address && (
+        <section>
+          <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
+            Dirección de envío
+          </h3>
           <div className="p-4 border border-[#C0A648]/40 rounded-lg bg-[#413F39]/70">
             <p>{address.direccionLinea1}</p>
             {address.direccionLinea2 && <p>{address.direccionLinea2}</p>}
@@ -113,18 +278,14 @@ export default function Checkout_Step4() {
             </p>
             <p>Código postal: {address.codigoPostal}</p>
           </div>
-        ) : (
-          <p className="italic text-[#F5F5F5]/70">
-            No se ha seleccionado dirección.
-          </p>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section>
-        <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
-          Información del usuario
-        </h3>
-        {userInfo ? (
+      {userInfo && (
+        <section>
+          <h3 className="text-2xl font-semibold mb-4 text-[#EBC431]/90">
+            Información del usuario
+          </h3>
           <div className="p-4 border border-[#C0A648]/40 rounded-lg bg-[#413F39]/70 space-y-1">
             <p>
               <strong className="text-[#EBC431]">Nombre:</strong>{" "}
@@ -139,12 +300,8 @@ export default function Checkout_Step4() {
               {userInfo.telefono}
             </p>
           </div>
-        ) : (
-          <p className="italic text-[#F5F5F5]/70">
-            No hay información del usuario.
-          </p>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="pt-6 border-t border-[#C0A648]/40">
         <div className="flex justify-between text-xl font-semibold">
@@ -156,16 +313,18 @@ export default function Checkout_Step4() {
       <div className="flex justify-between pt-6">
         <button
           onClick={() => navigate(-1)}
-          className="px-6 py-3 rounded-lg bg-[#6B644C] text-[#F5F5F5] hover:bg-[#968751] transition-all"
+          disabled={isLoading}
+          className="px-6 py-3 rounded-lg bg-[#6B644C] text-[#F5F5F5] hover:bg-[#968751] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Volver
         </button>
 
         <button
           onClick={handleConfirm}
-          className="px-6 py-3 rounded-lg bg-[#EBC431] text-[#333027] font-semibold hover:bg-[#C0A648] hover:scale-105 transition-all"
+          disabled={isLoading}
+          className="px-6 py-3 rounded-lg bg-[#EBC431] text-[#333027] font-semibold hover:bg-[#C0A648] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          Confirmar pedido
+          {isLoading ? "Procesando..." : "Confirmar pedido"}
         </button>
       </div>
     </div>

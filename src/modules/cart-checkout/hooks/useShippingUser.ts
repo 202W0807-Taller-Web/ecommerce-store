@@ -1,14 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+import type { ShippingUser, ShippingUserForm } from "../entities";
 
-export type ShippingUser = {
-  id: number;
-  idUsuario: number;
-  email: string;
-  nombreCompleto: string;
-  telefono: string;
-};
-
-export type ShippingUserForm = Omit<ShippingUser, "id">;
+// Re-exportar para retrocompatibilidad
+export type { ShippingUser, ShippingUserForm } from "../entities";
 
 export function useShippingUser(apiUrl: string, idUsuario: number) {
   const [user, setUser] = useState<ShippingUser | null>(null);
