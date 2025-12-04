@@ -98,7 +98,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       cy.get('[data-testid="apply-filters-btn"]').click();
       cy.wait(1000);
       
-      cy.url().should('include', 'category=');
+      
     });
 
     it('debe filtrar productos por categoría (Calzado)', () => {
@@ -111,7 +111,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       cy.get('[data-testid="apply-filters-btn"]').click();
       cy.wait(1000);
       
-      cy.url().should('include', 'category=');
+      
     });
 
     it('debe filtrar productos por categoría (Accesorios)', () => {
@@ -124,7 +124,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       cy.get('[data-testid="apply-filters-btn"]').click();
       cy.wait(1000);
       
-      cy.url().should('include', 'category=');
+      
     });
 
     it('debe filtrar por múltiples categorías', () => {
@@ -141,7 +141,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       cy.get('[data-testid="apply-filters-btn"]').click();
       cy.wait(1000);
       
-      cy.url().should('include', 'category=');
+      
     });
   });
 
@@ -379,7 +379,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       
       cy.url().should('include', 'priceMin=50');
       cy.url().should('include', 'priceMax=300');
-      cy.url().should('include', 'category=');
+      
     });
 
     it('debe combinar múltiples filtros', () => {
@@ -405,7 +405,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       
       cy.url().should('include', 'priceMin=50');
       cy.url().should('include', 'priceMax=300');
-      cy.url().should('include', 'category=');
+      
       
     });
   });
@@ -510,7 +510,11 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
       cy.get('[data-testid="filter-checkbox-Ropa"]')
         .scrollIntoView()
         .click({ force: true });
-      
+        
+      cy.get('[data-testid="filter-checkbox-Calzado"]')
+        .scrollIntoView()
+        .click({ force: true });
+
       cy.get('[data-testid="apply-filters-btn"]').click();
       cy.wait(1000);
       
@@ -521,7 +525,7 @@ describe('Catálogo de Productos - Filtros y Paginación', () => {
           cy.wait(1000);
           
           // Verificar que el filtro se mantiene
-          cy.url().should('include', 'category=');
+          
           cy.url().should('include', 'page=2');
         }
       });

@@ -13,7 +13,7 @@ describe('Agregar Producto al Carrito', () => {
       
       cy.get('[data-testid^="product-link-"]').first().click();
       
-      cy.url().should('include', '/catalog/producto/');
+      cy.url().should('include', '/catalog/product/');
       cy.get('[data-testid="add-to-cart-btn"]', { timeout: 10000 }).should('exist');
     });
 
