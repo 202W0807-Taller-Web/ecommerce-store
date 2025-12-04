@@ -1,6 +1,7 @@
 
 import { FaFacebookF, FaInstagram, FaWhatsapp, FaGraduationCap } from 'react-icons/fa';
 import { FiShoppingBag } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 
 export const Footer = () => {
   return (
@@ -70,6 +71,12 @@ export const Footer = () => {
               <button className="block text-gray-300 hover:text-gray-100 transition-colors text-left">
                 Soporte
               </button>
+              <Link
+                to="/politica-de-privacidad"
+                className="block text-gray-300 hover:text-gray-100 transition-colors text-left"
+              >
+                Política de privacidad
+              </Link>
             </nav>
           </div>
 
