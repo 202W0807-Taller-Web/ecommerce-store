@@ -19,13 +19,11 @@ export async function getMisPedidos(usuarioId: number, page = 1, limit = 5,filte
     }
 }
 
-// --- MODIFICACIÓN EN ESTA FUNCIÓN ---
 export async function getPedidoById(orderId: string) {
     try {
-        // Asumimos que el endpoint para un pedido es /api/orders/:orderId
+        // Endpoint para un pedido es /api/orders/:orderId
         const response = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`);
         
-        // ¡YA NO HAY MOCK! Simplemente devolvemos los datos reales del backend.
         return response.data;
 
     } catch (error) {
