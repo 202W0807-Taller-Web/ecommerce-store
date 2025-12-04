@@ -5,7 +5,9 @@ import PedidoCard from '../components/PedidoCard';
 
 export default function CustomerOrdersPage() {
     const [page, setPage] = useState(1);
-    const { pedidos,meta,loading } = usePedidos(page);
+    const [filter, setFilter] = useState("todos");
+    const [search, setSearch] = useState("");
+    const {  pedidos , meta ,loading ,error } = usePedidos(page,5,filter,search);
 
     return (
         <div className="p-6">
@@ -21,10 +23,12 @@ export default function CustomerOrdersPage() {
                     <input
                         type="text"
                         placeholder="Nombre artículo / ID pedido"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-12 pr-4 py-2 border-2 border-[#766F5D] hover:border-[#C9B35E] rounded-full text-sm bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#C9B35E]"
                     />
                 </div>
-
+                {/* Select de Filtros */}
                 <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2 text-sm text-[#4B493D]">
                         <img
@@ -32,15 +36,19 @@ export default function CustomerOrdersPage() {
                             alt="Filtro"
                             className="w-7 h-7"
                         />
-                        <select className="font-semibold bg-transparent border-none focus:outline-none text-sm text-[#4B493D] hover:text-[#C9B35E]">
+                        <select
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                            className="font-semibold bg-transparent border-none focus:outline-none text-sm text-[#4B493D] hover:text-[#C9B35E]"
+                        >
                             <option value="todos">Todos</option>
-                            <option value="enviado">Este mes</option>
-                            <option value="entregado">Mes pasado</option>
-                            <option value="entregado">Este año</option>
-                            <option value="entregado">2024</option>
-                            <option value="entregado">2023</option>
-                            <option value="entregado">2022</option>
-                            <option value="entregado">2021</option>
+                            <option value="mes-actual">Este mes</option>
+                            <option value="mes-pasado">Mes pasado</option>
+                            <option value="anio-actual">Este año</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
 
                         </select>
                     </div>
@@ -48,20 +56,27 @@ export default function CustomerOrdersPage() {
                     <div className="h-5 w-px bg-gray-300" />
 
                     <span className="font-semibold text-sm text-gray-600">
-                    {meta.total} Pedidos
+                        {meta.total} Pedidos
                     </span>
                 </div>
             </div>
-            {loading ? (
-                <p>Cargando pedidos...</p>
-            ) : (
+
+            {loading && <p>Cargando pedidos...</p>}
+            {!loading && error && (
+                <p className="text-red-600">{error}</p>
+            )}
+            {!loading && !error && pedidos.length === 0 && (
+                <p className="text-gray-600">No tienes pedidos registrados.</p>
+            )}
+            {!loading && !error && pedidos.length > 0 && (
                 <div className="space-y-4">
-                {pedidos.map((p: any) => (
-                    <PedidoCard key={p.cod_orden} pedido={p} />
-                ))}
+                    {pedidos.map((p: any) => (
+                        <PedidoCard key={p.cod_orden} pedido={p} />
+                    ))}
                 </div>
             )}
 
+            {/* Paginación  */}
             <div className="flex items-center  justify-center mt-8 space-x-4">
                 <button
                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}

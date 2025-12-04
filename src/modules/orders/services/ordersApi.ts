@@ -7,15 +7,15 @@ const API_BASE_URL =
         ? "https://orders-query-833583666995.us-central1.run.app"
         : "http://localhost:3002";
 
-export async function getMisPedidos(usuarioId: number, page = 1, limit = 5) {
+export async function getMisPedidos(usuarioId: number, page = 1, limit = 5,filter="todos",search="") {
     try {
         const response = await axios.get(`${API_BASE_URL}/api/orders/usuario/${usuarioId}`, {
-            params: { page, limit },
+            params: { page, limit, filter, search   },
         });
         return response.data;
     } catch (error) {
         console.error('Error al obtener los pedidos del usuario:', error);
-        return [];
+        throw error;
     }
 }
 
