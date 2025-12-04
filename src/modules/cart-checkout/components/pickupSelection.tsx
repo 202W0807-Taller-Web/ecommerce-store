@@ -1,41 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useUserLocation } from "../hooks/useUserLocation";
-
-interface Store {
-  id: number;
-  nombre: string;
-  imagen: string | null;
-  direccion: string;
-  latitud: number;
-  longitud: number;
-  distancia_km: number;
-}
-
-interface AlmacenOrigen {
-  id: number;
-  nombre: string;
-  direccion: string;
-  latitud: number;
-  longitud: number;
-}
-
-interface RecojoTienda {
-  tipo_envio: string;
-  costo_envio: number;
-  tiempo_estimado_dias: number;
-  fecha_entrega_estimada: string;
-  descripcion: string;
-  disponible: boolean;
-  tiendas: Store[];
-  mensaje: string;
-}
-
-interface ShippingQuoteResponse {
-  success: boolean;
-  distancia_km: number;
-  almacen_origen: AlmacenOrigen;
-  recojo_tienda: RecojoTienda;
-}
+import type { Store, AlmacenOrigen, RecojoTienda, PickupQuoteResponse } from "../entities";
 
 interface CartItem {
   idProducto: number;
@@ -59,7 +24,7 @@ export default function PickupSelection({ cart, onSelectPickupInfo }: PickupSele
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [quoteResponse, setQuoteResponse] = useState<ShippingQuoteResponse | null>(null);
+  const [quoteResponse, setQuoteResponse] = useState<PickupQuoteResponse | null>(null);
 
   const { lat, lng, loading: locationLoading, error: locationError } = useUserLocation();
 
@@ -106,7 +71,7 @@ export default function PickupSelection({ cart, onSelectPickupInfo }: PickupSele
           throw new Error(`Error en la API: ${res.status}`);
         }
 
-        const data: ShippingQuoteResponse = await res.json();
+        const data: PickupQuoteResponse = await res.json();
 
         setQuoteResponse(data);
 
