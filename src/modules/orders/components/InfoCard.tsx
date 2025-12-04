@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function InfoCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+export default function InfoCard({ title, icon, children }: { title: string; icon: string; children?: React.ReactNode }) {
     return (
         
         <div className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
