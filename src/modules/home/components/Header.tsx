@@ -1,6 +1,5 @@
-import { useState, useContext, useRef } from 'react';
+import { useState, useContext, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useRef, useEffect } from 'react';
 import { CategoriesModal } from './CategoriesModal';
 import { SearchAutocomplete } from '../../catalog/components/SearchAutocomplete';
 import { useSearchAutocomplete } from '../../catalog/hooks/useSearchAutocomplete';
@@ -23,7 +22,7 @@ export const Header = () => {
   // Hook de autocomplete con debounce de 300ms y mínimo 2 caracteres
   const {
     suggestions,
-    loading,
+    searchLoading,
     showSuggestions,
     setShowSuggestions,
     fetchSuggestions,
@@ -151,7 +150,7 @@ export const Header = () => {
                     data-testid="search-btn"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors"
                   >
-                    {loading ? (
+                    {searchLoading ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                     ) : (
                       <FaSearch className="w-5 h-5" />
@@ -161,7 +160,7 @@ export const Header = () => {
                   {/* Autocomplete Dropdown */}
                   <SearchAutocomplete
                     suggestions={suggestions}
-                    loading={loading}
+                    loading={searchLoading}
                     show={showSuggestions}
                     onSelect={handleSuggestionSelect}
                     onClose={() => setShowSuggestions(false)}

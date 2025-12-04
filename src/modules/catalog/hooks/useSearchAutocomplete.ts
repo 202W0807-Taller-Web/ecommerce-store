@@ -3,7 +3,7 @@ import { SearchService } from '../services/search.service';
 
 interface UseSearchAutocompleteResult {
   suggestions: string[];
-  loading: boolean;
+  searchLoading: boolean;
   showSuggestions: boolean;
   setShowSuggestions: (show: boolean) => void;
   fetchSuggestions: (query: string) => void;
@@ -21,7 +21,7 @@ export const useSearchAutocomplete = (
   minChars: number = 2
 ): UseSearchAutocompleteResult => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchLoading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   
   const searchService = useRef(new SearchService());
@@ -104,7 +104,7 @@ export const useSearchAutocomplete = (
 
   return {
     suggestions,
-    loading,
+    searchLoading,
     showSuggestions,
     setShowSuggestions,
     fetchSuggestions,
