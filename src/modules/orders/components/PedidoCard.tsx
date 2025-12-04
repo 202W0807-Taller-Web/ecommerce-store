@@ -17,7 +17,7 @@ export default function PedidoCard({ pedido }: { pedido: any }) {
 
             {/* Estado del pedido */}
             <div className=" bg-[#F8F6F6]  px-4 py-2 rounded-t-md border-b border-[#CACACA] mb-3">
-                <span className="text-base font-bold  px-2 py-1  text-[#C9B35E] bg-[#F6E8C2] rounded">
+                <span className=" px-2 py-1 font-bold text-[#C9B35E]  bg-[#F6E8C2] rounded">
                     {pedido.estado}
                 </span>
             </div>
