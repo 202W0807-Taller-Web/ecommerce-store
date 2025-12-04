@@ -79,13 +79,18 @@ export const Header = () => {
           {/* User Actions Section */}
           <div className="flex items-center space-x-4">
             {/* Shopping Bag */}
-            <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <Link
+                to="/mis-pedidos"
+                className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+              >
+            {/* <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"> */}
               <FiShoppingBag className="w-6 h-6" />
               {/* Cart badge */}
               {/* <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 3
               </span> */}
-            </button>
+            {/* </button> */}
+            </Link>
 
             {/* Heart/Wishlist */}
             <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
