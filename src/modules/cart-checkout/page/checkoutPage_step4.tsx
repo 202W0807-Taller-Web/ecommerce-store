@@ -1,6 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import CheckoutSteps from "../components/checkoutSteps";
+import { useOrdersService } from "../hooks/useOrdersService";
+import { useCart } from "../hooks/useCart";
+import type { Address, Carrier, AlmacenOrigen, Store } from "../entities";
 
 type CartItem = {
   idProducto: number;
@@ -8,18 +11,6 @@ type CartItem = {
   cantidad: number;
   precio: number;
   imagen?: string;
-};
-
-type Address = {
-  id?: number;
-  direccionLinea1: string;
-  direccionLinea2?: string;
-  ciudad: string;
-  provincia: string;
-  codigoPostal: string;
-  pais: string;
-  latitud?: number;
-  longitud?: number;
 };
 
 type UserInfo = {
@@ -30,9 +21,9 @@ type UserInfo = {
 
 type DeliveryInfo = {
   tipo: "RECOJO_EN_TIENDA" | "ENVIO_A_DOMICILIO";
-  almacenOrigen: any;
-  tiendaSeleccionada?: any;
-  carrierSeleccionado?: any;
+  almacenOrigen: AlmacenOrigen;
+  tiendaSeleccionada?: Store;
+  carrierSeleccionado?: Carrier;
   costoEnvio?: number;
   tiempoEstimadoDias?: number;
   fechaEntregaEstimada?: string;
@@ -50,6 +41,9 @@ export default function Checkout_Step4() {
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null);
   const [costos, setCostos] = useState<any>(null);
   const [method, setMethod] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { createOrder} = useOrdersService();
+  const { clearCart } = useCart();
 
   useEffect(() => {
     const state = location.state;
@@ -64,9 +58,41 @@ export default function Checkout_Step4() {
   }, [location.state]);
 
   const handleConfirm = async () => {
-    if (!userInfo || !deliveryInfo || !cart.length) return;
+    if (!userInfo || !deliveryInfo || !cart.length) {
+      alert("Faltan datos requeridos para confirmar el pedido.");
+      return;
+    }
 
-    // OBJETO QUE MANDARIAMOS A ORDENES
+    setIsLoading(true);
+
+    // Construir el objeto de entrega según el tipo
+    const entregaPayload =
+      deliveryInfo.tipo === "RECOJO_EN_TIENDA"
+        ? {
+            tipo: "RECOJO_TIENDA",
+            almacenOrigen: deliveryInfo.almacenOrigen,
+            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada,
+            costoEnvio: 0.0,
+            tiempoEstimadoDias: deliveryInfo.tiempoEstimadoDias ?? 0,
+            fechaEntregaEstimada: deliveryInfo.fechaEntregaEstimada,
+            descripcion: deliveryInfo.descripcion,
+          }
+        : {
+            tipo: "DOMICILIO",
+            almacenOrigen: deliveryInfo.almacenOrigen,
+            carrierSeleccionado: deliveryInfo.carrierSeleccionado ? {
+              carrier_id: deliveryInfo.carrierSeleccionado.carrier_id,
+              carrier_nombre: deliveryInfo.carrierSeleccionado.carrier_nombre,
+              carrier_codigo: deliveryInfo.carrierSeleccionado.carrier_codigo,
+              costo_envio: deliveryInfo.carrierSeleccionado.costo_envio,
+              tiempo_estimado_dias: deliveryInfo.carrierSeleccionado.tiempo_estimado_dias,
+              fecha_entrega_estimada: deliveryInfo.carrierSeleccionado.fecha_entrega_estimada,
+              cotizacion_id: deliveryInfo.carrierSeleccionado.cotizacion_id,
+            } : undefined,
+            direccionEnvioId: deliveryInfo.direccionEnvioId ?? address?.id,
+          };
+
+    // OBJETO PARA EL NUEVO ENDPOINT
     const orderPayload = {
       usuarioId: 20, // Temporalmente hardcodeado
       direccionEnvio: {
@@ -84,40 +110,51 @@ export default function Checkout_Step4() {
         nombreProducto: it.nombre ?? `Producto #${it.idProducto}`,
         cantidad: it.cantidad,
         precioUnitario: it.precio,
-        subtotal: it.precio * it.cantidad,
+        subTotal: it.precio * it.cantidad,
       })),
-      costos: costos || {
-        subtotal: cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-        impuestos: 0,
-        envio: deliveryInfo?.costoEnvio ?? 0,
-        total:
+      costos: {
+        subtotal: costos?.subtotal ?? cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
+        envio: costos?.envio ?? deliveryInfo?.costoEnvio ?? 0.0,
+        total: costos?.total ?? (
           cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +
-          (deliveryInfo?.costoEnvio ?? 0),
+          (deliveryInfo?.costoEnvio ?? 0.0)
+        ),
       },
-      entrega: deliveryInfo,
+      entrega: entregaPayload,
       metodoPago: "SIMULADO",
       estadoInicial: "PENDIENTE",
     };
 
-    console.log("🟡 Enviando pedido simulado:", orderPayload);
+    console.log("Enviando pedido a API:", orderPayload);
 
     try {
-      const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL;
-      const res = await fetch(`${baseUrl}/api/ordenes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      });
+      const res = await createOrder(orderPayload);
 
-      if (!res.ok) throw new Error("Error al crear la orden");
-      const data = await res.json();
-      console.log("✅ Orden creada:", data);
+      if (res?.success) {
+        await clearCart();
 
-      navigate("/checkout/success", { replace: true });
+        // Navegar al success
+        navigate("/checkout/success", {
+          replace: true,
+          state: { order: res.data },
+        });
+      }
     } catch (err) {
-      console.error("❌ Error simulando el envío de orden:", err);
-      alert("No se pudo confirmar el pedido. Intenta nuevamente.");
+      console.error(err);
+      alert("Hubo un error al crear la orden.");
     }
+
+    // TEST LAST PAGE
+    // navigate("/checkout/success", {
+    //     replace: true,
+    //     state: {
+    //       order: {
+    //         orderId: 'MOCK-123',
+    //         total: total,
+    //         items: cart
+    //       }
+    //     },
+    //   });
   };
 
   const total =
@@ -220,8 +257,7 @@ export default function Checkout_Step4() {
               <p>
                 <strong className="text-[#EBC431]">Entrega estimada:</strong>{" "}
                 {new Date(
-                  deliveryInfo.carrierSeleccionado?.fecha_entrega_estimada ??
-                    ""
+                  deliveryInfo.carrierSeleccionado?.fecha_entrega_estimada ?? ""
                 ).toLocaleDateString()}
               </p>
             </div>
@@ -277,16 +313,18 @@ export default function Checkout_Step4() {
       <div className="flex justify-between pt-6">
         <button
           onClick={() => navigate(-1)}
-          className="px-6 py-3 rounded-lg bg-[#6B644C] text-[#F5F5F5] hover:bg-[#968751] transition-all"
+          disabled={isLoading}
+          className="px-6 py-3 rounded-lg bg-[#6B644C] text-[#F5F5F5] hover:bg-[#968751] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Volver
         </button>
 
         <button
           onClick={handleConfirm}
-          className="px-6 py-3 rounded-lg bg-[#EBC431] text-[#333027] font-semibold hover:bg-[#C0A648] hover:scale-105 transition-all"
+          disabled={isLoading}
+          className="px-6 py-3 rounded-lg bg-[#EBC431] text-[#333027] font-semibold hover:bg-[#C0A648] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          Confirmar pedido
+          {isLoading ? "Procesando..." : "Confirmar pedido"}
         </button>
       </div>
     </div>

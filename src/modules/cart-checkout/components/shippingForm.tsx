@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useAddresses, type Address, type AddressForm } from "../hooks/useAddresses";
+import { useAddresses } from "../hooks/useAddresses";
+import type { Address, AddressForm } from "../entities";
 
 interface ShippingFormProps {
-  onSelectAddress?: (address: any) => void;
+  onSelectAddress?: (address: Address) => void;
 }
 
 export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
@@ -23,7 +24,7 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
   const [newAddress, setNewAddress] = useState<Partial<AddressForm>>({ principal: false });
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
-  const handleSelect = (addr: any) => {
+  const handleSelect = (addr: Address) => {
     setSelectedAddressId(addr.id);
     onSelectAddress?.(addr);
   };

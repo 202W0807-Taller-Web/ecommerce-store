@@ -5,6 +5,7 @@ import ShippingForm from "../components/shippingForm";
 import PickupSelection from "../components/pickupSelection";
 import CarrierSelection from "../components/carrierSelection";
 import { useState } from "react";
+import type { Address, Carrier, AlmacenOrigen, Store, RecojoTienda } from "../entities";
 
 interface CartItem {
   idProducto: number;
@@ -21,19 +22,17 @@ export default function Checkout_Step3() {
   const method = location.state?.shippingMethod as string | undefined;
   const userInfo = location.state?.userInfo;
 
-  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
-  // Para RECOJO EN TIENDA - guardamos toda la info necesaria
   const [pickupInfo, setPickupInfo] = useState<{
-    tienda: any;
-    almacenOrigen: any;
-    recojoInfo: any;
+    tienda: Store;
+    almacenOrigen: AlmacenOrigen;
+    recojoInfo: RecojoTienda;
   } | null>(null);
 
-  // Para ENVÍO A DOMICILIO - guardamos toda la info necesaria
   const [carrierInfo, setCarrierInfo] = useState<{
-    carrier: any;
-    almacenOrigen: any;
+    carrier: Carrier;
+    almacenOrigen: AlmacenOrigen;
     distanciaKm: number;
   } | null>(null);
 
@@ -99,7 +98,6 @@ export default function Checkout_Step3() {
         deliveryInfo: deliveryInfo, // Toda la info necesaria para el JSON final
         costos: {
           subtotal: subtotal,
-          impuestos: 0,
           envio: shippingCost,
           total: total,
         },
@@ -151,7 +149,7 @@ export default function Checkout_Step3() {
                     destinationAddress={{
                       lat: selectedAddress.latitud,
                       lng: selectedAddress.longitud,
-                      direccion: selectedAddress.direccion,
+                      direccion: selectedAddress.direccion ?? selectedAddress.direccionLinea1,
                     }}
                     onSelectCarrier={(info) => setCarrierInfo(info)}
                   />

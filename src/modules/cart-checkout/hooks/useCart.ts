@@ -1,19 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import type { CartItem, Carrito } from "../entities";
 
-export interface CartItem {
-  idProducto: number;
-  idVariante?: number | null;
-  nombre: string;
-  precio: number;
-  cantidad: number;
-  imagenUrl?: string;
-}
-
-export interface Carrito {
-  id: number;
-  idUsuario?: number | null;
-  items: CartItem[];
-}
+// Re-exportar para retrocompatibilidad
+export type { CartItem, Carrito } from "../entities";
 
 export function useCart() {
   const baseUrl = import.meta.env.VITE_API_CART_CHECKOUT_URL + "/api/carritos";
