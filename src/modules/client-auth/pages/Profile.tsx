@@ -15,14 +15,19 @@ const API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
 
 function EditProfileForm({ user, onClose }: any) {
 
-  const { refreshUser } = useContext(AuthContext)!; ;
+  const { refreshUser } = useContext(AuthContext)!;;
+
+  const formatDateForInput = (dateString: string | null) => {
+    if (!dateString) return "";
+    return dateString.split("T")[0];  // Extrae solo YYYY-MM-DD
+  };
 
   const [formData, setFormData] = useState({
     nombres: user.nombres || "",
     apellido_p: user.apellido_p || "",
     apellido_m: user.apellido_m || "",
     celular: user.celular || "",
-    f_nacimiento: user.f_nacimiento || "",
+    f_nacimiento: formatDateForInput(user.f_nacimiento),
   });
 
   const handleChange = (e: any) => {
@@ -44,12 +49,12 @@ function EditProfileForm({ user, onClose }: any) {
       });
 
       const data = await res.json();
-      if (data.success) {
-        // actualizar AuthContext con la nueva info
+
+      if (res.ok) {
         await refreshUser();
         onClose();
       } else {
-        alert("Error al actualizar perfil");
+        alert(data.message || "Error al actualizar perfil");
       }
     } catch (error) {
       console.error(error);
@@ -119,14 +124,14 @@ function EditProfileForm({ user, onClose }: any) {
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100"
+          className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100 cursor-pointer"
         >
           Cancelar
         </button>
 
         <button
           type="submit"
-          className="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary-dark"
+          className="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary-dark cursor-pointer"
         >
           Guardar
         </button>
@@ -155,8 +160,11 @@ export default function Profile() {
   }
 
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("es-ES", options);
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("T")[0].split("-");
+
+    return `${Number(day)} de ${new Intl.DateTimeFormat("es-ES", { month: "long" }).format(new Date(Number(year), Number(month) - 1, Number(day)))} de ${year}`;
   };
 
   return (
@@ -172,9 +180,20 @@ export default function Profile() {
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden mb-8">
           <div className="px-6 py-8 sm:flex sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <FiUser className="w-10 h-10 text-primary" />
+              <div className="w-20 h-20 rounded-full overflow-hidden border">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                    <FiUser className="w-10 h-10 text-primary" />
+                  </div>
+                )}
               </div>
+
               <div className="text-left">
                 <h2 className="text-xl font-semibold text-gray-900">
                   {user.nombres} {user.apellido_p} {user.apellido_m || ""}
@@ -186,7 +205,7 @@ export default function Profile() {
             </div>
             <button
               onClick={() => setIsEditing(true)}
-              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
             >
               <FiEdit2 className="-ml-1 mr-2 h-4 w-4 text-gray-500" />
               Editar perfil
@@ -198,7 +217,7 @@ export default function Profile() {
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "profile"
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "profile"
                   ? "border-primary text-primary"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -207,7 +226,7 @@ export default function Profile() {
               </button>
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "orders"
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "orders"
                   ? "border-primary text-primary"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -216,7 +235,7 @@ export default function Profile() {
               </button>
               <button
                 onClick={() => setActiveTab("wishlist")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "wishlist"
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "wishlist"
                   ? "border-primary text-primary"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}

@@ -45,6 +45,7 @@ interface User {
 
   // Opcionales del backend
   avatar?: string | null;
+  avatar_url?: string | null;
 
   // Fechas
   created_at: string;

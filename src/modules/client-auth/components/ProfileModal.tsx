@@ -42,6 +42,13 @@ const MenuItem = ({
   </li>
 );
 
+const formatToDDMMYYYY = (dateString: string) => {
+  if (!dateString) return "";
+
+  const [year, month, day] = dateString.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};
+
 export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) => {
   const { user, logout } = useContext(AuthContext)!;
   const navigate = useNavigate();
@@ -183,8 +190,9 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
             <p className="text-xs text-gray-500">
               Fecha de nacimiento:{" "}
               {user?.f_nacimiento
-                ? new Date(user.f_nacimiento).toLocaleDateString()
+                ? formatToDDMMYYYY(user.f_nacimiento)
                 : "Sin registrar"}
+
             </p>
           </div>
         </div>
