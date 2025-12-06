@@ -10,7 +10,7 @@ export const MainLayout = ({
   children, 
 }: MainLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background font-grotesk">
+    <div className="min-h-screen flex flex-col bg-background font-grotesk">
       {/* Header */}
        <Header />
       
