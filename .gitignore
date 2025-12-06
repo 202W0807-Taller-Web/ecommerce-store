@@ -24,3 +24,16 @@ dist-ssr
 *.sw?
 
 .env
+
+Cypress
+cypress/
+cypress.config.ts
+cypress.env.json
+
+# Firebase
+.firebase/
+
+# Ignorar configuración de Firebase
+.firebaserc
+firebase.json
+

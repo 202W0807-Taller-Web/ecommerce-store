@@ -1,4 +1,8 @@
 {
+  "compilerOptions": {
+    "types": ["cypress", "node"]
+    },
+
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

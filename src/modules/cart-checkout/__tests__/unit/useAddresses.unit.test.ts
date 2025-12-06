@@ -1,52 +1,93 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useAddresses } from '../../hooks/useAddresses';
-import type { Address, AddressForm } from '../../entities';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { useAddresses } from "../../hooks/useAddresses";
+import type { Address, AddressForm } from "../../entities";
+import React from "react";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('useAddresses', () => {
-  const apiUrl = 'http://localhost:3000/api/envio';
-  const idUsuarioEnvio = 20;
+// Mock del AuthContext con un valor por defecto
+const mockAuthContextValue = {
+  user: {
+    id: 20,
+    nombres: "Test",
+    apellido_p: "User",
+    correo: "test@example.com",
+    tipo_documento: "DNI",
+    nro_documento: "12345678",
+    activo: true,
+    rolInt: 1,
+    created_at: "2024-01-01",
+    updated_at: "2024-01-01",
+  },
+  isAuth: true,
+  loading: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+  refreshUser: vi.fn(),
+};
+
+// Mock del módulo AuthContext
+vi.mock("../../client-auth/context/AuthContext", () => ({
+  AuthContext: React.createContext(mockAuthContextValue),
+}));
+
+describe("useAddresses", () => {
+  const apiUrl = "http://localhost:3000/api/envio";
 
   const mockAddresses: Address[] = [
     {
       id: 1,
-      direccionLinea1: 'Calle Principal 123',
-      direccionLinea2: 'Apt 4B',
-      ciudad: 'Lima',
-      provincia: 'Lima',
-      codigoPostal: '15001',
-      pais: 'Perú',
+      direccionLinea1: "Calle Principal 123",
+      direccionLinea2: "Apt 4B",
+      ciudad: "Lima",
+      provincia: "Lima",
+      codigoPostal: "15001",
+      pais: "Perú",
       principal: true,
     },
     {
       id: 2,
-      direccionLinea1: 'Avenida Secundaria 456',
-      ciudad: 'Cusco',
-      provincia: 'Cusco',
-      codigoPostal: '08000',
-      pais: 'Perú',
+      direccionLinea1: "Avenida Secundaria 456",
+      ciudad: "Cusco",
+      provincia: "Cusco",
+      codigoPostal: "08000",
+      pais: "Perú",
       principal: false,
     },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Resetear el valor del mock del contexto
+    mockAuthContextValue.isAuth = true;
+    mockAuthContextValue.user = {
+      id: 20,
+      nombres: "Test",
+      apellido_p: "User",
+      correo: "test@example.com",
+      tipo_documento: "DNI",
+      nro_documento: "12345678",
+      activo: true,
+      rolInt: 1,
+      created_at: "2024-01-01",
+      updated_at: "2024-01-01",
+    };
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('should fetch addresses on mount', async () => {
+  it("should fetch addresses on mount", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     expect(result.current.loading).toBe(true);
 
@@ -56,10 +97,15 @@ describe('useAddresses', () => {
 
     expect(result.current.addresses).toEqual(mockAddresses);
     expect(result.current.error).toBe(null);
+
+    unmount();
   });
 
-  it('should not fetch if idUsuarioEnvio is null', async () => {
-    const { result } = renderHook(() => useAddresses(apiUrl, null));
+  it("should not fetch if user is not authenticated", async () => {
+    // Simular usuario no autenticado
+    mockAuthContextValue.isAuth = false;
+
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -67,30 +113,34 @@ describe('useAddresses', () => {
 
     expect(mockFetch).not.toHaveBeenCalled();
     expect(result.current.addresses).toEqual([]);
+
+    unmount();
   });
 
-  it('should handle fetch error', async () => {
+  it("should handle fetch error", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
     expect(result.current.error).toBeTruthy();
+
+    unmount();
   });
 
-  it('should create new address', async () => {
+  it("should create new address", async () => {
     const newAddress: AddressForm = {
-      direccionLinea1: 'Nueva Dirección 789',
-      ciudad: 'Arequipa',
-      provincia: 'Arequipa',
-      codigoPostal: '04000',
-      pais: 'Perú',
+      direccionLinea1: "Nueva Dirección 789",
+      ciudad: "Arequipa",
+      provincia: "Arequipa",
+      codigoPostal: "04000",
+      pais: "Perú",
       principal: false,
     };
 
@@ -105,7 +155,7 @@ describe('useAddresses', () => {
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.addresses).toEqual(mockAddresses);
@@ -123,11 +173,13 @@ describe('useAddresses', () => {
       expect(result.current.addresses.length).toBe(3);
       expect(result.current.addresses[2]).toEqual(createdAddress);
     });
+
+    unmount();
   });
 
-  it('should update existing address', async () => {
+  it("should update existing address", async () => {
     const updatedData: Partial<AddressForm> = {
-      direccionLinea2: 'Piso 5',
+      direccionLinea2: "Piso 5",
     };
 
     const updatedAddress: Address = {
@@ -141,7 +193,7 @@ describe('useAddresses', () => {
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.addresses).toEqual(mockAddresses);
@@ -156,18 +208,20 @@ describe('useAddresses', () => {
     await result.current.updateAddress(1, updatedData);
 
     await waitFor(() => {
-      expect(result.current.addresses[0].direccionLinea2).toBe('Piso 5');
+      expect(result.current.addresses[0].direccionLinea2).toBe("Piso 5");
     });
+
+    unmount();
   });
 
-  it('should delete address', async () => {
+  it("should delete address", async () => {
     // Mock para fetch inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.addresses).toEqual(mockAddresses);
@@ -182,18 +236,20 @@ describe('useAddresses', () => {
 
     await waitFor(() => {
       expect(result.current.addresses.length).toBe(1);
-      expect(result.current.addresses.find(a => a.id === 1)).toBeUndefined();
+      expect(result.current.addresses.find((a) => a.id === 1)).toBeUndefined();
     });
+
+    unmount();
   });
 
-  it('should mark address as primary', async () => {
+  it("should mark address as primary", async () => {
     // Mock para fetch inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.addresses).toEqual(mockAddresses);
@@ -210,16 +266,18 @@ describe('useAddresses', () => {
       expect(result.current.addresses[0].principal).toBe(false);
       expect(result.current.addresses[1].principal).toBe(true);
     });
+
+    unmount();
   });
 
-  it('should handle optimistic update rollback on error', async () => {
+  it("should handle optimistic update rollback on error", async () => {
     // Mock para fetch inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockAddresses,
     });
 
-    const { result } = renderHook(() => useAddresses(apiUrl, idUsuarioEnvio));
+    const { result, unmount } = renderHook(() => useAddresses(apiUrl));
 
     await waitFor(() => {
       expect(result.current.addresses).toEqual(mockAddresses);
@@ -238,5 +296,7 @@ describe('useAddresses', () => {
       expect(result.current.addresses).toEqual(mockAddresses);
       expect(result.current.error).toBeTruthy();
     });
+
+    unmount();
   });
 });
