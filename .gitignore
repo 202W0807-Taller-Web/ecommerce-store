@@ -27,3 +27,7 @@ dist-ssr
 
 # Firebase
 .firebase/
+
+# Ignorar configuración de Firebase
+.firebaserc
+firebase.json
