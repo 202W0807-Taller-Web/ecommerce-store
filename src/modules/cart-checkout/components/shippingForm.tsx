@@ -8,7 +8,6 @@ interface ShippingFormProps {
 
 export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
   const API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
-  const idUsuarioEnvio = 20; // HARDCODED (luego puedes reemplazarlo)
 
   const {
     addresses,
@@ -17,12 +16,16 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
     updateAddress,
     deleteAddress,
     markAsPrimary,
-  } = useAddresses(API_URL, idUsuarioEnvio);
+  } = useAddresses(API_URL);
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [newAddress, setNewAddress] = useState<Partial<AddressForm>>({ principal: false });
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [newAddress, setNewAddress] = useState<Partial<AddressForm>>({
+    principal: false,
+  });
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null,
+  );
 
   const handleSelect = (addr: Address) => {
     setSelectedAddressId(addr.id);
@@ -38,8 +41,10 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
     { key: "pais", placeholder: "País" },
   ];
 
-  const setField = <K extends keyof AddressForm>(key: K, value: AddressForm[K]) =>
-    setNewAddress((prev) => ({ ...prev, [key]: value }));
+  const setField = <K extends keyof AddressForm>(
+    key: K,
+    value: AddressForm[K],
+  ) => setNewAddress((prev) => ({ ...prev, [key]: value }));
 
   const openModal = (address?: Address) => {
     if (address) {
@@ -86,8 +91,8 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
                 selectedAddressId === addr.id
                   ? "border-[#EBC431] bg-[#413F39]"
                   : addr.principal
-                  ? "border-[#EBC431]/60 bg-[#413F39]/70"
-                  : "border-[#6B644C]/60 bg-[#2C2A25] hover:bg-[#413F39]/60"
+                    ? "border-[#EBC431]/60 bg-[#413F39]/70"
+                    : "border-[#6B644C]/60 bg-[#2C2A25] hover:bg-[#413F39]/60"
               }`}
             >
               <div>
@@ -100,7 +105,8 @@ export default function ShippingForm({ onSelectAddress }: ShippingFormProps) {
                   </p>
                 )}
                 <p className="text-sm text-[#F5F5F5]/70">
-                  {addr.ciudad}, {addr.provincia}, {addr.pais} — {addr.codigoPostal}
+                  {addr.ciudad}, {addr.provincia}, {addr.pais} —{" "}
+                  {addr.codigoPostal}
                 </p>
 
                 {selectedAddressId === addr.id && (
