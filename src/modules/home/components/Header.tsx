@@ -175,25 +175,20 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             {/* Shopping Bag */}
             <Link
-                to="/mis-pedidos"
-                className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
-              >
-            {/* <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"> */}
+              to="/mis-pedidos"
+              className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+            >
               <FiShoppingBag className="w-6 h-6" />
-              {/* Cart badge */}
-              {/* <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                3
-              </span> */}
-            {/* </button> */}
             </Link>
 
-            {/* Heart/Wishlist */}
-            <button
+            {/* Heart/Wishlist - Navega a Favoritos */}
+            <Link
+              to="/favorites"
               data-testid="wishlist-btn"
               className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
             >
               <FiHeart className="w-6 h-6" />
-            </button>
+            </Link>
 
             {/* Shopping Cart */}
             <Link

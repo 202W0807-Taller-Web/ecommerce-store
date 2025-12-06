@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProductCard } from "../../catalog/components/catalog/ProductCard";
 import { ProductCardSkeleton } from "../../catalog/components/skeletons/ProductCardSkeleton";
+import { RegisterModal } from "../../client-auth/components/RegisterModal";
 import {
   ChevronRight,
   TrendingUp,
@@ -17,6 +18,7 @@ export default function HomePage() {
   const { products, loading, error, fetchProducts } = useCatalog();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [newProducts, setNewProducts] = useState<any[]>([]);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
     fetchProducts({}, { page: 1, limit: 12 });
@@ -28,6 +30,10 @@ export default function HomePage() {
       setNewProducts(products.data.slice(4, 12));
     }
   }, [products]);
+
+  const handleLoginRequired = () => {
+    setShowRegisterModal(true);
+  };
 
   return (
     <div className="w-full">
@@ -178,7 +184,11 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onLoginRequired={handleLoginRequired}
+                />
               ))}
             </div>
           )}
@@ -233,7 +243,11 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {newProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  onLoginRequired={handleLoginRequired}
+                />
               ))}
             </div>
           )}
@@ -258,6 +272,12 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* Modal de registro */}
+      <RegisterModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+      />
     </div>
   );
 }

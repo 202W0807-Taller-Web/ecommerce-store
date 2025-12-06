@@ -1,5 +1,5 @@
 import AppRoutes from "./modules/home/routes/AppRoutes";
-import { AtributosProvider } from "./modules/catalog/contexts";
+import { AtributosProvider, FavoritesProvider } from "./modules/catalog/contexts";
 import { AuthProvider } from "./modules/client-auth/context/AuthContext";
 import { useCartAuth } from "./modules/cart-checkout/hooks/useCartAuth";
 
@@ -8,7 +8,9 @@ function App() {
     <AuthProvider>
       <CartAuthWrapper>
         <AtributosProvider>
+          <FavoritesProvider>
           <AppRoutes />
+          </FavoritesProvider>
         </AtributosProvider>
       </CartAuthWrapper>
     </AuthProvider>
