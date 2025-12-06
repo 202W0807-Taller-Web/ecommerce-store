@@ -16,10 +16,9 @@ export default function CartPage() {
 
   const items = cart?.items || [];
 
-  const productIds = useMemo(
-    () => items.map((item) => item.idProducto),
-    [items],
-  );
+  const productIds = useMemo(() => {
+    return items.map((item) => item.idProducto);
+  }, [JSON.stringify(items.map((i) => i.idProducto))]);
   const {
     getProductStockStatus,
     loading: stockLoading,
