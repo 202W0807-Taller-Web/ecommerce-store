@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { CatalogService } from "../services/catalog.service";
 import { type ProductFilters, type FrontendProductSummary, type PaginationResult } from "../types";
+import { SearchService } from "../services";
 
 export interface UseCatalogResult {
   // Productos
@@ -26,28 +26,28 @@ export const useCatalog = (): UseCatalogResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const catalogService = useMemo(() => new CatalogService(), []);
+  const searchService = useMemo(() => new SearchService(), []);
 
   const fetchProducts = useCallback(async (filters: ProductFilters, pagination: { page: number; limit: number }, sortBy?: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await catalogService.getProducts(filters, pagination, sortBy);
+      const result = await searchService.searchProducts(pagination, filters, sortBy);
       setProducts(result);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
-  }, [catalogService]);
+  }, [searchService]);
 
   const searchProducts = useCallback(async (query: string, filters?: Partial<ProductFilters>, sortBy?: string): Promise<FrontendProductSummary[]> => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await catalogService.searchProducts(query, filters, sortBy);
+      const result = await searchService.onlySearch(query, filters, sortBy);
       return result;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error desconocido');
@@ -55,7 +55,7 @@ export const useCatalog = (): UseCatalogResult => {
     } finally {
       setLoading(false);
     }
-  }, [catalogService]);
+  }, [searchService]);
 
   return {
     products,

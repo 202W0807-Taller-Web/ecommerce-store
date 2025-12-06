@@ -79,10 +79,10 @@ export class CatalogService {
       
       // Parámetros de ordenamiento
       if (sortBy) {
-        if (sortBy === 'price_asc') {
+        if (sortBy === 'price asc') {
           params.append('SortBy', 'Precio');
           params.append('IsDescending', 'false');
-        } else if (sortBy === 'price_desc') {
+        } else if (sortBy === 'price desc') {
           params.append('SortBy', 'Precio');
           params.append('IsDescending', 'true');
         }
@@ -176,6 +176,7 @@ export class CatalogService {
     const apiResponse = await this.fetchProducts(pagination, filters, sortBy);
     
     // Formatear productos para UI
+
     const productSummaries: FrontendProductSummary[] = apiResponse.data.map((apiProduct) => 
       formatearProducto(apiProduct)
     );
@@ -213,7 +214,7 @@ export class CatalogService {
       ...filters
     };
     
-    const apiResponse = await this.fetchProducts({ page: 1, limit: 100 }, searchFilters, sortBy);
+    const apiResponse = await this.fetchProducts({ page: 1, limit: 9 }, searchFilters, sortBy);
     const transformedProducts = apiResponse.data.map((apiProduct) => formatearProducto(apiProduct));
     
     let filteredProducts = transformedProducts;
