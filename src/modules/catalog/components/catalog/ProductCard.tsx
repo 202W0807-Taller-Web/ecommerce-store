@@ -1,29 +1,93 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { type FrontendProductSummary } from '../../types';
+import { useFavorites } from '../../hooks/useFavorites';
 
 interface ProductCardProps {
   product: FrontendProductSummary;
-  // Datos hardcodeados que se pasan como parámetros
   mockRating?: number;
+  onLoginRequired?: () => void;
 }
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, onLoginRequired }: ProductCardProps) => {
+  const { toggleFavorite, isFavorite, isAuthenticated } = useFavorites();
+  const [isToggling, setIsToggling] = useState(false);
+  const isFav = isFavorite(product.id);
+
+  useEffect(() => {
+    console.log(`🎴 ProductCard ${product.id} rendered - isFav:`, isFav, 'isAuth:', isAuthenticated);
+  }, [product.id, isFav, isAuthenticated]);
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log(`💗 Favorite click on product ${product.id} - isAuth:`, isAuthenticated);
+
+    if (!isAuthenticated) {
+      console.log('❌ No autenticado, mostrando modal de login');
+      onLoginRequired?.();
+      return;
+    }
+
+    if (isToggling) {
+      console.log('⏸️ Ya está procesando un toggle');
+      return;
+    }
+
+    setIsToggling(true);
+    try {
+      console.log(`🔄 Toggling favorite for product ${product.id}`);
+      const success = await toggleFavorite(product.id);
+      console.log(`${success ? '✅' : '❌'} Toggle result:`, success);
+    } catch (error) {
+      console.error('❌ Error al actualizar favorito:', error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
     <article data-testid={`product-card-${product.nombre}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
         {/* Corazón/Favorito en esquina superior derecha */}
-        <button className="absolute top-3 right-3 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-gray-100 transition-colors">
-          <svg className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-          </svg>
+        <button 
+          onClick={handleFavoriteClick}
+          disabled={isToggling}
+          className={`absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all duration-200 shadow-sm ${
+            isToggling ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'
+          }`}
+          aria-label={isFav ? "Quitar de favoritos" : "Agregar a favoritos"}
+        >
+          {isToggling ? (
+            <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg 
+              className={`w-5 h-5 transition-all duration-200 ${
+                isFav 
+                  ? 'text-red-500 fill-red-500 scale-110' 
+                  : 'text-gray-400 hover:text-red-400 hover:scale-110'
+              }`}
+              fill={isFav ? "currentColor" : "none"}
+              stroke="currentColor" 
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          )}
         </button>
 
-        <Link data-testid={`product-link-${product.id}`}  to={`/catalog/product/${product.id}`} className="block">
+        <Link data-testid={`product-link-${product.id}`} to={`/catalog/product/${product.id}`} className="block">
           <div className="aspect-square overflow-hidden bg-gray-50">
             <img
               src={product.imagen || ''}
               alt={product.nombre}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              loading="lazy"
             />
           </div>
           
@@ -31,7 +95,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <div className="flex items-center gap-2 mb-2">
               {/* Badge PROM si es promoción */}
               {product.isPromo && (
-                <span className="bg-red-200 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
                   PROM
                 </span>
               )}
@@ -42,29 +106,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             
             {/* Precio en formato S/ */}
             <div className="mb-2">
-              <span className="text-lg font-medium text-gray-900">
+              <span className="text-lg font-semibold text-gray-900">
                 S/ {product.precio ? product.precio.toFixed(2) : "0.00"}
               </span>
-              {product.precioOriginal && (
+              {product.precioOriginal && product.precioOriginal > product.precio && (
                 <span className="text-sm text-gray-500 line-through ml-2">
-                  S/ {product.precioOriginal ? product.precioOriginal.toFixed(2): "0.00"}
+                  S/ {product.precioOriginal.toFixed(2)}
                 </span>
               )}
             </div>
-            
-            {/* Rating con estrellas */}
-            {/* <div className="flex items-center justify-start">
-              <div className="flex items-center space-x-1">
-                <div className="flex">
-                  {[...Array(5)].map((_, index) => (
-                    <svg key={index} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-              
-            </div> */}
           </div>
         </Link>
       </div>

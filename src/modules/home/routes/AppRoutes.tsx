@@ -17,6 +17,7 @@ import PrivacyPolicy from "../../client-auth/pages/PrivacyPolicy";
 
 import MainRoutesLayout from "../layout/MainRoutesLayout";
 import { HomeLayout } from "../layout/HomeLayout";
+import { FavoritesPage } from "../../catalog/pages/FavoritesPage";
 
 export default function AppRoutes() {
   return (
@@ -70,6 +71,14 @@ export default function AppRoutes() {
                 <Profile />
               </PrivateRoute>
             }
+          />
+          <Route 
+          path="/favorites"
+          element={
+            <PrivateRoute>
+                <FavoritesPage />
+              </PrivateRoute>
+          }
           />
           <Route
             path="/privacy-settings"
