@@ -9,7 +9,7 @@ import CheckoutSuccess from "../page/success_page";
 export default function CartCheckoutRoutes() {
   return (
     <Routes>
-      <Route path="cart" element={<Cart />} />
+      <Route index element={<Cart />} />
       <Route path="checkout/step1" element={<Checkout_Step1 />} />
       <Route path="checkout/step2" element={<Checkout_Step2 />} />
       <Route path="checkout/step3" element={<Checkout_Step3 />} />

@@ -5,7 +5,13 @@ import ShippingForm from "../components/shippingForm";
 import PickupSelection from "../components/pickupSelection";
 import CarrierSelection from "../components/carrierSelection";
 import { useState } from "react";
-import type { Address, Carrier, AlmacenOrigen, Store, RecojoTienda } from "../entities";
+import type {
+  Address,
+  Carrier,
+  AlmacenOrigen,
+  Store,
+  RecojoTienda,
+} from "../entities";
 
 interface CartItem {
   idProducto: number;
@@ -60,9 +66,10 @@ export default function Checkout_Step3() {
   const total = subtotal + shippingCost;
 
   // Determinar si se puede continuar
-  const canContinue = method === "pickup" 
-    ? pickupInfo !== null 
-    : (selectedAddress !== null && carrierInfo !== null);
+  const canContinue =
+    method === "pickup"
+      ? pickupInfo !== null
+      : selectedAddress !== null && carrierInfo !== null;
 
   const handleContinue = () => {
     if (!canContinue) return;
@@ -89,7 +96,7 @@ export default function Checkout_Step3() {
       };
     }
 
-    navigate("/checkout/step4", {
+    navigate("/cart/checkout/step4", {
       state: {
         method: method,
         passedCart: cart,
@@ -149,7 +156,9 @@ export default function Checkout_Step3() {
                     destinationAddress={{
                       lat: selectedAddress.latitud,
                       lng: selectedAddress.longitud,
-                      direccion: selectedAddress.direccion ?? selectedAddress.direccionLinea1,
+                      direccion:
+                        selectedAddress.direccion ??
+                        selectedAddress.direccionLinea1,
                     }}
                     onSelectCarrier={(info) => setCarrierInfo(info)}
                   />
@@ -162,7 +171,7 @@ export default function Checkout_Step3() {
           <div className="flex justify-between pt-6 border-t border-[#C0A648]/40">
             <button
               onClick={() =>
-                navigate("/checkout/step2", {
+                navigate("/cart/checkout/step2", {
                   state: { passedCart: cart, method: method },
                 })
               }

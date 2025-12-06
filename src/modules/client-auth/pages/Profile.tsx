@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import * as authApi from "../api/authApi";
 import { useAddresses } from "../../cart-checkout/hooks/useAddresses";
@@ -15,7 +15,7 @@ import {
   FiCalendar,
 } from "react-icons/fi";
 const AUTH_API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
-const CART_API_URL = `${import.meta.env.VITE_CART_BACKEND}`;
+const CART_API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}`;
 
 function EditProfileForm({ user, onClose, onSuccess }: any) {
   const { refreshUser } = useContext(AuthContext)!;
@@ -238,7 +238,10 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
 
 export default function Profile() {
   const { user, refreshUser } = useContext(AuthContext)!;
-  const [activeTab, setActiveTab] = useState("profile");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab") || "profile";
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true); // Estado de carga
   const [, setSelectedImage] = useState<File | null>(null);
@@ -247,6 +250,11 @@ export default function Profile() {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStartTime, setUploadStartTime] = useState<number>(0);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  // Update activeTab when URL changes
+  useEffect(() => {
+    setActiveTab(tabFromUrl);
+  }, [tabFromUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -342,7 +350,10 @@ export default function Profile() {
   }, [showSuccessToast]);
 
   // Addresses management using useAddresses hook
-  const addressesApiUrl = `${CART_API_URL}/api/direcciones`;
+  // The hook expects a base URL that will be appended with
+  // `/usuario/:id/direcciones` or `/direcciones/:id`, so use
+  // the same base used by cart-checkout: `/api/envio`.
+  const addressesApiUrl = `${CART_API_URL}/api/envio`;
   const {
     addresses,
     loading: loadingAddresses,
@@ -463,7 +474,6 @@ export default function Profile() {
   // Formatear la URL de la imagen de perfil si se ha seleccionado una nueva imagen
   const imageToDisplay = previewUrl || user.avatar_url;
 
-  console.log("Avatar URL:", user.avatar_url);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -472,6 +482,12 @@ export default function Profile() {
 
     return `${Number(day)} de ${new Intl.DateTimeFormat("es-ES", { month: "long" }).format(new Date(Number(year), Number(month) - 1, Number(day)))} de ${year}`;
   };
+
+  // Compute primary address from addresses (from useAddresses hook)
+  const primaryAddress = addresses && addresses.length > 0 ? addresses.find((a: any) => a.principal) : null;
+  const primaryAddressText = primaryAddress
+    ? `${primaryAddress.direccionLinea1}${primaryAddress.direccionLinea2 ? `, ${primaryAddress.direccionLinea2}` : ""}${primaryAddress.ciudad ? `, ${primaryAddress.ciudad}` : ""}${primaryAddress.provincia ? `, ${primaryAddress.provincia}` : ""}${primaryAddress.pais ? ` - ${primaryAddress.pais}` : ""}`
+    : user.direccion || null;
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-white py-8 px-4 sm:px-6 lg:px-8">
@@ -669,9 +685,9 @@ export default function Profile() {
                   </h4>
                   <div className="mt-1 flex items-start">
                     <FiMapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-900">
-                      {user.direccion ? user.direccion : "Sin registrar"}
-                    </p>
+                      <p className="text-sm text-gray-900">
+                        {primaryAddressText ? primaryAddressText : "Sin registrar"}
+                      </p>
                   </div>
                 </div>
               </div>
