@@ -1,37 +1,81 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useCart } from '../../hooks/useCart';
-import type { Carrito } from '../../entities';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { useCart } from "../../hooks/useCart";
+import type { Carrito } from "../../entities";
+import React from "react";
 
 // Mock de fetch global
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('useCart', () => {
+// Mock de console methods
+vi.spyOn(console, "log").mockImplementation(() => {});
+vi.spyOn(console, "warn").mockImplementation(() => {});
+
+// Mock de localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+  writable: true,
+  configurable: true,
+});
+
+// Mock del AuthContext
+const mockAuthContext = {
+  isAuth: false,
+  user: null,
+};
+
+vi.mock("../../client-auth/context/AuthContext", () => ({
+  AuthContext: React.createContext(mockAuthContext),
+}));
+
+describe("useCart", () => {
   const mockCart: Carrito = {
     id: 7,
     idUsuario: null,
     items: [
       {
         idProducto: 1,
-        nombre: 'Producto Test',
+        nombre: "Producto Test",
         precio: 100,
         cantidad: 2,
-        imagenUrl: 'test.jpg',
+        imagenUrl: "test.jpg",
       },
     ],
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    import.meta.env.VITE_API_CART_CHECKOUT_URL = 'http://localhost:3000';
+    localStorageMock.clear();
+    mockAuthContext.isAuth = false;
+    mockAuthContext.user = null;
+    import.meta.env.VITE_API_CART_CHECKOUT_URL = "http://localhost:3000";
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    localStorageMock.clear();
   });
 
-  it('should fetch cart on mount', async () => {
+  it("should fetch cart on mount", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockCart,
@@ -49,7 +93,9 @@ describe('useCart', () => {
     expect(result.current.error).toBe(null);
   });
 
-  it('should handle fetch error', async () => {
+  it("should handle fetch error", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
@@ -65,14 +111,16 @@ describe('useCart', () => {
     expect(result.current.cart).toBe(null);
   });
 
-  it('should add item to cart', async () => {
+  it("should add item to cart", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     const updatedCart: Carrito = {
       ...mockCart,
       items: [
         ...mockCart.items,
         {
           idProducto: 2,
-          nombre: 'Nuevo Producto',
+          nombre: "Nuevo Producto",
           precio: 50,
           cantidad: 1,
         },
@@ -99,7 +147,7 @@ describe('useCart', () => {
 
     await result.current.addToCart({
       idProducto: 2,
-      nombre: 'Nuevo Producto',
+      nombre: "Nuevo Producto",
       precio: 50,
       cantidad: 1,
     });
@@ -109,7 +157,9 @@ describe('useCart', () => {
     });
   });
 
-  it('should update item quantity', async () => {
+  it("should update item quantity", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     const updatedCart: Carrito = {
       ...mockCart,
       items: [{ ...mockCart.items[0], cantidad: 5 }],
@@ -140,7 +190,9 @@ describe('useCart', () => {
     });
   });
 
-  it('should remove item from cart', async () => {
+  it("should remove item from cart", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     const updatedCart: Carrito = {
       ...mockCart,
       items: [],
@@ -171,7 +223,9 @@ describe('useCart', () => {
     });
   });
 
-  it('should clear cart', async () => {
+  it("should clear cart", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     // Mock para fetchCart inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -197,7 +251,9 @@ describe('useCart', () => {
     });
   });
 
-  it('should handle optimistic updates on error', async () => {
+  it("should handle optimistic updates on error", async () => {
+    localStorageMock.setItem("carritoId", "7");
+
     // Mock para fetchCart inicial
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -219,12 +275,13 @@ describe('useCart', () => {
     try {
       await result.current.addToCart({
         idProducto: 2,
-        nombre: 'Nuevo Producto',
+        nombre: "Nuevo Producto",
         precio: 50,
         cantidad: 1,
       });
     } catch (error) {
       // Esperamos el error
+      console.log(error);
     }
 
     await waitFor(() => {
