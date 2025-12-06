@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "../page/HomePage";
 import AuthLayout from "../layout/AuthLayout";
 import CatalogRoutes from "../../catalog/routes/CatalogRoutes";
-import CartCheckoutRoutes from "../../cart-checkout/routes/CartCheckoutRoutes";
+import CartCheckoutRoutes from "../../cart-checkout/routes/CartCheckoutRoutes";;
 import CustomerOrdersPage from "../../orders/pages/customerOrders_page";
 import OrderDetailPage from "../../orders/pages/OrderDetailPage";
 import PublicRoute from "../../client-auth/components/helpers/PublicRoutes";
@@ -16,6 +16,7 @@ import PrivacySettings from "../../client-auth/pages/PrivacySettings";
 import PrivacyPolicy from "../../client-auth/pages/PrivacyPolicy";
 
 import MainRoutesLayout from "../layout/MainRoutesLayout";
+import { HomeLayout } from "../layout/HomeLayout";
 
 export default function AppRoutes() {
   return (
@@ -57,9 +58,11 @@ export default function AppRoutes() {
           />
         </Route>
 
+        <Route element={<HomeLayout />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
         {/* All other routes use MainLayout */}
         <Route element={<MainRoutesLayout />}>
-          <Route path="/" element={<HomePage />} />
           <Route
             path="/profile"
             element={
