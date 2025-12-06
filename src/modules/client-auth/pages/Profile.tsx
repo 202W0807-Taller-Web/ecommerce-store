@@ -17,14 +17,12 @@ import {
 const AUTH_API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
 const CART_API_URL = `${import.meta.env.VITE_CART_BACKEND}`;
 
-
 function EditProfileForm({ user, onClose, onSuccess }: any) {
-
-  const { refreshUser } = useContext(AuthContext)!;;
+  const { refreshUser } = useContext(AuthContext)!;
 
   const formatDateForInput = (dateString: string | null) => {
     if (!dateString) return "";
-    return dateString.split("T")[0];  // Extrae solo YYYY-MM-DD
+    return dateString.split("T")[0]; // Extrae solo YYYY-MM-DD
   };
 
   const [formData, setFormData] = useState({
@@ -132,8 +130,10 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
   const hasErrors = Boolean(phoneError || dateError || emailError);
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[70vh] overflow-auto pr-2">
-
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[70vh] overflow-auto pr-2"
+    >
       <div className="sm:col-span-1">
         <label className="text-sm font-medium text-gray-700">Nombres</label>
         <input
@@ -146,7 +146,9 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
       </div>
 
       <div className="sm:col-span-1">
-        <label className="text-sm font-medium text-gray-700">Apellido Paterno</label>
+        <label className="text-sm font-medium text-gray-700">
+          Apellido Paterno
+        </label>
         <input
           type="text"
           name="apellido_p"
@@ -157,7 +159,9 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
       </div>
 
       <div className="sm:col-span-1">
-        <label className="text-sm font-medium text-gray-700">Apellido Materno</label>
+        <label className="text-sm font-medium text-gray-700">
+          Apellido Materno
+        </label>
         <input
           type="text"
           name="apellido_m"
@@ -168,7 +172,9 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
       </div>
 
       <div className="sm:col-span-1">
-        <label className="text-sm font-medium text-gray-700">Correo electrónico</label>
+        <label className="text-sm font-medium text-gray-700">
+          Correo electrónico
+        </label>
         <input
           type="email"
           name="correo"
@@ -176,7 +182,9 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
           onChange={handleChange}
           className="mt-1 w-full border rounded-md px-3 py-2"
         />
-        {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+        {emailError && (
+          <p className="text-xs text-red-500 mt-1">{emailError}</p>
+        )}
       </div>
 
       <div className="sm:col-span-1">
@@ -188,11 +196,15 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
           onChange={handleChange}
           className="mt-1 w-full border rounded-md px-3 py-2"
         />
-        {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
+        {phoneError && (
+          <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+        )}
       </div>
 
       <div className="sm:col-span-1">
-        <label className="text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+        <label className="text-sm font-medium text-gray-700">
+          Fecha de nacimiento
+        </label>
         <input
           type="date"
           name="f_nacimiento"
@@ -215,12 +227,11 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
         <button
           type="submit"
           disabled={hasErrors}
-          className={`px-4 py-2 text-sm rounded-md text-white ${hasErrors ? 'bg-gray-400 opacity-60 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark cursor-pointer'} transform ${hasErrors ? '' : 'hover:-translate-y-0.5 hover:shadow-md'} transition duration-150`}
+          className={`px-4 py-2 text-sm rounded-md text-white ${hasErrors ? "bg-gray-400 opacity-60 cursor-not-allowed" : "bg-primary hover:bg-primary-dark cursor-pointer"} transform ${hasErrors ? "" : "hover:-translate-y-0.5 hover:shadow-md"} transition duration-150`}
         >
           Guardar
         </button>
       </div>
-
     </form>
   );
 }
@@ -244,7 +255,8 @@ export default function Profile() {
         setImageError("Debes iniciar sesión para cambiar la imagen");
         return;
       }
-      if (file.size > 2 * 1024 * 1024) { // 2MB
+      if (file.size > 2 * 1024 * 1024) {
+        // 2MB
         setImageError("La imagen debe ser de 2MB o menos");
         return;
       }
@@ -293,7 +305,9 @@ export default function Profile() {
         }
         setImageError("");
       } else {
-        setImageError((data && (data.message || data.error)) || "Error al subir la imagen");
+        setImageError(
+          (data && (data.message || data.error)) || "Error al subir la imagen",
+        );
       }
     } catch (error) {
       console.error(error);
@@ -312,7 +326,7 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setLoading(false); // Desactivar la carga cuando los datos del usuario estén disponibles
-      console.log('Datos del usuario:', user);  // Verifica los datos del usuario en Profile.tsx
+      console.log("Datos del usuario:", user); // Verifica los datos del usuario en Profile.tsx
     }
   }, [user]); // Se ejecuta cuando 'user' cambia (cuando es cargado)
 
@@ -335,8 +349,8 @@ export default function Profile() {
     createAddress,
     updateAddress,
     deleteAddress,
-    markAsPrimary
-  } = useAddresses(addressesApiUrl, user?.id ?? null);
+    markAsPrimary,
+  } = useAddresses(addressesApiUrl);
 
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [addressForm, setAddressForm] = useState<any>(null); // null = new
@@ -347,36 +361,43 @@ export default function Profile() {
       setAddressForm({ ...addr });
     } else {
       setAddressForm({
-        direccionLinea1: '',
-        direccionLinea2: '',
-        ciudad: '',
-        provincia: '',
-        pais: '',
-        codigoPostal: '',
-        principal: false
+        direccionLinea1: "",
+        direccionLinea2: "",
+        ciudad: "",
+        provincia: "",
+        pais: "",
+        codigoPostal: "",
+        principal: false,
       });
     }
-    setAddressError('');
+    setAddressError("");
     setAddressModalOpen(true);
   };
 
   const closeAddressModal = () => {
     setAddressModalOpen(false);
     setAddressForm(null);
-    setAddressError('');
+    setAddressError("");
   };
 
   const handleAddressChange = (e: any) => {
     const { name, value, type, checked } = e.target;
-    setAddressForm({ ...addressForm, [name]: type === 'checkbox' ? checked : value });
+    setAddressForm({
+      ...addressForm,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const saveAddress = async () => {
     if (!addressForm) return;
 
     // basic validation
-    if (!addressForm.direccionLinea1 || !addressForm.ciudad || !addressForm.pais) {
-      setAddressError('Los campos dirección, ciudad y país son obligatorios');
+    if (
+      !addressForm.direccionLinea1 ||
+      !addressForm.ciudad ||
+      !addressForm.pais
+    ) {
+      setAddressError("Los campos dirección, ciudad y país son obligatorios");
       return;
     }
     try {
@@ -393,18 +414,18 @@ export default function Profile() {
       closeAddressModal();
     } catch (err) {
       console.error(err);
-      setAddressError('Error al guardar la dirección');
+      setAddressError("Error al guardar la dirección");
     }
   };
 
   const handleDeleteAddress = async (id: number) => {
-    if (!confirm('¿Eliminar esta dirección?')) return;
+    if (!confirm("¿Eliminar esta dirección?")) return;
     try {
       await deleteAddress(id);
       setShowSuccessToast(true);
     } catch (err) {
       console.error(err);
-      alert('Error al eliminar la dirección');
+      alert("Error al eliminar la dirección");
     }
   };
 
@@ -414,7 +435,7 @@ export default function Profile() {
       setShowSuccessToast(true);
     } catch (err) {
       console.error(err);
-      alert('Error al establecer dirección principal');
+      alert("Error al establecer dirección principal");
     }
   };
 
@@ -427,8 +448,12 @@ export default function Profile() {
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Perfil de Usuario</h2>
-            <p className="mt-2 text-sm text-gray-500">Por favor inicia sesión para ver tu perfil</p>
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Perfil de Usuario
+            </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Por favor inicia sesión para ver tu perfil
+            </p>
           </div>
         </div>
       </div>
@@ -467,7 +492,7 @@ export default function Profile() {
                   src={imageToDisplay || ""}
                   alt="Avatar"
                   className="w-full h-full object-cover transition-shadow duration-200 group-hover:shadow-lg"
-                /*onError={(e) => {
+                  /*onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = '/path/to/default-avatar.png'; // Imagen por defecto en caso de error
                 }}*/
@@ -482,9 +507,26 @@ export default function Profile() {
                 {/* Loader overlay during upload */}
                 {uploading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                    <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    <svg
+                      className="animate-spin h-8 w-8 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
                     </svg>
                   </div>
                 )}
@@ -497,15 +539,17 @@ export default function Profile() {
                 />
                 {/* Estado de subida y errores visuales se muestran fuera del contenedor */}
               </div>
-              {imageError && <p className="text-xs text-red-500 mt-1">{imageError}</p>}
-
+              {imageError && (
+                <p className="text-xs text-red-500 mt-1">{imageError}</p>
+              )}
 
               <div className="text-left">
                 <h2 className="text-xl font-semibold text-gray-900">
                   {user.nombres} {user.apellido_p} {user.apellido_m || ""}
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Miembro desde {formatDate(user.created_at || new Date().toISOString())}
+                  Miembro desde{" "}
+                  {formatDate(user.created_at || new Date().toISOString())}
                 </p>
               </div>
             </div>
@@ -516,44 +560,47 @@ export default function Profile() {
               <FiEdit2 className="-ml-1 mr-2 h-4 w-4" />
               Editar perfil
             </button>
-
           </div>
 
           <div className="border-t border-gray-200">
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "profile"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === "profile"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
                 Perfil
               </button>
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "orders"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === "orders"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
                 Mis Pedidos
               </button>
               <button
                 onClick={() => setActiveTab("wishlist")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "wishlist"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === "wishlist"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
                 Lista de deseos
               </button>
               <button
                 onClick={() => setActiveTab("addresses")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${activeTab === "addresses"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === "addresses"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
                 Direcciones
               </button>
@@ -564,18 +611,26 @@ export default function Profile() {
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
           {activeTab === "profile" && (
             <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Información Personal</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">
+                Información Personal
+              </h3>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Nombre completo</h4>
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Nombre completo
+                  </h4>
                   <div className="mt-1 flex items-center">
                     <FiUser className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-sm text-gray-900">{user.nombres} {user.apellido_p} {user.apellido_m || ""}</p>
+                    <p className="text-sm text-gray-900">
+                      {user.nombres} {user.apellido_p} {user.apellido_m || ""}
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Correo electrónico</h4>
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Correo electrónico
+                  </h4>
                   <div className="mt-1 flex items-center">
                     <FiMail className="h-4 w-4 text-gray-400 mr-2" />
                     <p className="text-sm text-gray-900">{user.correo}</p>
@@ -583,23 +638,35 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Teléfono</h4>
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Teléfono
+                  </h4>
                   <div className="mt-1 flex items-center">
                     <FiPhone className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-sm text-gray-900">{user.celular || "Sin registrar"}</p>
+                    <p className="text-sm text-gray-900">
+                      {user.celular || "Sin registrar"}
+                    </p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Fecha de nacimiento</h4>
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Fecha de nacimiento
+                  </h4>
                   <div className="mt-1 flex items-center">
                     <FiCalendar className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-sm text-gray-900">{user.f_nacimiento ? formatDate(user.f_nacimiento) : "Sin registrar"}</p>
+                    <p className="text-sm text-gray-900">
+                      {user.f_nacimiento
+                        ? formatDate(user.f_nacimiento)
+                        : "Sin registrar"}
+                    </p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Dirección Principal</h4>
+                  <h4 className="text-sm font-medium text-gray-500">
+                    Dirección Principal
+                  </h4>
                   <div className="mt-1 flex items-start">
                     <FiMapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-gray-900">
@@ -610,7 +677,9 @@ export default function Profile() {
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-100">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Seguridad</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Seguridad
+                </h3>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <button className="inline-flex items-center text-sm font-medium text-primary hover:text-primary-dark">
                     <FiLock className="mr-2 h-4 w-4" />
@@ -630,10 +699,14 @@ export default function Profile() {
 
           {activeTab === "orders" && (
             <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Mis Pedidos</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">
+                Mis Pedidos
+              </h3>
               <div className="text-center py-12">
                 <FiShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No hay pedidos recientes</h3>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No hay pedidos recientes
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Cuando realices un pedido, aparecerá aquí.
                 </p>
@@ -643,11 +716,17 @@ export default function Profile() {
 
           {activeTab === "wishlist" && (
             <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Lista de deseos</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">
+                Lista de deseos
+              </h3>
               <div className="text-center py-12">
                 <FiHeart className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Tu lista de deseos está vacía</h3>
-                <p className="mt-1 text-sm text-gray-500">Guarda tus productos favoritos aquí.</p>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  Tu lista de deseos está vacía
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Guarda tus productos favoritos aquí.
+                </p>
               </div>
             </div>
           )}
@@ -655,12 +734,18 @@ export default function Profile() {
           {activeTab === "addresses" && (
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Mis Direcciones</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Mis Direcciones
+                </h3>
                 <button
                   onClick={() => openAddressModal(null)}
                   disabled={addresses.length >= 3}
-                  title={addresses.length >= 3 ? "Solo se permite añadir 3 direcciones como máximo" : ""}
-                  className={`inline-flex items-center px-3 py-2 border rounded-md text-sm transition transform ${addresses.length >= 3 ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 hover:bg-primary hover:text-white hover:border-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-md'}`}
+                  title={
+                    addresses.length >= 3
+                      ? "Solo se permite añadir 3 direcciones como máximo"
+                      : ""
+                  }
+                  className={`inline-flex items-center px-3 py-2 border rounded-md text-sm transition transform ${addresses.length >= 3 ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed" : "bg-white border-gray-300 hover:bg-primary hover:text-white hover:border-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-md"}`}
                 >
                   Agregar dirección
                 </button>
@@ -668,41 +753,92 @@ export default function Profile() {
 
               {loadingAddresses ? (
                 <div className="text-center py-12">
-                  <svg className="animate-spin h-8 w-8 text-gray-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  <svg
+                    className="animate-spin h-8 w-8 text-gray-400 mx-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
                   </svg>
                 </div>
               ) : addresses.length === 0 ? (
                 <div className="text-center py-12">
                   <FiMapPin className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Sin direcciones registradas</h3>
-                  <p className="mt-1 text-sm text-gray-500">Agrega una dirección para tus pedidos.</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Sin direcciones registradas
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Agrega una dirección para tus pedidos.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {addresses.map((d) => (
-                    <div key={d.id} className="bg-white p-4 rounded-md shadow-md border flex flex-col justify-between">
+                    <div
+                      key={d.id}
+                      className="bg-white p-4 rounded-md shadow-md border flex flex-col justify-between"
+                    >
                       <div>
                         <div className="flex items-start">
                           <FiMapPin className="h-6 w-6 text-primary mr-3 flex-shrink-0" />
                           <div>
-                            <p className="font-medium text-gray-900">{d.direccionLinea1}</p>
-                            <p className="text-sm text-gray-600">{d.ciudad}{d.provincia ? `, ${d.provincia}` : ''} - {d.pais}</p>
-                            {d.codigoPostal && <p className="text-sm text-gray-500">{d.codigoPostal}</p>}
+                            <p className="font-medium text-gray-900">
+                              {d.direccionLinea1}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {d.ciudad}
+                              {d.provincia ? `, ${d.provincia}` : ""} - {d.pais}
+                            </p>
+                            {d.codigoPostal && (
+                              <p className="text-sm text-gray-500">
+                                {d.codigoPostal}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-4 flex items-center justify-between">
                         <div>
-                          {d.principal && <span className="text-xs bg-primary text-white px-2 py-1 rounded">Principal</span>}
+                          {d.principal && (
+                            <span className="text-xs bg-primary text-white px-2 py-1 rounded">
+                              Principal
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => openAddressModal(d)} className="px-3 py-1 text-sm border rounded hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Editar</button>
-                          <button onClick={() => handleDeleteAddress(d.id)} className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50 hover:border-red-300 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Eliminar</button>
+                          <button
+                            onClick={() => openAddressModal(d)}
+                            className="px-3 py-1 text-sm border rounded hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAddress(d.id)}
+                            className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50 hover:border-red-300 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                          >
+                            Eliminar
+                          </button>
                           {!d.principal && (
-                            <button onClick={() => handleSetPrimaryAddress(d.id)} className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Usar</button>
+                            <button
+                              onClick={() => handleSetPrimaryAddress(d.id)}
+                              className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                            >
+                              Usar
+                            </button>
                           )}
                         </div>
                       </div>
@@ -716,37 +852,92 @@ export default function Profile() {
                 <>
                   <style>{`@keyframes fadeScale { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
                   <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full" style={{ animation: 'fadeScale 260ms ease-out' }}>
-                      <h3 className="text-lg font-medium mb-4">{addressForm?.id ? 'Editar dirección' : 'Agregar dirección'}</h3>
+                    <div
+                      className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full"
+                      style={{ animation: "fadeScale 260ms ease-out" }}
+                    >
+                      <h3 className="text-lg font-medium mb-4">
+                        {addressForm?.id
+                          ? "Editar dirección"
+                          : "Agregar dirección"}
+                      </h3>
                       <div className="grid grid-cols-1 gap-3">
                         <label className="text-sm">Dirección*</label>
-                        <input name="direccionLinea1" value={addressForm?.direccionLinea1 || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="direccionLinea1"
+                          value={addressForm?.direccionLinea1 || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="text-sm">Dirección adicional</label>
-                        <input name="direccionLinea2" value={addressForm?.direccionLinea2 || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="direccionLinea2"
+                          value={addressForm?.direccionLinea2 || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="text-sm">Ciudad*</label>
-                        <input name="ciudad" value={addressForm?.ciudad || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="ciudad"
+                          value={addressForm?.ciudad || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="text-sm">Provincia</label>
-                        <input name="provincia" value={addressForm?.provincia || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="provincia"
+                          value={addressForm?.provincia || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="text-sm">País*</label>
-                        <input name="pais" value={addressForm?.pais || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="pais"
+                          value={addressForm?.pais || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="text-sm">Código postal</label>
-                        <input name="codigoPostal" value={addressForm?.codigoPostal || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input
+                          name="codigoPostal"
+                          value={addressForm?.codigoPostal || ""}
+                          onChange={handleAddressChange}
+                          className="w-full border rounded px-3 py-2"
+                        />
 
                         <label className="inline-flex items-center mt-2">
-                          <input type="checkbox" name="principal" checked={!!addressForm?.principal} onChange={handleAddressChange} className="mr-2" />
+                          <input
+                            type="checkbox"
+                            name="principal"
+                            checked={!!addressForm?.principal}
+                            onChange={handleAddressChange}
+                            className="mr-2"
+                          />
                           Marcar como dirección principal
                         </label>
 
-                        {addressError && <p className="text-xs text-red-500">{addressError}</p>}
+                        {addressError && (
+                          <p className="text-xs text-red-500">{addressError}</p>
+                        )}
 
                         <div className="flex justify-end gap-3 mt-4">
-                          <button onClick={closeAddressModal} className="px-4 py-2 border rounded bg-white hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Cancelar</button>
-                          <button onClick={saveAddress} className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Guardar</button>
+                          <button
+                            onClick={closeAddressModal}
+                            className="px-4 py-2 border rounded bg-white hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={saveAddress}
+                            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                          >
+                            Guardar
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -762,7 +953,10 @@ export default function Profile() {
               @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
               @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(10px); } 30% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(10px); } }`}</style>
               <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-auto" style={{ animation: 'fadeScale 260ms ease-out' }}>
+                <div
+                  className="bg-white p-6 rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-auto"
+                  style={{ animation: "fadeScale 260ms ease-out" }}
+                >
                   <h2 className="text-xl font-semibold mb-4">Editar Perfil</h2>
                   <EditProfileForm
                     user={user}
@@ -775,13 +969,17 @@ export default function Profile() {
           )}
 
           {showSuccessToast && (
-            <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50" style={{ animation: 'fadeInOut 3.5s ease-in-out forwards' }}>
-              <p className="text-sm font-medium">Cambios guardados correctamente</p>
+            <div
+              className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+              style={{ animation: "fadeInOut 3.5s ease-in-out forwards" }}
+            >
+              <p className="text-sm font-medium">
+                Cambios guardados correctamente
+              </p>
             </div>
           )}
         </div>
       </div>
     </div>
-
   );
 }
