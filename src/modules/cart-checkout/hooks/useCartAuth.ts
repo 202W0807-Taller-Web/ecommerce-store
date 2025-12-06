@@ -32,7 +32,7 @@ export function useCartAuth() {
             await fetch(
               `${baseUrl}/${carritoTemporal}/asignar-usuario?idUsuario=${userId}`,
               {
-                method: "POST",
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
               },
             );

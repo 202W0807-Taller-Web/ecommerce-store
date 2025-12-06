@@ -82,7 +82,7 @@ export function useCart() {
             await fetch(
               `${baseUrl}/${cartId}/asignar-usuario?idUsuario=${userId}`,
               {
-                method: "POST",
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
               },
             );
