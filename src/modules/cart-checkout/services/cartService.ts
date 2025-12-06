@@ -66,7 +66,7 @@ export class CartService {
     if (!userId) return;
 
     try {
-      await axios.post(
+      await axios.put(
         `${this.baseUrl}/${carritoId}/asignar-usuario?idUsuario=${userId}`,
       );
       console.log("👤 Carrito asignado al usuario:", userId);
