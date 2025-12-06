@@ -29,14 +29,24 @@ export function useCartAuth() {
         try {
           if (carritoTemporal) {
             // Hay carrito anónimo, asignarlo al usuario
-            await fetch(
+            const resp = await fetch(
               `${baseUrl}/${carritoTemporal}/asignar-usuario?idUsuario=${userId}`,
               {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
               },
             );
-            console.log("✅ Carrito anónimo asignado al usuario");
+
+            if (!resp.ok) throw new Error("Error al asignar carrito");
+
+            // SIEMPRE guardar el carrito que responde el backend
+            const data = await resp.json();
+            if (data?.idCarrito) {
+              localStorage.setItem(CART_ID_KEY, data.idCarrito.toString());
+              console.log("🛒 Carrito asignado y actualizado:", data.idCarrito);
+            }
+
+            return;
           } else {
             // No hay carrito local, verificar si el usuario tiene uno en el backend
             try {

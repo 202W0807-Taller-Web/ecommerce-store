@@ -16,10 +16,9 @@ export default function CartPage() {
 
   const items = cart?.items || [];
 
-  const productIds = useMemo(
-    () => items.map((item) => item.idProducto),
-    [items],
-  );
+  const productIds = useMemo(() => {
+    return items.map((item) => item.idProducto);
+  }, [JSON.stringify(items.map((i) => i.idProducto))]);
   const {
     getProductStockStatus,
     loading: stockLoading,
@@ -89,7 +88,7 @@ export default function CartPage() {
       navigate("/login", {
         state: {
           from: "/cart",
-          returnTo: "/checkout/step1",
+          returnTo: "/cart/checkout/step1",
           message: "Inicia sesión para continuar con tu compra",
         },
       });
@@ -112,7 +111,7 @@ export default function CartPage() {
       return;
     }
 
-    navigate("/checkout/step1", {
+    navigate("/cart/checkout/step1", {
       state: { cart: items, cartId: cart?.id },
     });
   };

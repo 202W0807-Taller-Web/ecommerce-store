@@ -1,4 +1,7 @@
-export * from './useCatalog';
-export * from './useProductDetail';
-export * from './useProductVariants';
-export * from './useCart';
+export { useCatalog } from './useCatalog';
+export { useProductDetail } from './useProductDetail';
+export { useCart } from './useCart';
+export { useProductVariants } from './useProductVariants';
+export { useProductReviews } from './useProductReviews';
+export { useSearchAutocomplete } from './useSearchAutocomplete';
+export { useFavorites } from './useFavorites';

@@ -7,7 +7,7 @@ export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
     { id: 1, label: "Método" },
     { id: 2, label: "Info" },
     { id: 3, label: "Envío" },
-    { id: 4, label: "Confirmación"},
+    { id: 4, label: "Confirmación" },
   ];
 
   return (
@@ -20,25 +20,25 @@ export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
           <div key={step.id} className="flex items-center">
             {/* Circulo del paso */}
             <div
-              className={`w-10 h-10 flex items-center justify-center rounded-full font-semibold border-2 transition-all duration-300
+              className={`w-12 h-12 flex items-center justify-center rounded-full font-semibold border-2 transition-all duration-300
                 ${isActive
-                  ? "bg-[#EBC431] text-[#333027] border-[#C0A648]"
+                  ? "bg-[#EBC431] text-[#333027] border-[#C0A648] shadow-lg transform scale-110"
                   : isCompleted
-                    ? "bg-[#C0A648] text-[#333027] border-[#EBC431]"
-                    : "bg-[#413F39] text-[#F5F5F5] border-[#6B644C]"
-                }`}
+                  ? "bg-[#333027] text-[#F5F5F5] border-[#C0A648] shadow-md"
+                  : "bg-[#413F39] text-[#F5F5F5] border-[#6B644C]"}
+              `}
             >
               {step.id}
             </div>
 
             {/* Etiqueta */}
             <span
-              className={`ml-3 text-sm font-medium transition-colors 
+              className={`ml-3 text-sm font-medium transition-colors
                 ${isActive
                   ? "text-[#EBC431]"
                   : isCompleted
-                    ? "text-[#C0A648]"
-                    : "text-[#F5F5F5]/70"
+                  ? "text-[#C0A648]"
+                  : "text-[#F5F5F5]/70"
                 }`}
             >
               {step.label}
@@ -48,7 +48,7 @@ export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
             {index < steps.length - 1 && (
               <div
                 className={`w-12 h-[2px] mx-4 transition-all
-                  ${isCompleted ? "bg-[#EBC431]" : "bg-[#6B644C]"}
+                  ${isCompleted ? "bg-[#C0A648]" : "bg-[#6B644C]"}
                 `}
               ></div>
             )}

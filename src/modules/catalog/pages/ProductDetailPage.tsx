@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useProductDetail } from "../hooks/useProductDetail";
 import { useCart } from "../hooks/useCart";
 import { type Variante } from "../types";
+import { RegisterModal } from "../../client-auth/components/RegisterModal";
 import {
   ProductGallery,
   ProductInfo,
@@ -24,6 +25,7 @@ export const ProductDetailPage = () => {
   } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<Variante | null>(null);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   const generateMockData = (productId: number) => {
     const mockRating = 4.2 + (productId % 3) * 0.2;
@@ -38,6 +40,10 @@ export const ProductDetailPage = () => {
 
   const handleColorChange = (colorId: number | null) => {
     setSelectedColor(colorId);
+  };
+
+  const handleLoginRequired = () => {
+    setShowRegisterModal(true);
   };
 
   useEffect(() => {
@@ -78,79 +84,88 @@ export const ProductDetailPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb productName={product.nombre} />
+    <>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumb productName={product.nombre} />
 
-      {/* Mensajes de feedback del carrito */}
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-          <svg
-            className="w-5 h-5 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span className="text-green-800">
-            ¡Producto agregado al carrito exitosamente!
-          </span>
+        {/* Mensajes de feedback del carrito */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-green-800">
+              ¡Producto agregado al carrito exitosamente!
+            </span>
+          </div>
+        )}
+
+        {cartError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+            <span className="text-red-800">{cartError}</span>
+            <button
+              onClick={clearError}
+              className="ml-auto text-red-600 hover:text-red-800"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Product Details Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+          <ProductGallery
+            product={product}
+            selectedVariant={selectedVariant}
+            selectedColor={selectedColor}
+          />
+          <ProductInfo
+            product={product}
+            onAddToCart={handleAddToCart}
+            onVariantChange={setSelectedVariant}
+            onColorChange={handleColorChange}
+            mockRating={mockRating}
+            mockReviewCount={mockReviewCount}
+            isAddingToCart={adding}
+            onLoginRequired={handleLoginRequired}
+          />
         </div>
-      )}
 
-      {cartError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <svg
-            className="w-5 h-5 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          <span className="text-red-800">{cartError}</span>
-          <button
-            onClick={clearError}
-            className="ml-auto text-red-600 hover:text-red-800"
-          >
-            ✕
-          </button>
+        {/* Reviews del Producto */}
+        <div className="mb-16">
+          <ProductReviews productId={product.id} />
         </div>
-      )}
-
-      {/* Product Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-        <ProductGallery
-          product={product}
-          selectedVariant={selectedVariant}
-          selectedColor={selectedColor}
-        />
-        <ProductInfo
-          product={product}
-          onAddToCart={handleAddToCart}
-          onVariantChange={setSelectedVariant}
-          onColorChange={handleColorChange}
-          mockRating={mockRating}
-          mockReviewCount={mockReviewCount}
-          isAddingToCart={adding}
-        />
       </div>
 
-      {/* Reviews del Producto */}
-      <div className="mb-16">
-        <ProductReviews productId={product.id} />
-      </div>
-    </div>
+      {/* Modal de registro */}
+      <RegisterModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+      />
+    </>
   );
 };
 

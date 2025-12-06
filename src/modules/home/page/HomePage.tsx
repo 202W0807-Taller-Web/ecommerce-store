@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProductCard } from "../../catalog/components/catalog/ProductCard";
 import { ProductCardSkeleton } from "../../catalog/components/skeletons/ProductCardSkeleton";
+import { RegisterModal } from "../../client-auth/components/RegisterModal";
 import {
   ChevronRight,
   TrendingUp,
   Star,
   Zap,
-  Dumbbell,
-  Wind,
   Shirt,
+  Footprints,
+  Watch,
 } from "lucide-react";
 import { useCatalog } from "../../catalog/hooks/useCatalog";
 
@@ -17,24 +18,27 @@ export default function HomePage() {
   const { products, loading, error, fetchProducts } = useCatalog();
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [newProducts, setNewProducts] = useState<any[]>([]);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
-    // Cargar 12 productos y dividirlos
     fetchProducts({}, { page: 1, limit: 12 });
   }, [fetchProducts]);
 
   useEffect(() => {
-    // Dividir productos: primeros 4 destacados, siguientes 8 nuevos
     if (products.data.length > 0) {
       setFeaturedProducts(products.data.slice(0, 4));
       setNewProducts(products.data.slice(4, 12));
     }
   }, [products]);
 
+  const handleLoginRequired = () => {
+    setShowRegisterModal(true);
+  };
+
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative h-[600px] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8">
+      <section className="relative h-[600px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-600 to-secondary">
           <div
             className="absolute inset-0 opacity-10"
@@ -84,33 +88,33 @@ export default function HomePage() {
       </section>
 
       {/* Featured Categories */}
-      <section className="py-16 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[{
-              title: "Running",
-              description: "Velocidad y comodidad",
-              icon: Wind,
-              color: "from-accent/20 to-primary/20",
-              link: "running",
-            },
-            {
-              title: "Training",
-              description: "Rendimiento máximo",
-              icon: Dumbbell,
-              color: "from-primary/20 to-secondary/20",
-              link: "training",
-            },
-            {
-              title: "Lifestyle",
-              description: "Estilo y confort",
+              title: "Ropa",
+              description: "Prendas de alto rendimiento",
               icon: Shirt,
+              color: "from-accent/20 to-primary/20",
+              link: "Ropa",
+            },
+            {
+              title: "Calzado",
+              description: "Comodidad en cada paso",
+              icon: Footprints,
+              color: "from-primary/20 to-secondary/20",
+              link: "Calzado",
+            },
+            {
+              title: "Accesorios",
+              description: "Completa tu equipamiento",
+              icon: Watch,
               color: "from-secondary/20 to-accent/20",
-              link: "lifestyle",
+              link: "Accesorios",
             }].map((category, index) => (
               <Link
                 key={index}
-                to={`/catalog?categoria=${category.link}`}
+                to={`/catalog?category=${category.link}`}
                 className="group relative h-64 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary/20 bg-white"
               >
                 <div
@@ -180,7 +184,11 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onLoginRequired={handleLoginRequired}
+                />
               ))}
             </div>
           )}
@@ -198,7 +206,7 @@ export default function HomePage() {
       </section>
 
       {/* New Arrivals */}
-      <section className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <div>
@@ -235,7 +243,11 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {newProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  onLoginRequired={handleLoginRequired}
+                />
               ))}
             </div>
           )}
@@ -243,7 +255,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-20 bg-gradient-to-r from-secondary via-primary to-accent -mx-4 sm:-mx-6 lg:-mx-8">
+      <section className="py-20 bg-gradient-to-r from-secondary via-primary to-accent">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6 font-grotesk">
             ¿Listo para el próximo nivel?
@@ -260,6 +272,12 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* Modal de registro */}
+      <RegisterModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+      />
     </div>
   );
 }

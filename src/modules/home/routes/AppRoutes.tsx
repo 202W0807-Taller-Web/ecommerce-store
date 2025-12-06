@@ -16,6 +16,8 @@ import PrivacySettings from "../../client-auth/pages/PrivacySettings";
 import PrivacyPolicy from "../../client-auth/pages/PrivacyPolicy";
 
 import MainRoutesLayout from "../layout/MainRoutesLayout";
+import { HomeLayout } from "../layout/HomeLayout";
+import { FavoritesPage } from "../../catalog/pages/FavoritesPage";
 
 export default function AppRoutes() {
   return (
@@ -57,9 +59,11 @@ export default function AppRoutes() {
           />
         </Route>
 
+        <Route element={<HomeLayout />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
         {/* All other routes use MainLayout */}
         <Route element={<MainRoutesLayout />}>
-          <Route path="/" element={<HomePage />} />
           <Route
             path="/profile"
             element={
@@ -67,6 +71,14 @@ export default function AppRoutes() {
                 <Profile />
               </PrivateRoute>
             }
+          />
+          <Route 
+          path="/favorites"
+          element={
+            <PrivateRoute>
+                <FavoritesPage />
+              </PrivateRoute>
+          }
           />
           <Route
             path="/privacy-settings"
@@ -78,7 +90,7 @@ export default function AppRoutes() {
           />
           <Route path="/politica-de-privacidad" element={<PrivacyPolicy />} />
           <Route path="/catalog/*" element={<CatalogRoutes />} />
-          <Route path="/*" element={<CartCheckoutRoutes />} />
+          <Route path="/cart/*" element={<CartCheckoutRoutes />} />
           <Route path="/mis-pedidos" element={<CustomerOrdersPage />} />
           <Route path="/mis-pedidos/:orderId" element={<OrderDetailPage />} />
         </Route>

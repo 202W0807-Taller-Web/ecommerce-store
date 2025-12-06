@@ -42,7 +42,7 @@ export default function Checkout_Step4() {
   const [costos, setCostos] = useState<any>(null);
   const [method, setMethod] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const { createOrder} = useOrdersService();
+  const { createOrder } = useOrdersService();
   const { clearCart } = useCart();
 
   useEffect(() => {
@@ -71,7 +71,9 @@ export default function Checkout_Step4() {
         ? {
             tipo: "RECOJO_TIENDA",
             almacenOrigen: deliveryInfo.almacenOrigen,
-            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada,
+            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada
+              ? (({ imagen, ...rest }) => rest)(deliveryInfo.tiendaSeleccionada)
+              : undefined,
             costoEnvio: 0.0,
             tiempoEstimadoDias: deliveryInfo.tiempoEstimadoDias ?? 0,
             fechaEntregaEstimada: deliveryInfo.fechaEntregaEstimada,
@@ -80,15 +82,21 @@ export default function Checkout_Step4() {
         : {
             tipo: "DOMICILIO",
             almacenOrigen: deliveryInfo.almacenOrigen,
-            carrierSeleccionado: deliveryInfo.carrierSeleccionado ? {
-              carrier_id: deliveryInfo.carrierSeleccionado.carrier_id,
-              carrier_nombre: deliveryInfo.carrierSeleccionado.carrier_nombre,
-              carrier_codigo: deliveryInfo.carrierSeleccionado.carrier_codigo,
-              costo_envio: deliveryInfo.carrierSeleccionado.costo_envio,
-              tiempo_estimado_dias: deliveryInfo.carrierSeleccionado.tiempo_estimado_dias,
-              fecha_entrega_estimada: deliveryInfo.carrierSeleccionado.fecha_entrega_estimada,
-              cotizacion_id: deliveryInfo.carrierSeleccionado.cotizacion_id,
-            } : undefined,
+            carrierSeleccionado: deliveryInfo.carrierSeleccionado
+              ? {
+                  carrier_id: deliveryInfo.carrierSeleccionado.carrier_id,
+                  carrier_nombre:
+                    deliveryInfo.carrierSeleccionado.carrier_nombre,
+                  carrier_codigo:
+                    deliveryInfo.carrierSeleccionado.carrier_codigo,
+                  costo_envio: deliveryInfo.carrierSeleccionado.costo_envio,
+                  tiempo_estimado_dias:
+                    deliveryInfo.carrierSeleccionado.tiempo_estimado_dias,
+                  fecha_entrega_estimada:
+                    deliveryInfo.carrierSeleccionado.fecha_entrega_estimada,
+                  cotizacion_id: deliveryInfo.carrierSeleccionado.cotizacion_id,
+                }
+              : undefined,
             direccionEnvioId: deliveryInfo.direccionEnvioId ?? address?.id,
           };
 
@@ -113,12 +121,14 @@ export default function Checkout_Step4() {
         subTotal: it.precio * it.cantidad,
       })),
       costos: {
-        subtotal: costos?.subtotal ?? cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
+        subtotal:
+          costos?.subtotal ??
+          cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
         envio: costos?.envio ?? deliveryInfo?.costoEnvio ?? 0.0,
-        total: costos?.total ?? (
+        total:
+          costos?.total ??
           cart.reduce((acc, i) => acc + i.precio * i.cantidad, 0) +
-          (deliveryInfo?.costoEnvio ?? 0.0)
-        ),
+            (deliveryInfo?.costoEnvio ?? 0.0),
       },
       entrega: entregaPayload,
       metodoPago: "SIMULADO",
@@ -134,7 +144,7 @@ export default function Checkout_Step4() {
         await clearCart();
 
         // Navegar al success
-        navigate("/checkout/success", {
+        navigate("/cart/checkout/success", {
           replace: true,
           state: { order: res.data },
         });
@@ -235,7 +245,7 @@ export default function Checkout_Step4() {
               <p>
                 <strong className="text-[#EBC431]">Fecha estimada:</strong>{" "}
                 {new Date(
-                  deliveryInfo.fechaEntregaEstimada ?? ""
+                  deliveryInfo.fechaEntregaEstimada ?? "",
                 ).toLocaleDateString()}
               </p>
             </div>
@@ -257,7 +267,8 @@ export default function Checkout_Step4() {
               <p>
                 <strong className="text-[#EBC431]">Entrega estimada:</strong>{" "}
                 {new Date(
-                  deliveryInfo.carrierSeleccionado?.fecha_entrega_estimada ?? ""
+                  deliveryInfo.carrierSeleccionado?.fecha_entrega_estimada ??
+                    "",
                 ).toLocaleDateString()}
               </p>
             </div>
