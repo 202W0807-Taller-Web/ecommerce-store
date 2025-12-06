@@ -206,7 +206,7 @@ export const Header = () => {
 
             {/* User Profile */}
             <button 
-              className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+              className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
               onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
               ref={profileButtonRef}
             >

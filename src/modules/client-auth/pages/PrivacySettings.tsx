@@ -167,17 +167,18 @@ const PrivacySettings = () => {
 
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800">Preferencias de privacidad</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Preferencias y consentimientos</h2>
             <p className="text-sm text-gray-500">
-              Controla cómo usamos tu información personal.
+              Controla cómo usamos tu información personal y gestiona tus consentimientos.
             </p>
           </div>
 
           <div className="divide-y divide-gray-100">
+            {/* Preferencias de privacidad */}
             <div className="px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Notificaciones</h3>
-                <p className="text-sm text-gray-500">Recibir comunicaciones generales.</p>
+                <h3 className="text-sm font-medium text-gray-900">Compartir información para mejorar la experiencia</h3>
+                <p className="text-sm text-gray-500">Ayudarnos a mejorar nuestros servicios.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -207,24 +208,9 @@ const PrivacySettings = () => {
                 <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBC431]"></div>
               </label>
             </div>
-          </div>
 
-          {statusMsg && (
-            <div className="px-6 py-3 text-sm text-primary">{statusMsg}</div>
-          )}
-        </div>
-
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800">Consentimientos</h2>
-            <p className="text-sm text-gray-500">Gestiona tus consentimientos activos.</p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {consents.length === 0 ? (
-              <div className="px-6 py-4 text-sm text-gray-500">
-                No hay consentimientos configurados.
-              </div>
-            ) : (
+            {/* Consentimientos */}
+            {consents.length === 0 ? null : (
               consents.map((c) => (
                 <div key={c.id} className="px-6 py-4 flex items-center justify-between">
                   <div>
@@ -247,8 +233,9 @@ const PrivacySettings = () => {
               ))
             )}
           </div>
-          {consentMsg && (
-            <div className="px-6 py-3 text-sm text-primary">{consentMsg}</div>
+
+          {(statusMsg || consentMsg) && (
+            <div className="px-6 py-3 text-sm text-primary">{statusMsg || consentMsg}</div>
           )}
         </div>
 

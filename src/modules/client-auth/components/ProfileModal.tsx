@@ -2,8 +2,7 @@ import { useContext, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import {
-  FiUser, FiShoppingBag, FiHeart,
-  FiCreditCard, FiMapPin, FiBell, FiLogOut, FiSettings,
+  FiUser, FiMapPin, FiLogOut, FiShoppingCart, FiShoppingBag,
   FiChevronRight
 } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
@@ -218,37 +217,32 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
               }}
             />
             <MenuItem
+              icon={<FiShoppingCart className="w-5 h-5" />}
+              text="Mi Carrito"
+              onClick={() => {
+                onClose();
+                navigate('/cart');
+              }}
+            />
+
+            <MenuItem
               icon={<FiShoppingBag className="w-5 h-5" />}
-              text="Mis pedidos"
-              onClick={() => { }}
+              text="Mis Pedidos"
+              onClick={() => {
+                onClose();
+                navigate('/mis-pedidos');
+              }}
               showArrow
             />
-            <MenuItem
-              icon={<FiHeart className="w-5 h-5" />}
-              text="Lista de deseos"
-              onClick={() => { }}
-              showArrow
-            />
-            <MenuItem
-              icon={<FiCreditCard className="w-5 h-5" />}
-              text="Métodos de pago"
-              onClick={() => { }}
-            />
+
             <MenuItem
               icon={<FiMapPin className="w-5 h-5" />}
               text="Direcciones"
-              onClick={() => { }}
+              onClick={() => {
+                onClose();
+                navigate('/profile?tab=addresses');
+              }}
               showArrow
-            />
-            <MenuItem
-              icon={<FiBell className="w-5 h-5" />}
-              text="Notificaciones"
-              onClick={() => { }}
-            />
-            <MenuItem
-              icon={<FiSettings className="w-5 h-5" />}
-              text="Configuración"
-              onClick={() => { }}
             />
           </ul>
         </nav>
