@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { CartService } from "../../cart-checkout/services/cartService";
+import { useContext } from "react";
+import { AuthContext } from "../../client-auth/context/AuthContext";
 
 export interface UseCartResult {
   adding: boolean;
@@ -21,6 +23,9 @@ export const useCart = (): UseCartResult => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const auth = useContext(AuthContext);
+  const idUsuario = auth?.isAuth && auth?.user ? auth.user.id : undefined;
+
   const cartService = useMemo(() => new CartService(), []);
 
   const addToCart = useCallback(
@@ -30,7 +35,8 @@ export const useCart = (): UseCartResult => {
       setSuccess(false);
 
       try {
-        await cartService.addToCart(productId, variantId, quantity);
+        const userId = idUsuario;
+        await cartService.addToCart(productId, variantId, quantity, userId);
         setSuccess(true);
 
         // Auto-limpiar el mensaje de éxito después de 3 segundos
