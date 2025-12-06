@@ -129,7 +129,7 @@ export class CartService {
       } else {
         // No hay carrito local, verificar si el usuario tiene uno en el backend
         try {
-          const response = await axios.get(`${this.baseUrl}/user/${userId}`);
+          const response = await axios.get(`${this.baseUrl}/usuario/${userId}`);
           if (response.data?.id) {
             localStorage.setItem(CART_ID_KEY, response.data.id.toString());
             console.log("✅ Carrito del usuario recuperado");
@@ -162,7 +162,7 @@ export class CartService {
     if (userId && !carritoId) {
       // Usuario autenticado pero sin carritoId local, intentar recuperar
       try {
-        const response = await axios.get(`${this.baseUrl}/user/${userId}`);
+        const response = await axios.get(`${this.baseUrl}/usuario/${userId}`);
         if (response.data?.id) {
           localStorage.setItem(CART_ID_KEY, response.data.id.toString());
           console.log("✅ Carrito recuperado al inicializar");
