@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "../page/HomePage";
 import AuthLayout from "../layout/AuthLayout";
 import CatalogRoutes from "../../catalog/routes/CatalogRoutes";
-import CartCheckoutRoutes from "../../cart-checkout/routes/CartCheckoutRoutes";;
+import CartCheckoutRoutes from "../../cart-checkout/routes/CartCheckoutRoutes";
 import CustomerOrdersPage from "../../orders/pages/customerOrders_page";
 import OrderDetailPage from "../../orders/pages/OrderDetailPage";
 import PublicRoute from "../../client-auth/components/helpers/PublicRoutes";
@@ -81,7 +81,7 @@ export default function AppRoutes() {
           />
           <Route path="/politica-de-privacidad" element={<PrivacyPolicy />} />
           <Route path="/catalog/*" element={<CatalogRoutes />} />
-          <Route path="/*" element={<CartCheckoutRoutes />} />
+          <Route path="/cart/*" element={<CartCheckoutRoutes />} />
           <Route path="/mis-pedidos" element={<CustomerOrdersPage />} />
           <Route path="/mis-pedidos/:orderId" element={<OrderDetailPage />} />
         </Route>
