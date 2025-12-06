@@ -20,7 +20,7 @@ interface AddToCartResponse {
 }
 
 interface CreateCartResponse {
-  id: number;
+  idCarrito: number;
   // otros campos que devuelva tu backend
 }
 
@@ -43,7 +43,7 @@ export class CartService {
     try {
       // Crear carrito
       const response = await axios.post<CreateCartResponse>(`${this.baseUrl}`);
-      carritoId = response.data.id.toString();
+      carritoId = response.data.idCarrito.toString();
       localStorage.setItem(CART_ID_KEY, carritoId);
 
       // Si hay usuario autenticado, asignar inmediatamente
