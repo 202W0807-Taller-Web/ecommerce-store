@@ -317,12 +317,137 @@ export default function Profile() {
   // Auto-dismiss success toast after 3 seconds
   useEffect(() => {
     if (showSuccessToast) {
+      // match the CSS animation duration (3.5s) so fade-out is visible
       const timer = setTimeout(() => {
         setShowSuccessToast(false);
-      }, 3000);
+      }, 3500);
       return () => clearTimeout(timer);
     }
   }, [showSuccessToast]);
+
+  // Addresses state
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressForm, setAddressForm] = useState<any>(null); // null = new
+  const [addressError, setAddressError] = useState<string>("");
+
+  const loadAddresses = async () => {
+    if (!user) return;
+    setLoadingAddresses(true);
+    try {
+      const res = await fetch(`${API_URL}/api/direcciones/usuario/${user.id}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddresses(data || []);
+      } else {
+        console.warn('Error loading addresses', data);
+      }
+    } catch (err) {
+      console.error('Error fetching addresses', err);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'addresses' && user) {
+      void loadAddresses();
+    }
+  }, [activeTab, user]);
+
+  const openAddressModal = (addr: any | null) => {
+    if (addr) {
+      setAddressForm({ ...addr });
+    } else {
+      setAddressForm({ calle: '', ciudad: '', estado: '', pais: '', codigo_postal: '', isDefault: false });
+    }
+    setAddressError('');
+    setAddressModalOpen(true);
+  };
+
+  const closeAddressModal = () => {
+    setAddressModalOpen(false);
+    setAddressForm(null);
+    setAddressError('');
+  };
+
+  const handleAddressChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    setAddressForm({ ...addressForm, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const saveAddress = async () => {
+    if (!addressForm) return;
+    if (!user) {
+      setAddressError('Usuario no disponible');
+      return;
+    }
+    // basic validation
+    if (!addressForm.calle || !addressForm.ciudad || !addressForm.pais) {
+      setAddressError('Los campos calle, ciudad y país son obligatorios');
+      return;
+    }
+    try {
+      const method = addressForm.id ? 'PUT' : 'POST';
+      const url = addressForm.id ? `${API_URL}/api/direcciones/${addressForm.id}` : `${API_URL}/api/direcciones`;
+      const res = await fetch(url, {
+        method,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...addressForm, usuario_id: user.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await loadAddresses();
+        setShowSuccessToast(true);
+        closeAddressModal();
+      } else {
+        setAddressError(data?.error || data?.message || 'Error al guardar la dirección');
+      }
+    } catch (err) {
+      console.error(err);
+      setAddressError('Error al guardar la dirección');
+    }
+  };
+
+  const deleteAddress = async (id: number) => {
+    if (!confirm('¿Eliminar esta dirección?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/direcciones/${id}`, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        await loadAddresses();
+        setShowSuccessToast(true);
+      } else {
+        alert(data?.error || 'Error al eliminar');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar la dirección');
+    }
+  };
+
+  const setDefaultAddress = async (id: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/direcciones/${id}/set-default`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await loadAddresses();
+        setShowSuccessToast(true);
+      } else {
+        alert(data?.error || 'Error al establecer predeterminada');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al establecer dirección predeterminada');
+    }
+  };
 
 
   if (loading) {
@@ -561,12 +686,102 @@ export default function Profile() {
 
           {activeTab === "addresses" && (
             <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Mis Direcciones</h3>
-              <div className="text-center py-12">
-                <FiMapPin className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Sin direcciones registradas</h3>
-                <p className="mt-1 text-sm text-gray-500">Agrega una dirección para tus pedidos.</p>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Mis Direcciones</h3>
+                <button
+                  onClick={() => openAddressModal(null)}
+                  disabled={addresses.length >= 3}
+                  title={addresses.length >= 3 ? "Solo se permite añadir 3 direcciones como máximo" : ""}
+                  className={`inline-flex items-center px-3 py-2 border rounded-md text-sm transition transform ${addresses.length >= 3 ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 hover:bg-primary hover:text-white hover:border-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-md'}`}
+                >
+                  Agregar dirección
+                </button>
               </div>
+
+              {loadingAddresses ? (
+                <div className="text-center py-12">
+                  <svg className="animate-spin h-8 w-8 text-gray-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                </div>
+              ) : addresses.length === 0 ? (
+                <div className="text-center py-12">
+                  <FiMapPin className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Sin direcciones registradas</h3>
+                  <p className="mt-1 text-sm text-gray-500">Agrega una dirección para tus pedidos.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {addresses.map((d) => (
+                    <div key={d.id} className="bg-white p-4 rounded-md shadow-md border flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-start">
+                          <FiMapPin className="h-6 w-6 text-primary mr-3 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-gray-900">{d.calle}</p>
+                            <p className="text-sm text-gray-600">{d.ciudad}{d.estado ? `, ${d.estado}` : ''} - {d.pais}</p>
+                            {d.codigo_postal && <p className="text-sm text-gray-500">{d.codigo_postal}</p>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between">
+                        <div>
+                          {d.isDefault && <span className="text-xs bg-primary text-white px-2 py-1 rounded">Predeterminada</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => openAddressModal(d)} className="px-3 py-1 text-sm border rounded hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Editar</button>
+                          <button onClick={() => deleteAddress(d.id)} className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50 hover:border-red-300 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Eliminar</button>
+                          {!d.isDefault && (
+                            <button onClick={() => setDefaultAddress(d.id)} className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Usar</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Address modal */}
+              {addressModalOpen && (
+                <>
+                  <style>{`@keyframes fadeScale { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
+                  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full" style={{ animation: 'fadeScale 260ms ease-out' }}>
+                      <h3 className="text-lg font-medium mb-4">{addressForm?.id ? 'Editar dirección' : 'Agregar dirección'}</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        <label className="text-sm">Calle*</label>
+                        <input name="calle" value={addressForm?.calle || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="text-sm">Ciudad*</label>
+                        <input name="ciudad" value={addressForm?.ciudad || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="text-sm">Estado</label>
+                        <input name="estado" value={addressForm?.estado || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="text-sm">País*</label>
+                        <input name="pais" value={addressForm?.pais || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="text-sm">Código postal</label>
+                        <input name="codigo_postal" value={addressForm?.codigo_postal || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="inline-flex items-center mt-2">
+                          <input type="checkbox" name="isDefault" checked={!!addressForm?.isDefault} onChange={handleAddressChange} className="mr-2" />
+                          Marcar como predeterminada
+                        </label>
+
+                        {addressError && <p className="text-xs text-red-500">{addressError}</p>}
+
+                        <div className="flex justify-end gap-3 mt-4">
+                          <button onClick={closeAddressModal} className="px-4 py-2 border rounded bg-white hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Cancelar</button>
+                          <button onClick={saveAddress} className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Guardar</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
