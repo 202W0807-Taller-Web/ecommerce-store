@@ -71,7 +71,9 @@ export default function Checkout_Step4() {
         ? {
             tipo: "RECOJO_TIENDA",
             almacenOrigen: deliveryInfo.almacenOrigen,
-            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada,
+            tiendaSeleccionada: deliveryInfo.tiendaSeleccionada
+              ? (({ imagen, ...rest }) => rest)(deliveryInfo.tiendaSeleccionada)
+              : undefined,
             costoEnvio: 0.0,
             tiempoEstimadoDias: deliveryInfo.tiempoEstimadoDias ?? 0,
             fechaEntregaEstimada: deliveryInfo.fechaEntregaEstimada,
