@@ -2,8 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import CheckoutSteps from "../components/checkoutSteps";
 import OrderSummary from "../components/orderSummary";
 import UserInfo from "../components/infoUserForm";
-import { useShippingUser } from "../hooks/useShippingUser";
-import { useEffect, useState } from "react";
+import { AuthContext } from "../../client-auth/context/AuthContext";
+import { useEffect, useState, useContext } from "react";
 
 interface CartItem {
   idProducto: number;
@@ -15,14 +15,10 @@ interface CartItem {
 export default function Checkout_Step2() {
   const location = useLocation();
   const navigate = useNavigate();
+  const auth = useContext(AuthContext);
 
   const cart = location.state?.passedCart as CartItem[] | undefined;
   const method = location.state?.method as string | undefined;
-  console.log(method);
-  const idUsuario = 20; // valor hardcodeado
-
-  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
-  const { user, createUser } = useShippingUser(apiUrl, idUsuario);
 
   const [userInfo, setUserInfo] = useState({
     nombreCompleto: "",
@@ -34,14 +30,27 @@ export default function Checkout_Step2() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (!auth?.isAuth) {
+      // Redirigir a login si no está autenticado
+      navigate("/login", {
+        state: {
+          from: "/checkout/step2",
+          message: "Debes iniciar sesión para continuar con la compra",
+        },
+      });
+      return;
+    }
+
+    // Pre-llenar con datos del usuario autenticado
+    if (auth.user) {
       setUserInfo({
-        nombreCompleto: user.nombreCompleto || "",
-        email: user.email || "",
-        telefono: user.telefono || "",
+        nombreCompleto:
+          `${auth.user.nombres} ${auth.user.apellido_p} ${auth.user.apellido_m || ""}`.trim(),
+        email: auth.user.correo,
+        telefono: auth.user.celular || "",
       });
     }
-  }, [user]);
+  }, [auth, navigate]);
 
   if (!cart) {
     return (
@@ -54,8 +63,13 @@ export default function Checkout_Step2() {
     );
   }
 
+  if (!auth?.isAuth || !auth.user) {
+    return null;
+  }
+
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
-  const shippingCost = method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
+  const shippingCost =
+    method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
   const total = subtotal + shippingCost;
 
   const handleContinue = async () => {
@@ -63,7 +77,9 @@ export default function Checkout_Step2() {
 
     // Validación simple
     if (!nombreCompleto.trim() || !email.trim() || !telefono.trim()) {
-      setError("Por favor, completa toda la información de contacto antes de continuar.");
+      setError(
+        "Por favor, completa toda la información de contacto antes de continuar.",
+      );
       return;
     }
 
@@ -71,18 +87,14 @@ export default function Checkout_Step2() {
     setIsSubmitting(true);
 
     try {
-      if (!user) {
-        await createUser({
-          idUsuario,
-          ...userInfo,
-        });
-      }
-
-      navigate("/checkout/step3", { state: { passedCart: cart, shippingMethod: method, userInfo: userInfo } });
-
+      navigate("/checkout/step3", {
+        state: { passedCart: cart, shippingMethod: method, userInfo: userInfo },
+      });
     } catch (err) {
       console.error("Error al continuar:", err);
-      setError("Ocurrió un error al guardar la información. Intenta nuevamente.");
+      setError(
+        "Ocurrió un error al guardar la información. Intenta nuevamente.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -106,11 +118,7 @@ export default function Checkout_Step2() {
               Información de contacto
             </h1>
             <UserInfo values={userInfo} onChange={setUserInfo} />
-            {error && (
-              <p className="text-red-400 text-sm mt-4">
-                ⚠️ {error}
-              </p>
-            )}
+            {error && <p className="text-red-400 text-sm mt-4">⚠️ {error}</p>}
           </section>
 
           {/* Navigation Buttons */}
@@ -125,10 +133,11 @@ export default function Checkout_Step2() {
             <button
               onClick={handleContinue}
               disabled={!isFormComplete || isSubmitting}
-              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${!isFormComplete || isSubmitting
+              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${
+                !isFormComplete || isSubmitting
                   ? "bg-gray-500 text-gray-300 cursor-not-allowed"
                   : "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md"
-                }`}
+              }`}
             >
               {isSubmitting ? "Procesando..." : "Continuar →"}
             </button>
@@ -145,7 +154,9 @@ export default function Checkout_Step2() {
                 price: `$${item.precio.toFixed(2)}`,
               }))}
               subtotal={`$${subtotal.toFixed(2)}`}
-              shipping={shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`}
+              shipping={
+                shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`
+              }
               total={`$${total.toFixed(2)}`}
             />
           ) : (
