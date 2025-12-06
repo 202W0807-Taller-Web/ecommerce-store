@@ -86,3 +86,14 @@ export const resetPassword = async (payload: { token: string; nuevaContrasena: s
   });
   return res.json();
 };
+
+// Actualizar usuario (soporta multipart/form-data para avatar)
+export const updateUser = async (id: number | string, payload: FormData) => {
+  const url = `${import.meta.env.VITE_AUTH_BACKEND}/api/usuarios/${id}`;
+  const res = await fetch(url, {
+    method: "PUT",
+    credentials: "include",
+    body: payload,
+  });
+  return res.json();
+};
