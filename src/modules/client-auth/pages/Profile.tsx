@@ -9,8 +9,8 @@ import {
   FiPhone,
   FiMapPin,
   FiEdit2,
-  FiShoppingBag,
-  FiHeart,
+  //FiShoppingBag,
+  //FiHeart,
   FiLock,
   FiCalendar,
 } from "react-icons/fi";
@@ -372,13 +372,12 @@ export default function Profile() {
       setAddressForm({ ...addr });
     } else {
       setAddressForm({
-        direccionLinea1: "",
-        direccionLinea2: "",
-        ciudad: "",
-        provincia: "",
-        pais: "",
-        codigoPostal: "",
-        principal: false,
+        direccionLinea1: '',
+        direccionLinea2: '',
+        ciudad: '',
+        provincia: '',
+        pais: '',
+        codigoPostal: ''
       });
     }
     setAddressError("");
@@ -591,26 +590,6 @@ export default function Profile() {
                 Perfil
               </button>
               <button
-                onClick={() => setActiveTab("orders")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
-                  activeTab === "orders"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Mis Pedidos
-              </button>
-              <button
-                onClick={() => setActiveTab("wishlist")}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
-                  activeTab === "wishlist"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Lista de deseos
-              </button>
-              <button
                 onClick={() => setActiveTab("addresses")}
                 className={`py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer ${
                   activeTab === "addresses"
@@ -713,40 +692,6 @@ export default function Profile() {
             </div>
           )}
 
-          {activeTab === "orders" && (
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">
-                Mis Pedidos
-              </h3>
-              <div className="text-center py-12">
-                <FiShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No hay pedidos recientes
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Cuando realices un pedido, aparecerá aquí.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "wishlist" && (
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">
-                Lista de deseos
-              </h3>
-              <div className="text-center py-12">
-                <FiHeart className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  Tu lista de deseos está vacía
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Guarda tus productos favoritos aquí.
-                </p>
-              </div>
-            </div>
-          )}
-
           {activeTab === "addresses" && (
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -755,13 +700,7 @@ export default function Profile() {
                 </h3>
                 <button
                   onClick={() => openAddressModal(null)}
-                  disabled={addresses.length >= 3}
-                  title={
-                    addresses.length >= 3
-                      ? "Solo se permite añadir 3 direcciones como máximo"
-                      : ""
-                  }
-                  className={`inline-flex items-center px-3 py-2 border rounded-md text-sm transition transform ${addresses.length >= 3 ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed" : "bg-white border-gray-300 hover:bg-primary hover:text-white hover:border-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-md"}`}
+                  className="inline-flex items-center px-3 py-2 border rounded-md text-sm transition transform bg-white border-gray-300 hover:bg-primary hover:text-white hover:border-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-md"
                 >
                   Agregar dirección
                 </button>
@@ -801,7 +740,7 @@ export default function Profile() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
                   {addresses.map((d) => (
                     <div
                       key={d.id}
@@ -926,20 +865,7 @@ export default function Profile() {
                           className="w-full border rounded px-3 py-2"
                         />
 
-                        <label className="inline-flex items-center mt-2">
-                          <input
-                            type="checkbox"
-                            name="principal"
-                            checked={!!addressForm?.principal}
-                            onChange={handleAddressChange}
-                            className="mr-2"
-                          />
-                          Marcar como dirección principal
-                        </label>
-
-                        {addressError && (
-                          <p className="text-xs text-red-500">{addressError}</p>
-                        )}
+                        {addressError && <p className="text-xs text-red-500">{addressError}</p>}
 
                         <div className="flex justify-end gap-3 mt-4">
                           <button
