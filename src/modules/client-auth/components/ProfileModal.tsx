@@ -53,8 +53,6 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
   const { user, logout } = useContext(AuthContext)!;
   const navigate = useNavigate();
 
-  console.log("USER", user); // ⬅️ AGRÉGALO AQUÍ
-
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar el menú al hacer clic fuera de él
@@ -174,9 +172,19 @@ export const ProfileModal = ({ isOpen, onClose, anchorEl }: ProfileModalProps) =
       {/* Encabezado del menú */}
       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <FiUser className="w-5 h-5" />
+          {/* Aquí vamos a mostrar el avatar */}
+          <div className="w-10 h-10 rounded-full overflow-hidden">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FiUser className="w-5 h-5 text-gray-500" />
+            )}
           </div>
+          
           <div>
             <h3 className="font-medium text-gray-900 text-sm">
               {user?.nombres} {user?.apellido_p}
