@@ -2,8 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import CheckoutSteps from "../components/checkoutSteps";
 import OrderSummary from "../components/orderSummary";
 import UserInfo from "../components/infoUserForm";
-import { AuthContext } from "../../client-auth/context/AuthContext";
-import { useEffect, useState, useContext } from "react";
+import { useShippingUser } from "../hooks/useShippingUser";
+import { useEffect, useState } from "react";
 
 interface CartItem {
   idProducto: number;
@@ -15,10 +15,12 @@ interface CartItem {
 export default function Checkout_Step2() {
   const location = useLocation();
   const navigate = useNavigate();
-  const auth = useContext(AuthContext);
 
   const cart = location.state?.passedCart as CartItem[] | undefined;
   const method = location.state?.method as string | undefined;
+
+  const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
+  const { user, createUser, idUsuario } = useShippingUser(apiUrl);
 
   const [userInfo, setUserInfo] = useState({
     nombreCompleto: "",
@@ -30,27 +32,14 @@ export default function Checkout_Step2() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!auth?.isAuth) {
-      // Redirigir a login si no está autenticado
-      navigate("/login", {
-        state: {
-          from: "/checkout/step2",
-          message: "Debes iniciar sesión para continuar con la compra",
-        },
-      });
-      return;
-    }
-
-    // Pre-llenar con datos del usuario autenticado
-    if (auth.user) {
+    if (user) {
       setUserInfo({
-        nombreCompleto:
-          `${auth.user.nombres} ${auth.user.apellido_p} ${auth.user.apellido_m || ""}`.trim(),
-        email: auth.user.correo,
-        telefono: auth.user.celular || "",
+        nombreCompleto: user.nombreCompleto || "",
+        email: user.email || "",
+        telefono: user.telefono || "",
       });
     }
-  }, [auth, navigate]);
+  }, [user]);
 
   if (!cart) {
     return (
@@ -61,10 +50,6 @@ export default function Checkout_Step2() {
         </Link>
       </div>
     );
-  }
-
-  if (!auth?.isAuth || !auth.user) {
-    return null;
   }
 
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
@@ -87,6 +72,14 @@ export default function Checkout_Step2() {
     setIsSubmitting(true);
 
     try {
+      if (!user) {
+        if (idUsuario)
+          await createUser({
+            idUsuario,
+            ...userInfo,
+          });
+      }
+
       navigate("/checkout/step3", {
         state: { passedCart: cart, shippingMethod: method, userInfo: userInfo },
       });
