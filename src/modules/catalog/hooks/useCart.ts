@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { CartService } from "../services";
+import { CartService } from "../../cart-checkout/services/cartService";
 
 export interface UseCartResult {
   adding: boolean;
