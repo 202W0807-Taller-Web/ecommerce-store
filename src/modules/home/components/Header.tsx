@@ -1,13 +1,20 @@
+import { useState, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { CategoriesModal } from './CategoriesModal';
 import { FaBars, FaSearch, FaGraduationCap } from 'react-icons/fa';
-import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart, } from 'react-icons/fi';
+import { FiShoppingBag, FiUser, FiHeart, FiShoppingCart } from 'react-icons/fi';
+import { RegisterModal } from '../../client-auth/components/RegisterModal';
+import { ProfileModal } from '../../client-auth/components/ProfileModal';
+import { AuthContext } from '../../client-auth/context/AuthContext';
+import { LoadingModal } from '../../client-auth/components/LoadingModal';
 
 export const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const { isAuth, loading } = useContext(AuthContext)!;
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
   // Los atributos ahora se manejan directamente en CategoriesModal
 
   const handleSearch = (e: React.FormEvent) => {
@@ -79,13 +86,18 @@ export const Header = () => {
           {/* User Actions Section */}
           <div className="flex items-center space-x-4">
             {/* Shopping Bag */}
-            <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <Link
+                to="/mis-pedidos"
+                className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+              >
+            {/* <button className="relative p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"> */}
               <FiShoppingBag className="w-6 h-6" />
               {/* Cart badge */}
               {/* <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 3
               </span> */}
-            </button>
+            {/* </button> */}
+            </Link>
 
             {/* Heart/Wishlist */}
             <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
@@ -102,7 +114,11 @@ export const Header = () => {
             </Link>
 
             {/* User Profile */}
-            <button className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors">
+            <button 
+              className="p-2 text-primary hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
+              ref={profileButtonRef}
+            >
               <FiUser className="w-6 h-6" />
             </button>
           </div>
@@ -114,6 +130,28 @@ export const Header = () => {
         isOpen={isCategoriesModalOpen}
         onClose={() => setIsCategoriesModalOpen(false)}
       />
+
+      {/* Modales de autenticación */}
+      {loading ? (
+        <LoadingModal
+          isOpen={loading}
+          onClose={() => setIsProfileModalOpen(false)}
+          anchorEl={profileButtonRef.current}
+        />
+      ) : (
+        isAuth ? (
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            anchorEl={profileButtonRef.current}
+          />
+        ) : (
+          <RegisterModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
+        )
+      )}
     </header>
   );
 };
