@@ -2,6 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import * as authApi from "../api/authApi";
+import { useAddresses } from "../../cart-checkout/hooks/useAddresses";
 import {
   FiUser,
   FiMail,
@@ -13,7 +14,8 @@ import {
   FiLock,
   FiCalendar,
 } from "react-icons/fi";
-const API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
+const AUTH_API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
+const CART_API_URL = `${import.meta.env.VITE_CART_BACKEND}`;
 
 
 function EditProfileForm({ user, onClose, onSuccess }: any) {
@@ -105,7 +107,7 @@ function EditProfileForm({ user, onClose, onSuccess }: any) {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/usuarios/${user.id}`, {
+      const res = await fetch(`${AUTH_API_URL}/api/usuarios/${user.id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -325,44 +327,34 @@ export default function Profile() {
     }
   }, [showSuccessToast]);
 
-  // Addresses state
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  // Addresses management using useAddresses hook
+  const addressesApiUrl = `${CART_API_URL}/api/direcciones`;
+  const {
+    addresses,
+    loading: loadingAddresses,
+    createAddress,
+    updateAddress,
+    deleteAddress,
+    markAsPrimary
+  } = useAddresses(addressesApiUrl, user?.id ?? null);
+
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [addressForm, setAddressForm] = useState<any>(null); // null = new
   const [addressError, setAddressError] = useState<string>("");
-
-  const loadAddresses = async () => {
-    if (!user) return;
-    setLoadingAddresses(true);
-    try {
-      const res = await fetch(`${API_URL}/api/direcciones/usuario/${user.id}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAddresses(data || []);
-      } else {
-        console.warn('Error loading addresses', data);
-      }
-    } catch (err) {
-      console.error('Error fetching addresses', err);
-    } finally {
-      setLoadingAddresses(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'addresses' && user) {
-      void loadAddresses();
-    }
-  }, [activeTab, user]);
 
   const openAddressModal = (addr: any | null) => {
     if (addr) {
       setAddressForm({ ...addr });
     } else {
-      setAddressForm({ calle: '', ciudad: '', estado: '', pais: '', codigo_postal: '', isDefault: false });
+      setAddressForm({
+        direccionLinea1: '',
+        direccionLinea2: '',
+        ciudad: '',
+        provincia: '',
+        pais: '',
+        codigoPostal: '',
+        principal: false
+      });
     }
     setAddressError('');
     setAddressModalOpen(true);
@@ -381,74 +373,50 @@ export default function Profile() {
 
   const saveAddress = async () => {
     if (!addressForm) return;
-    if (!user) {
-      setAddressError('Usuario no disponible');
-      return;
-    }
+
     // basic validation
-    if (!addressForm.calle || !addressForm.ciudad || !addressForm.pais) {
-      setAddressError('Los campos calle, ciudad y país son obligatorios');
+    if (!addressForm.direccionLinea1 || !addressForm.ciudad || !addressForm.pais) {
+      setAddressError('Los campos dirección, ciudad y país son obligatorios');
       return;
     }
     try {
-      const method = addressForm.id ? 'PUT' : 'POST';
-      const url = addressForm.id ? `${API_URL}/api/direcciones/${addressForm.id}` : `${API_URL}/api/direcciones`;
-      const res = await fetch(url, {
-        method,
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...addressForm, usuario_id: user.id }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        await loadAddresses();
-        setShowSuccessToast(true);
-        closeAddressModal();
+      if (addressForm.id) {
+        // Update existing
+        const { id, ...updateData } = addressForm;
+        await updateAddress(id, updateData);
       } else {
-        setAddressError(data?.error || data?.message || 'Error al guardar la dirección');
+        // Create new
+        const { ...newAddressData } = addressForm;
+        await createAddress(newAddressData);
       }
+      setShowSuccessToast(true);
+      closeAddressModal();
     } catch (err) {
       console.error(err);
       setAddressError('Error al guardar la dirección');
     }
   };
 
-  const deleteAddress = async (id: number) => {
+  const handleDeleteAddress = async (id: number) => {
     if (!confirm('¿Eliminar esta dirección?')) return;
     try {
-      const res = await fetch(`${API_URL}/api/direcciones/${id}`, { method: 'DELETE', credentials: 'include' });
-      const data = await res.json();
-      if (res.ok) {
-        await loadAddresses();
-        setShowSuccessToast(true);
-      } else {
-        alert(data?.error || 'Error al eliminar');
-      }
+      await deleteAddress(id);
+      setShowSuccessToast(true);
     } catch (err) {
       console.error(err);
       alert('Error al eliminar la dirección');
     }
   };
 
-  const setDefaultAddress = async (id: number) => {
+  const handleSetPrimaryAddress = async (id: number) => {
     try {
-      const res = await fetch(`${API_URL}/api/direcciones/${id}/set-default`, {
-        method: 'PATCH',
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (res.ok) {
-        await loadAddresses();
-        setShowSuccessToast(true);
-      } else {
-        alert(data?.error || 'Error al establecer predeterminada');
-      }
+      await markAsPrimary(id);
+      setShowSuccessToast(true);
     } catch (err) {
       console.error(err);
-      alert('Error al establecer dirección predeterminada');
+      alert('Error al establecer dirección principal');
     }
   };
-
 
   if (loading) {
     return <div className="text-center py-12">Cargando...</div>; // O un spinner de carga
@@ -719,22 +687,22 @@ export default function Profile() {
                         <div className="flex items-start">
                           <FiMapPin className="h-6 w-6 text-primary mr-3 flex-shrink-0" />
                           <div>
-                            <p className="font-medium text-gray-900">{d.calle}</p>
-                            <p className="text-sm text-gray-600">{d.ciudad}{d.estado ? `, ${d.estado}` : ''} - {d.pais}</p>
-                            {d.codigo_postal && <p className="text-sm text-gray-500">{d.codigo_postal}</p>}
+                            <p className="font-medium text-gray-900">{d.direccionLinea1}</p>
+                            <p className="text-sm text-gray-600">{d.ciudad}{d.provincia ? `, ${d.provincia}` : ''} - {d.pais}</p>
+                            {d.codigoPostal && <p className="text-sm text-gray-500">{d.codigoPostal}</p>}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-4 flex items-center justify-between">
                         <div>
-                          {d.isDefault && <span className="text-xs bg-primary text-white px-2 py-1 rounded">Predeterminada</span>}
+                          {d.principal && <span className="text-xs bg-primary text-white px-2 py-1 rounded">Principal</span>}
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => openAddressModal(d)} className="px-3 py-1 text-sm border rounded hover:bg-gray-100 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Editar</button>
-                          <button onClick={() => deleteAddress(d.id)} className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50 hover:border-red-300 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Eliminar</button>
-                          {!d.isDefault && (
-                            <button onClick={() => setDefaultAddress(d.id)} className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Usar</button>
+                          <button onClick={() => handleDeleteAddress(d.id)} className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50 hover:border-red-300 transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Eliminar</button>
+                          {!d.principal && (
+                            <button onClick={() => handleSetPrimaryAddress(d.id)} className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition transform hover:-translate-y-0.5 hover:shadow cursor-pointer">Usar</button>
                           )}
                         </div>
                       </div>
@@ -751,24 +719,27 @@ export default function Profile() {
                     <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full" style={{ animation: 'fadeScale 260ms ease-out' }}>
                       <h3 className="text-lg font-medium mb-4">{addressForm?.id ? 'Editar dirección' : 'Agregar dirección'}</h3>
                       <div className="grid grid-cols-1 gap-3">
-                        <label className="text-sm">Calle*</label>
-                        <input name="calle" value={addressForm?.calle || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <label className="text-sm">Dirección*</label>
+                        <input name="direccionLinea1" value={addressForm?.direccionLinea1 || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+
+                        <label className="text-sm">Dirección adicional</label>
+                        <input name="direccionLinea2" value={addressForm?.direccionLinea2 || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
 
                         <label className="text-sm">Ciudad*</label>
                         <input name="ciudad" value={addressForm?.ciudad || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
 
-                        <label className="text-sm">Estado</label>
-                        <input name="estado" value={addressForm?.estado || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <label className="text-sm">Provincia</label>
+                        <input name="provincia" value={addressForm?.provincia || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
 
                         <label className="text-sm">País*</label>
                         <input name="pais" value={addressForm?.pais || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
 
                         <label className="text-sm">Código postal</label>
-                        <input name="codigo_postal" value={addressForm?.codigo_postal || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
+                        <input name="codigoPostal" value={addressForm?.codigoPostal || ''} onChange={handleAddressChange} className="w-full border rounded px-3 py-2" />
 
                         <label className="inline-flex items-center mt-2">
-                          <input type="checkbox" name="isDefault" checked={!!addressForm?.isDefault} onChange={handleAddressChange} className="mr-2" />
-                          Marcar como predeterminada
+                          <input type="checkbox" name="principal" checked={!!addressForm?.principal} onChange={handleAddressChange} className="mr-2" />
+                          Marcar como dirección principal
                         </label>
 
                         {addressError && <p className="text-xs text-red-500">{addressError}</p>}
@@ -813,5 +784,4 @@ export default function Profile() {
     </div>
 
   );
-
 }
