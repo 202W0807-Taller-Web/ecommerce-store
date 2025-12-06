@@ -88,7 +88,7 @@ export default function CartPage() {
       navigate("/login", {
         state: {
           from: "/cart",
-          returnTo: "/checkout/step1",
+          returnTo: "/cart/checkout/step1",
           message: "Inicia sesión para continuar con tu compra",
         },
       });
@@ -111,7 +111,7 @@ export default function CartPage() {
       return;
     }
 
-    navigate("/checkout/step1", {
+    navigate("/cart/checkout/step1", {
       state: { cart: items, cartId: cart?.id },
     });
   };

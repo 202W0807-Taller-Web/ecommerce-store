@@ -80,7 +80,7 @@ export default function Checkout_Step2() {
           });
       }
 
-      navigate("/checkout/step3", {
+      navigate("/cart/checkout/step3", {
         state: { passedCart: cart, shippingMethod: method, userInfo: userInfo },
       });
     } catch (err) {
@@ -117,7 +117,9 @@ export default function Checkout_Step2() {
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-6 border-t border-[#C0A648]/40">
             <button
-              onClick={() => navigate("/checkout/step1", { state: { cart } })}
+              onClick={() =>
+                navigate("/cart/checkout/step1", { state: { cart } })
+              }
               className="px-6 py-3 rounded-lg border-2 border-[#C0A648] text-[#EBC431] bg-[#333027] hover:bg-[#413F39]/80 hover:scale-105 hover:border-[#EBC431] transition font-medium"
             >
               ← Volver a método de entrega
