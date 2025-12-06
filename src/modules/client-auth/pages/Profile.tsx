@@ -9,8 +9,8 @@ import {
   FiPhone,
   FiMapPin,
   FiEdit2,
-  FiShoppingBag,
-  FiHeart,
+  //FiShoppingBag,
+  //FiHeart,
   FiLock,
   FiCalendar,
 } from "react-icons/fi";
