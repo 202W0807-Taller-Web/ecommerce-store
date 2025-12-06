@@ -18,11 +18,9 @@ export default function Checkout_Step2() {
 
   const cart = location.state?.passedCart as CartItem[] | undefined;
   const method = location.state?.method as string | undefined;
-  console.log(method);
-  const idUsuario = 20; // valor hardcodeado
 
   const apiUrl = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}/api/envio`;
-  const { user, createUser } = useShippingUser(apiUrl, idUsuario);
+  const { user, createUser, idUsuario } = useShippingUser(apiUrl);
 
   const [userInfo, setUserInfo] = useState({
     nombreCompleto: "",
@@ -55,7 +53,8 @@ export default function Checkout_Step2() {
   }
 
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
-  const shippingCost = method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
+  const shippingCost =
+    method === "express" ? 19.99 : method === "standard" ? 9.99 : 0;
   const total = subtotal + shippingCost;
 
   const handleContinue = async () => {
@@ -63,7 +62,9 @@ export default function Checkout_Step2() {
 
     // Validación simple
     if (!nombreCompleto.trim() || !email.trim() || !telefono.trim()) {
-      setError("Por favor, completa toda la información de contacto antes de continuar.");
+      setError(
+        "Por favor, completa toda la información de contacto antes de continuar.",
+      );
       return;
     }
 
@@ -72,17 +73,21 @@ export default function Checkout_Step2() {
 
     try {
       if (!user) {
-        await createUser({
-          idUsuario,
-          ...userInfo,
-        });
+        if (idUsuario)
+          await createUser({
+            idUsuario,
+            ...userInfo,
+          });
       }
 
-      navigate("/checkout/step3", { state: { passedCart: cart, shippingMethod: method, userInfo: userInfo } });
-
+      navigate("/checkout/step3", {
+        state: { passedCart: cart, shippingMethod: method, userInfo: userInfo },
+      });
     } catch (err) {
       console.error("Error al continuar:", err);
-      setError("Ocurrió un error al guardar la información. Intenta nuevamente.");
+      setError(
+        "Ocurrió un error al guardar la información. Intenta nuevamente.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -106,11 +111,7 @@ export default function Checkout_Step2() {
               Información de contacto
             </h1>
             <UserInfo values={userInfo} onChange={setUserInfo} />
-            {error && (
-              <p className="text-red-400 text-sm mt-4">
-                ⚠️ {error}
-              </p>
-            )}
+            {error && <p className="text-red-400 text-sm mt-4">⚠️ {error}</p>}
           </section>
 
           {/* Navigation Buttons */}
@@ -125,10 +126,11 @@ export default function Checkout_Step2() {
             <button
               onClick={handleContinue}
               disabled={!isFormComplete || isSubmitting}
-              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${!isFormComplete || isSubmitting
+              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-semibold ${
+                !isFormComplete || isSubmitting
                   ? "bg-gray-500 text-gray-300 cursor-not-allowed"
                   : "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md"
-                }`}
+              }`}
             >
               {isSubmitting ? "Procesando..." : "Continuar →"}
             </button>
@@ -145,7 +147,9 @@ export default function Checkout_Step2() {
                 price: `$${item.precio.toFixed(2)}`,
               }))}
               subtotal={`$${subtotal.toFixed(2)}`}
-              shipping={shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`}
+              shipping={
+                shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`
+              }
               total={`$${total.toFixed(2)}`}
             />
           ) : (

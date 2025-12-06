@@ -1,19 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import type { Address, AddressForm } from "../entities";
+import { AuthContext } from "../../client-auth/context/AuthContext";
 
 // Re-exportar para retrocompatibilidad
 export type { Address, AddressForm } from "../entities";
 
-export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
+export function useAddresses(apiUrl: string) {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const auth = useContext(AuthContext);
+  const idUsuarioEnvio = auth?.isAuth && auth?.user ? auth.user.id : null;
 
   const fetchAddresses = useCallback(async () => {
     if (!idUsuarioEnvio) return;
     try {
       setLoading(true);
-      const res = await fetch(`${apiUrl}/usuario/${idUsuarioEnvio}/direcciones`);
+      const res = await fetch(
+        `${apiUrl}/usuario/${idUsuarioEnvio}/direcciones`,
+      );
       if (!res.ok) throw new Error("Error al obtener direcciones");
       const data = await res.json();
       setAddresses(data);
@@ -33,24 +39,25 @@ export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
       setAddresses((prev) => [...prev, optimistic]);
 
       try {
-        const res = await fetch(`${apiUrl}/usuario/${idUsuarioEnvio}/direcciones`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newAddress),
-        });
+        const res = await fetch(
+          `${apiUrl}/usuario/${idUsuarioEnvio}/direcciones`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newAddress),
+          },
+        );
 
         if (!res.ok) throw new Error("Error al crear dirección");
         const data = await res.json();
 
-        setAddresses((prev) =>
-          prev.map((a) => (a.id === tempId ? data : a))
-        );
+        setAddresses((prev) => prev.map((a) => (a.id === tempId ? data : a)));
       } catch (err) {
         setError((err as Error).message);
         setAddresses((prev) => prev.filter((a) => a.id !== tempId));
       }
     },
-    [apiUrl, idUsuarioEnvio]
+    [apiUrl, idUsuarioEnvio],
   );
 
   const updateAddress = useCallback(
@@ -59,7 +66,7 @@ export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
       if (!old) return;
 
       setAddresses((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updated } : a))
+        prev.map((a) => (a.id === id ? { ...a, ...updated } : a)),
       );
 
       try {
@@ -72,17 +79,13 @@ export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
         if (!res.ok) throw new Error("Error al actualizar dirección");
         const data = await res.json();
 
-        setAddresses((prev) =>
-          prev.map((a) => (a.id === id ? data : a))
-        );
+        setAddresses((prev) => prev.map((a) => (a.id === id ? data : a)));
       } catch (err) {
         setError((err as Error).message);
-        setAddresses((prev) =>
-          prev.map((a) => (a.id === id ? old : a))
-        );
+        setAddresses((prev) => prev.map((a) => (a.id === id ? old : a)));
       }
     },
-    [apiUrl, addresses]
+    [apiUrl, addresses],
   );
 
   const deleteAddress = useCallback(
@@ -100,20 +103,20 @@ export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
         setAddresses(old);
       }
     },
-    [apiUrl, addresses]
+    [apiUrl, addresses],
   );
 
   const markAsPrimary = useCallback(
     async (id: number) => {
       const old = addresses;
       setAddresses((prev) =>
-        prev.map((a) => ({ ...a, principal: a.id === id }))
+        prev.map((a) => ({ ...a, principal: a.id === id })),
       );
 
       try {
         const res = await fetch(
           `${apiUrl}/usuario/${idUsuarioEnvio}/direcciones/${id}/principal`,
-          { method: "PATCH" }
+          { method: "PATCH" },
         );
         if (!res.ok) throw new Error("Error al marcar como principal");
       } catch (err) {
@@ -121,7 +124,7 @@ export function useAddresses(apiUrl: string, idUsuarioEnvio: number | null) {
         setAddresses(old);
       }
     },
-    [apiUrl, idUsuarioEnvio, addresses]
+    [apiUrl, idUsuarioEnvio, addresses],
   );
 
   useEffect(() => {

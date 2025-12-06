@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { useCart } from "../hooks/useCart";
 import { useStockValidation } from "../hooks/useStockValidation";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../client-auth/context/AuthContext";
 import OrderSummary from "../components/orderSummary";
 
 export default function CartPage() {
   const { cart, loading, updateQuantity, removeFromCart } = useCart();
+  const auth = useContext(AuthContext);
   const navigate = useNavigate();
   const [toast, setToast] = useState<{
     message: string;
@@ -16,7 +18,7 @@ export default function CartPage() {
 
   const productIds = useMemo(
     () => items.map((item) => item.idProducto),
-    [items]
+    [items],
   );
   const {
     getProductStockStatus,
@@ -35,13 +37,13 @@ export default function CartPage() {
       items.map((item) => ({
         idProducto: item.idProducto,
         cantidad: item.cantidad,
-      }))
+      })),
     );
   }, [items, loading, stockLoading, validateCart]);
 
   const showToast = (
     message: string,
-    type: "error" | "success" | "warning" = "error"
+    type: "error" | "success" | "warning" = "error",
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -50,15 +52,14 @@ export default function CartPage() {
   const handleUpdateQuantity = async (
     idProducto: number,
     nuevaCantidad: number,
-    idVariante?: number | null
+    idVariante?: number | null,
   ) => {
-    // Validar stock antes de actualizar
     const stockStatus = getProductStockStatus(idProducto, nuevaCantidad);
 
     if (nuevaCantidad > stockStatus.cantidadMaxima) {
       showToast(
         `Solo hay ${stockStatus.cantidadMaxima} unidades disponibles`,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -72,7 +73,7 @@ export default function CartPage() {
 
   const handleRemove = async (
     idProducto: number,
-    idVariante?: number | null
+    idVariante?: number | null,
   ) => {
     try {
       await removeFromCart(idProducto, idVariante);
@@ -83,23 +84,36 @@ export default function CartPage() {
   };
 
   const handleContinue = () => {
+    // Validar autenticación primero
+    if (!auth?.isAuth) {
+      navigate("/login", {
+        state: {
+          from: "/cart",
+          returnTo: "/checkout/step1",
+          message: "Inicia sesión para continuar con tu compra",
+        },
+      });
+      return;
+    }
+
+    // Validar stock
     if (!cartValidation?.isValid) {
       if (cartValidation?.hasOutOfStock) {
         showToast(
           "Hay productos sin stock. Por favor, elimínalos del carrito.",
-          "error"
+          "error",
         );
       } else if (cartValidation?.hasExceeded) {
         showToast(
           "La cantidad de algunos productos excede el stock disponible.",
-          "error"
+          "error",
         );
       }
       return;
     }
 
     navigate("/checkout/step1", {
-      state: { cart: items, cartId: cart?.id || 7 },
+      state: { cart: items, cartId: cart?.id },
     });
   };
 
@@ -123,8 +137,8 @@ export default function CartPage() {
             toast.type === "error"
               ? "bg-red-500 text-white"
               : toast.type === "warning"
-              ? "bg-yellow-500 text-black"
-              : "bg-green-500 text-white"
+                ? "bg-yellow-500 text-black"
+                : "bg-green-500 text-white"
           }`}
         >
           {toast.message}
@@ -135,6 +149,7 @@ export default function CartPage() {
         TU CARRITO ({itemCount} producto{itemCount !== 1 ? "s" : ""})
       </h2>
 
+      {/* Alerta de problemas de stock */}
       {!loading &&
         !stockLoading &&
         cartValidation &&
@@ -157,14 +172,22 @@ export default function CartPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         <div className="md:col-span-2 space-y-6">
           {items.length === 0 ? (
-            <p className="text-center text-[#F5F5F5]/70">
-              Tu carrito está vacío.
-            </p>
+            <div className="text-center py-16">
+              <p className="text-[#F5F5F5]/70 text-xl mb-4">
+                Tu carrito está vacío.
+              </p>
+              <button
+                onClick={() => navigate("/catalog")}
+                className="px-6 py-3 bg-[#EBC431] text-[#333027] rounded-lg hover:bg-[#F5E27A] transition font-semibold"
+              >
+                Explorar productos
+              </button>
+            </div>
           ) : (
             items.map((item) => {
               const stockStatus = getProductStockStatus(
                 item.idProducto,
-                item.cantidad
+                item.cantidad,
               );
               const hasStockIssue =
                 !stockStatus.tieneStock || stockStatus.excedeCantidad;
@@ -174,7 +197,7 @@ export default function CartPage() {
                   key={`${item.idProducto}-${item.idVariante || 0}`}
                   className={`flex items-center justify-between rounded-2xl p-5 transition-all duration-200 shadow-md
                     ${
-                      loading && hasStockIssue
+                      hasStockIssue
                         ? "bg-red-900/20 border-2 border-red-500/50"
                         : "bg-[#333027] border border-[#C0A648]/40 hover:bg-[#413F39]"
                     }`}
@@ -192,7 +215,7 @@ export default function CartPage() {
                     <div className="flex-1">
                       <p
                         className={`font-semibold text-lg ${
-                          loading && hasStockIssue ? "text-red-400" : "text-[#EBC431]"
+                          hasStockIssue ? "text-red-400" : "text-[#EBC431]"
                         }`}
                       >
                         {item.nombre ?? "Producto sin nombre"}
@@ -231,7 +254,7 @@ export default function CartPage() {
                         handleUpdateQuantity(
                           item.idProducto,
                           item.cantidad - 1,
-                          item.idVariante
+                          item.idVariante,
                         )
                       }
                       disabled={item.cantidad <= 1 || !stockStatus.tieneStock}
@@ -247,7 +270,7 @@ export default function CartPage() {
                         handleUpdateQuantity(
                           item.idProducto,
                           item.cantidad + 1,
-                          item.idVariante
+                          item.idVariante,
                         )
                       }
                       disabled={
@@ -294,10 +317,20 @@ export default function CartPage() {
                   : "bg-[#EBC431] text-[#333027] hover:bg-[#F5E27A] hover:scale-105"
               }`}
           >
-            {stockLoading ? "Verificando stock..." : "Continuar Compra"}
+            {stockLoading
+              ? "Verificando stock..."
+              : !auth?.isAuth
+                ? "Iniciar sesión para continuar"
+                : "Continuar Compra"}
           </button>
 
-          {cartValidation && !cartValidation.isValid && (
+          {!auth?.isAuth && items.length > 0 && (
+            <p className="text-xs text-blue-300 text-center mt-2">
+              Tus productos se guardarán al iniciar sesión
+            </p>
+          )}
+
+          {auth?.isAuth && cartValidation && !cartValidation.isValid && (
             <p className="text-xs text-red-400 text-center mt-2">
               Corrige los problemas de stock para continuar
             </p>

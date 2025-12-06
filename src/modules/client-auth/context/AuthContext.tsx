@@ -45,6 +45,7 @@ interface User {
 
   // Opcionales del backend
   avatar?: string | null;
+  avatar_url?: string | null;
 
   // Fechas
   created_at: string;
@@ -81,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log("res:", res);
       if (res.isAuthenticated) {
         const userRes = await authApi.getCurrentUser();
+        console.log('Respuesta de getCurrentUser:', userRes); // Verifica qué datos recibes
         if (userRes.success) {
           setUser(userRes.user);
           setIsAuth(true);
@@ -106,6 +108,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleLogin = async (data: authApi.LoginData) => {
     const res = await authApi.login(data);
     if (res.success) {
+      // Aquí es donde puedes ver los datos del usuario
+      console.log('Usuario logueado:', res.user);  // Muestra los datos del usuario en la consola
       setUser(res.user);
       setIsAuth(true);
     }

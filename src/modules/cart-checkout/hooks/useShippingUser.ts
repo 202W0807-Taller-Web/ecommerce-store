@@ -1,13 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import type { ShippingUser, ShippingUserForm } from "../entities";
+import { AuthContext } from "../../client-auth/context/AuthContext";
 
 // Re-exportar para retrocompatibilidad
 export type { ShippingUser, ShippingUserForm } from "../entities";
 
-export function useShippingUser(apiUrl: string, idUsuario: number) {
+export function useShippingUser(apiUrl: string) {
   const [user, setUser] = useState<ShippingUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const auth = useContext(AuthContext);
+  const idUsuario = auth?.isAuth && auth?.user ? auth.user.id : null;
 
   const fetchUser = useCallback(async () => {
     if (!idUsuario) return;
@@ -26,7 +30,7 @@ export function useShippingUser(apiUrl: string, idUsuario: number) {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, idUsuario]);
+  }, [apiUrl]);
 
   const createUser = useCallback(
     async (newUser: ShippingUserForm) => {
@@ -43,12 +47,12 @@ export function useShippingUser(apiUrl: string, idUsuario: number) {
         setError((err as Error).message);
       }
     },
-    [apiUrl]
+    [apiUrl],
   );
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  return { user, loading, error, fetchUser, createUser };
+  return { user, loading, error, fetchUser, createUser, idUsuario };
 }
