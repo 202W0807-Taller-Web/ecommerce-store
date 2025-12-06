@@ -177,6 +177,7 @@ export const VariantSelector = ({ variants, onVariantChange, onColorChange }: Va
             
             return (
               <button
+                data-testid={`color-btn-${colorId}`}
                 key={colorId}
                 onClick={() => handleColorChange(colorId)}
                 className={`
@@ -214,6 +215,7 @@ export const VariantSelector = ({ variants, onVariantChange, onColorChange }: Va
               
               return (
                 <button
+                  data-testid={`size-btn-${sizeId}`}
                   key={sizeId}
                   onClick={() => handleSizeChange(sizeId)}
                   className={`

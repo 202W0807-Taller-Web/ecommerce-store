@@ -1,39 +1,263 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import ProductCard from "../components/ProductCard";
-import { useProducts } from "../hooks/useProducts";
+import { ProductCard } from "../../catalog/components/catalog/ProductCard";
+import { ProductCardSkeleton } from "../../catalog/components/skeletons/ProductCardSkeleton";
+import {
+  ChevronRight,
+  TrendingUp,
+  Star,
+  Zap,
+  Dumbbell,
+  Wind,
+  Shirt,
+} from "lucide-react";
+import { useCatalog } from "../../catalog/hooks/useCatalog";
 
 export default function HomePage() {
-  const { products, loading, error } = useProducts();
+  const { products, loading, error, fetchProducts } = useCatalog();
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [newProducts, setNewProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Cargar 12 productos y dividirlos
+    fetchProducts({}, { page: 1, limit: 12 });
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    // Dividir productos: primeros 4 destacados, siguientes 8 nuevos
+    if (products.data.length > 0) {
+      setFeaturedProducts(products.data.slice(0, 4));
+      setNewProducts(products.data.slice(4, 12));
+    }
+  }, [products]);
 
   return (
-    <div className="space-y-12">
+    <div className="w-full">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[#6B644C] to-[#413F39] text-[#EBC431] rounded-2xl shadow-lg p-8 text-center">
-        <h1 className="text-4xl font-extrabold mb-4">Bienvenido a la Tienda</h1>
-        <p className="text-lg mb-6 text-[#C0A648]">
-          Explora nuestra colección y encuentra productos increíbles al mejor precio.
-        </p>
-        <Link
-          to="/catalog"
-          className="bg-[#EBC431] text-[#333027] font-semibold px-6 py-3 rounded-full shadow hover:bg-[#C0A648] transition"
-        >
-          Ver Todos los Productos
-        </Link>
+      <section className="relative h-[600px] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-600 to-secondary">
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+        </div>
+
+        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-accent/20 text-accent px-4 py-2 rounded-full mb-6">
+              <Zap className="w-4 h-4" />
+              <span className="text-sm font-medium font-grotesk">
+                Nueva Colección 2025
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-base mb-6 font-grotesk">
+              Eleva Tu{" "}
+              <span className="text-accent">Rendimiento</span>
+            </h1>
+
+            <p className="text-xl text-base/80 mb-8 font-dm">
+              Descubre nuestra línea premium de ropa deportiva diseñada para
+              atletas que buscan lo mejor.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/catalog"
+                className="inline-flex items-center gap-2 bg-accent text-neutral-800 px-8 py-4 rounded-lg font-semibold hover:bg-primary transition-all duration-300 shadow-lg hover:shadow-xl font-grotesk"
+              >
+                Explorar Catálogo
+                <ChevronRight className="w-5 h-5" />
+              </Link>
+
+              <Link
+                to="/catalog"
+                className="inline-flex items-center gap-2 bg-base/10 backdrop-blur-sm text-base border-2 border-base/20 px-8 py-4 rounded-lg font-semibold hover:bg-base/20 transition-all duration-300 font-grotesk"
+              >
+                Ver Ofertas
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Productos Destacados */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-6 text-[#C0A648]">
-          Productos Destacados
-        </h2>
+      {/* Featured Categories */}
+      <section className="py-16 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[{
+              title: "Running",
+              description: "Velocidad y comodidad",
+              icon: Wind,
+              color: "from-accent/20 to-primary/20",
+              link: "running",
+            },
+            {
+              title: "Training",
+              description: "Rendimiento máximo",
+              icon: Dumbbell,
+              color: "from-primary/20 to-secondary/20",
+              link: "training",
+            },
+            {
+              title: "Lifestyle",
+              description: "Estilo y confort",
+              icon: Shirt,
+              color: "from-secondary/20 to-accent/20",
+              link: "lifestyle",
+            }].map((category, index) => (
+              <Link
+                key={index}
+                to={`/catalog?categoria=${category.link}`}
+                className="group relative h-64 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary/20 bg-white"
+              >
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${category.color} group-hover:scale-105 transition-transform duration-300`}
+                />
+                <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
+                  <div className="bg-accent/20 rounded-full p-6 mb-4 group-hover:bg-accent/30 transition-colors duration-300">
+                    <category.icon
+                      className="w-12 h-12 text-accent"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h3 className="text-3xl font-bold text-neutral-800 font-grotesk mb-2">
+                    {category.title}
+                  </h3>
+                  <p className="text-neutral-600 font-dm">
+                    {category.description}
+                  </p>
+                  <div className="mt-4 flex items-center gap-1 text-accent group-hover:gap-2 transition-all duration-300">
+                    <span className="text-sm font-medium font-grotesk">
+                      Explorar
+                    </span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {loading && <p className="text-[#6B644C]">Cargando productos...</p>}
-        {error && <p className="text-red-500">Error: {error}</p>}
+      {/* Featured Products */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <div className="flex items-center gap-2 text-accent mb-2">
+                <Star className="w-5 h-5 fill-accent" />
+                <span className="text-sm font-medium uppercase tracking-wider font-grotesk">
+                  Destacados
+                </span>
+              </div>
+              <h2 className="text-4xl font-bold text-neutral-800 font-grotesk">
+                Productos Populares
+              </h2>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+            <Link
+              to="/catalog"
+              className="hidden md:inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-grotesk font-medium"
+            >
+              Ver todos
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-gray-500 font-dm">
+              {error}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 text-center md:hidden">
+            <Link
+              to="/catalog"
+              className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-grotesk font-medium"
+            >
+              Ver todos los productos
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* New Arrivals */}
+      <section className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <div className="flex items-center gap-2 text-accent mb-2">
+                <TrendingUp className="w-5 h-5" />
+                <span className="text-sm font-medium uppercase tracking-wider font-grotesk">
+                  Recién llegados
+                </span>
+              </div>
+              <h2 className="text-4xl font-bold text-neutral-800 font-grotesk">
+                Nuevos Productos
+              </h2>
+            </div>
+
+            <Link
+              to="/catalog"
+              className="hidden md:inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-grotesk font-medium"
+            >
+              Ver todos
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-gray-500 font-dm">
+              {error}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="py-20 bg-gradient-to-r from-secondary via-primary to-accent -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-6 font-grotesk">
+            ¿Listo para el próximo nivel?
+          </h2>
+          <p className="text-xl text-neutral-800/80 mb-8 font-dm">
+            Únete a miles de atletas que confían en nuestra marca
+          </p>
+          <Link
+            to="/catalog"
+            className="inline-flex items-center gap-2 bg-neutral-800 text-base px-10 py-5 rounded-lg font-semibold hover:bg-neutral-600 transition-all duration-300 shadow-xl hover:shadow-2xl font-grotesk text-lg"
+          >
+            Comprar Ahora
+            <ChevronRight className="w-6 h-6" />
+          </Link>
         </div>
       </section>
     </div>

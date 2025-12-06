@@ -158,6 +158,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
       
       return (
         <button
+          data-testid={`filter-checkbox-${valor.valor}`}
           key={valor.id}
           onClick={() => handleFilterToggle(atributo.nombre, valor.valor)}
           className={`
@@ -180,6 +181,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
       <label key={valor.id} className="flex items-center space-x-3 cursor-pointer">
         <div className="relative">
           <input
+            data-testid={`filter-checkbox-${valor.valor}`}
             type="checkbox"
             checked={isSelected}
             onChange={() => handleFilterToggle(atributo.nombre, valor.valor)}
@@ -260,6 +262,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
                   </span>
                   <input
                     type="number"
+                    data-testid="price-min-input"
                     placeholder="0.00"
                     value={filters.priceMin || ''}
                     onChange={(e) => onPriceChange?.('priceMin', e.target.value ? Number(e.target.value) : undefined)}
@@ -282,6 +285,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
                   </span>
                   <input
                     type="number"
+                    data-testid="price-max-input"
                     placeholder="100.00"
                     value={filters.priceMax || ''}
                     onChange={(e) => onPriceChange?.('priceMax', e.target.value ? Number(e.target.value) : undefined)}
@@ -305,6 +309,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
         <div className="flex gap-3">
           <button
+            data-testid="apply-filters-btn"
             onClick={handleApplyFilters}
             disabled={!!(priceErrors?.priceMin || priceErrors?.priceMax)}
             className={`flex-1 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
@@ -317,6 +322,7 @@ export const FilterSidebar = ({ filters, onFilterChange, onClearFilters, onApply
             Filtrar
           </button>
           <button
+            data-testid="clear-filters-btn"
             onClick={handleClearAllFilters}
             className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
