@@ -1,9 +1,10 @@
 interface Review {
   id: string;
-  title: string;
+  order_id: number;
+  user_id:number
   author: string;
   rating: number;
-  content: string;
+  comment: string;
   date: string;
 }
 
@@ -30,15 +31,17 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
   return (
     <div className="bg-white rounded-lg p-6 border border-gray-200">
       <div className="space-y-3">
-        <h3 className="font-bold text-gray-900">{review.title}</h3>
+        <h3 className="font-bold text-gray-900">{review.author}</h3>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">By {review.author}</span>
           <div className="flex items-center space-x-1">
-            {renderStars(review.rating)}
+            {renderStars(review.rating)} 
+            <div>
+              {review.rating}
+            </div>
           </div>
         </div>
         <p className="text-gray-600 leading-relaxed">
-          {review.content}
+          {review.comment}
         </p>
       </div>
     </div>
