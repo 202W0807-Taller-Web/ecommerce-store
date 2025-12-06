@@ -101,6 +101,7 @@ export const ProductInfo = ({
         <label className="text-sm font-medium text-gray-700">Cantidad:</label>
         <div className="flex items-center border border-gray-300 rounded">
           <button
+          data-testid="decrease-quantity-btn"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
             disabled={isAddingToCart}
             className="px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -109,6 +110,7 @@ export const ProductInfo = ({
           </button>
           <span className="px-4 py-1 border-x border-gray-300">{quantity}</span>
           <button
+          data-testid="increase-quantity-btn"
             onClick={() => setQuantity(quantity + 1)}
             disabled={isAddingToCart}
             className="px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -121,6 +123,7 @@ export const ProductInfo = ({
       {/* Action Buttons */}
       <div className="flex space-x-3">
         <button
+        data-testid="add-to-cart-btn"
           onClick={handleAddToCart}
           disabled={!selectedVariant || isAddingToCart}
           className={`flex-1 font-medium py-3 px-6 rounded-lg flex items-center justify-center space-x-2 transition-colors ${
