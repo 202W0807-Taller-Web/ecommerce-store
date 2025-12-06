@@ -7,7 +7,7 @@ interface ProductCardProps {
   mockRating?: number;
 }
 
-export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
+export const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <article data-testid={`product-card-${product.nombre}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
@@ -53,7 +53,7 @@ export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
             </div>
             
             {/* Rating con estrellas */}
-            <div className="flex items-center justify-start">
+            {/* <div className="flex items-center justify-start">
               <div className="flex items-center space-x-1">
                 <div className="flex">
                   {[...Array(5)].map((_, index) => (
@@ -62,12 +62,9 @@ export const ProductCard = ({ product, mockRating }: ProductCardProps) => {
                     </svg>
                   ))}
                 </div>
-                <span className="text-sm font-medium text-gray-900 ml-1">
-                  {(mockRating || product.rating || 0).toFixed(1)}
-                </span>
               </div>
               
-            </div>
+            </div> */}
           </div>
         </Link>
       </div>
