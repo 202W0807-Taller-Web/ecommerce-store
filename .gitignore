@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 .env
+
+
+Cypress
+cypress/
+cypress.config.ts
+cypress.env.json
