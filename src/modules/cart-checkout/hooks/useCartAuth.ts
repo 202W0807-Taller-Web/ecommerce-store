@@ -40,7 +40,7 @@ export function useCartAuth() {
           } else {
             // No hay carrito local, verificar si el usuario tiene uno en el backend
             try {
-              const response = await fetch(`${baseUrl}/user/${userId}`);
+              const response = await fetch(`${baseUrl}/usuario/${userId}`);
               if (response.ok) {
                 const data = await response.json();
                 if (data?.idCarrito) {
