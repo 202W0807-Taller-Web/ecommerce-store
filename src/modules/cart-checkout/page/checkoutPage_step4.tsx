@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import CheckoutSteps from "../components/checkoutSteps";
 import { useOrdersService } from "../hooks/useOrdersService";
 import { useCart } from "../hooks/useCart";
 import type { Address, Carrier, AlmacenOrigen, Store } from "../entities";
+import { AuthContext } from "../../client-auth/context/AuthContext";
 
 type CartItem = {
   idProducto: number;
@@ -34,6 +35,9 @@ type DeliveryInfo = {
 export default function Checkout_Step4() {
   const location = useLocation();
   const navigate = useNavigate();
+  const auth = useContext(AuthContext);
+
+  const usuarioId = auth?.isAuth && auth?.user ? auth.user.id : null;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [address, setAddress] = useState<Address | null>(null);
@@ -58,6 +62,10 @@ export default function Checkout_Step4() {
   }, [location.state]);
 
   const handleConfirm = async () => {
+    if (!usuarioId) {
+      alert("No hay usuario logueado.");
+      return;
+    }
     if (!userInfo || !deliveryInfo || !cart.length) {
       alert("Faltan datos requeridos para confirmar el pedido.");
       return;
@@ -102,7 +110,7 @@ export default function Checkout_Step4() {
 
     // OBJETO PARA EL NUEVO ENDPOINT
     const orderPayload = {
-      usuarioId: 20, // Temporalmente hardcodeado
+      usuarioId,
       direccionEnvio: {
         nombreCompleto: userInfo.nombreCompleto,
         telefono: userInfo.telefono,
@@ -152,19 +160,9 @@ export default function Checkout_Step4() {
     } catch (err) {
       console.error(err);
       alert("Hubo un error al crear la orden.");
+    } finally {
+      setIsLoading(false);
     }
-
-    // TEST LAST PAGE
-    // navigate("/checkout/success", {
-    //     replace: true,
-    //     state: {
-    //       order: {
-    //         orderId: 'MOCK-123',
-    //         total: total,
-    //         items: cart
-    //       }
-    //     },
-    //   });
   };
 
   const total =
