@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CheckoutSteps from "../components/checkoutSteps";
-import OrderSummary from "../components/orderSummary";
 import ShippingForm from "../components/shippingForm";
 import PickupSelection from "../components/pickupSelection";
 import CarrierSelection from "../components/carrierSelection";
@@ -29,13 +28,11 @@ export default function Checkout_Step3() {
   const userInfo = location.state?.userInfo;
 
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-
   const [pickupInfo, setPickupInfo] = useState<{
     tienda: Store;
     almacenOrigen: AlmacenOrigen;
     recojoInfo: RecojoTienda;
   } | null>(null);
-
   const [carrierInfo, setCarrierInfo] = useState<{
     carrier: Carrier;
     almacenOrigen: AlmacenOrigen;
@@ -55,7 +52,6 @@ export default function Checkout_Step3() {
 
   const subtotal = cart.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
 
-  // Calcular costo de envío según el método y selección
   let shippingCost = 0;
   if (method === "pickup") {
     shippingCost = 0; // Recojo en tienda siempre es gratis
@@ -65,7 +61,6 @@ export default function Checkout_Step3() {
 
   const total = subtotal + shippingCost;
 
-  // Determinar si se puede continuar
   const canContinue =
     method === "pickup"
       ? pickupInfo !== null
@@ -74,7 +69,6 @@ export default function Checkout_Step3() {
   const handleContinue = () => {
     if (!canContinue) return;
 
-    // Construir el objeto de entrega según el tipo
     let deliveryInfo;
 
     if (method === "pickup" && pickupInfo) {
@@ -102,7 +96,7 @@ export default function Checkout_Step3() {
         passedCart: cart,
         selectedAddress: selectedAddress,
         userInfo: userInfo,
-        deliveryInfo: deliveryInfo, // Toda la info necesaria para el JSON final
+        deliveryInfo: deliveryInfo,
         costos: {
           subtotal: subtotal,
           envio: shippingCost,
@@ -113,12 +107,12 @@ export default function Checkout_Step3() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-6xl mx-auto p-8 space-y-12">
       <CheckoutSteps currentStep={3} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
         {/* LEFT COLUMN */}
-        <div className="md:col-span-2 space-y-10">
+        <div className="md:col-span-2 space-y-12">
           {method === "pickup" ? (
             <section>
               <h1 className="text-3xl font-bold mb-6 text-[#EBC431]">
@@ -138,9 +132,7 @@ export default function Checkout_Step3() {
                 <h1 className="text-3xl font-bold mb-6 text-[#EBC431]">
                   Dirección de envío
                 </h1>
-                <ShippingForm
-                  onSelectAddress={(addr) => setSelectedAddress(addr)}
-                />
+                <ShippingForm onSelectAddress={(addr) => setSelectedAddress(addr)} />
               </section>
 
               {selectedAddress && (
@@ -157,8 +149,7 @@ export default function Checkout_Step3() {
                       lat: selectedAddress.latitud,
                       lng: selectedAddress.longitud,
                       direccion:
-                        selectedAddress.direccion ??
-                        selectedAddress.direccionLinea1,
+                        selectedAddress.direccion ?? selectedAddress.direccionLinea1,
                     }}
                     onSelectCarrier={(info) => setCarrierInfo(info)}
                   />
@@ -167,7 +158,6 @@ export default function Checkout_Step3() {
             </>
           )}
 
-          {/* Botones de navegación */}
           <div className="flex justify-between pt-6 border-t border-[#C0A648]/40">
             <button
               onClick={() =>
@@ -175,7 +165,7 @@ export default function Checkout_Step3() {
                   state: { passedCart: cart, method: method },
                 })
               }
-              className="px-6 py-3 rounded-lg border-2 border-[#C0A648] text-[#EBC431] bg-[#333027] hover:bg-[#413F39]/80 hover:scale-105 hover:border-[#EBC431] transition font-medium"
+              className="px-8 py-4 rounded-lg border-2 border-[#C0A648] text-[#EBC431] bg-[#333027] hover:bg-[#413F39]/80 hover:scale-105 hover:border-[#EBC431] transition font-medium"
             >
               ← Volver
             </button>
@@ -183,12 +173,11 @@ export default function Checkout_Step3() {
             <button
               onClick={handleContinue}
               disabled={!canContinue}
-              className={`px-6 py-3 rounded-lg border-2 border-[#C0A648] transition font-medium
-    ${
-      canContinue
-        ? "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md cursor-pointer"
-        : "bg-[#6B644C]/50 text-gray-400 cursor-not-allowed"
-    }`}
+              className={`px-8 py-4 rounded-lg border-2 border-[#C0A648] transition font-semibold text-center ${
+                canContinue
+                  ? "bg-[#F5E27A] text-[#333027] hover:bg-[#EBC431] hover:scale-105 hover:shadow-md cursor-pointer"
+                  : "bg-[#6B644C]/50 text-gray-400 cursor-not-allowed"
+              }`}
             >
               Continuar al pago →
             </button>
@@ -196,23 +185,47 @@ export default function Checkout_Step3() {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="md:sticky md:top-8">
-          {cart ? (
-            <OrderSummary
-              products={cart.map((item) => ({
-                name: item.nombre || `Producto #${item.idProducto}`,
-                quantity: item.cantidad,
-                price: `$${item.precio.toFixed(2)}`,
-              }))}
-              subtotal={`$${subtotal.toFixed(2)}`}
-              shipping={
-                shippingCost === 0 ? "GRATIS" : `$${shippingCost.toFixed(2)}`
-              }
-              total={`$${total.toFixed(2)}`}
-            />
-          ) : (
-            <p className="text-gray-400">Tu carrito está vacío.</p>
-          )}
+        <div className="md:sticky md:top-8 p-8 bg-[#2E2B24] rounded-2xl shadow-xl space-y-6">
+          <h2 className="text-2xl font-bold text-[#EBC431] mb-4">Resumen del pedido</h2>
+          <div className="space-y-4">
+            {cart.map((item) => (
+              <div
+                key={item.idProducto}
+                className="flex justify-between items-center p-4 bg-[#413F39]/20 rounded-xl"
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium text-[#F5F5F5]">{item.nombre || `Producto #${item.idProducto}`}</span>
+                  <span className="text-[#F5F5F5]/70 text-sm">
+                    Cantidad: {item.cantidad} × ${item.precio.toFixed(2)}
+                  </span>
+                </div>
+                <span className="font-semibold text-[#EBC431]">
+                  ${(item.cantidad * item.precio).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-[#C0A648]/40 pt-4 space-y-2 text-lg">
+            <div className="flex justify-between">
+              <span className="text-[#F5F5F5]/80">Subtotal</span>
+              <span className="font-semibold text-[#EBC431]">${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#F5F5F5]/80">Envío</span>
+              <span className="font-semibold text-[#EBC431]">
+                {shippingCost === 0 ? (
+                  <span className="text-green-400 font-semibold">GRATIS</span>
+                ) : (
+                  `$${shippingCost.toFixed(2)}`
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between text-xl font-bold mt-2">
+              <span>Total</span>
+              <span className="text-yellow-400 font-extrabold">${total.toFixed(2)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
