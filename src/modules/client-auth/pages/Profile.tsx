@@ -15,7 +15,7 @@ import {
   FiCalendar,
 } from "react-icons/fi";
 const AUTH_API_URL = `${import.meta.env.VITE_AUTH_BACKEND}`;
-const CART_API_URL = `${import.meta.env.VITE_CART_BACKEND}`;
+const CART_API_URL = `${import.meta.env.VITE_API_CART_CHECKOUT_URL}`;
 
 
 function EditProfileForm({ user, onClose, onSuccess }: any) {
@@ -328,15 +328,18 @@ export default function Profile() {
   }, [showSuccessToast]);
 
   // Addresses management using useAddresses hook
-  const addressesApiUrl = `${CART_API_URL}/api/direcciones`;
+  // The hook expects a base URL that will be appended with
+  // `/usuario/:id/direcciones` or `/direcciones/:id`, so use
+  // the same base used by cart-checkout: `/api/envio`.
+  const addressesApiUrl = `${CART_API_URL}/api/envio`;
   const {
     addresses,
     loading: loadingAddresses,
     createAddress,
     updateAddress,
     deleteAddress,
-    markAsPrimary
-  } = useAddresses(addressesApiUrl, user?.id ?? null);
+    markAsPrimary,
+  } = useAddresses(addressesApiUrl);
 
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [addressForm, setAddressForm] = useState<any>(null); // null = new
@@ -438,7 +441,6 @@ export default function Profile() {
   // Formatear la URL de la imagen de perfil si se ha seleccionado una nueva imagen
   const imageToDisplay = previewUrl || user.avatar_url;
 
-  console.log("Avatar URL:", user.avatar_url);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
